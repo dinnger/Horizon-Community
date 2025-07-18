@@ -1,0 +1,8 @@
+@font-face {
+	font-family: "material-icons";
+	src: url("./fonts/materialdesignicons-webfont.woff2");
+}
+
+.material-icons {
+	font-family: "material-icons";
+}

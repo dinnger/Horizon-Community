@@ -1,0 +1,36 @@
+{
+	"formatter": {
+	  "enabled": true,
+	  "formatWithErrors": false,
+	  "ignore": [],
+	  "attributePosition": "auto",
+	  "indentStyle": "tab",
+	  "indentWidth": 2,
+	  "lineWidth": 140,
+	  "lineEnding": "lf"
+	},
+	"javascript": {
+	  "formatter": {
+		"quoteStyle": "single",
+		"arrowParentheses":"always",
+		"bracketSameLine": false,
+		"bracketSpacing": true,
+		"jsxQuoteStyle": "single",
+		"quoteProperties": "asNeeded",
+		"semicolons": "asNeeded",
+		"trailingCommas": "none"
+	  }
+	},
+	"linter":{
+		"rules":{
+			"suspicious": {
+				"noExplicitAny": "off"
+			}
+		}
+	},
+	"json": {
+	  "formatter": {
+		"trailingCommas": "none"
+	  }
+	}
+  }

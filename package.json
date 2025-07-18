@@ -1,0 +1,58 @@
+{
+  "name": "horizon",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Proyecto principal",
+  "main": "index.js",
+  "workspaces": [
+    "client",
+    "client/canvas",
+    "server"
+  ],
+  "scripts": {
+    "server:dev": "tsx --require tsconfig-paths/register ./server/src/index.ts",
+    "server:update-nodes": "tsx --require tsconfig-paths/register ./server/src/seeders/update-node-permissions.ts",
+    "server:migrate": "tsx --require tsconfig-paths/register ./server/src/run-migration.ts",
+    "worker:dev": "tsx --require tsconfig-paths/register ./worker/index.ts",
+    "worker:test": "tsx --require tsconfig-paths/register ./worker/index.ts --FLOW=test-workflow --PORT=3001",
+    "build": "tsc",
+    "start": "tsc  && tsc-alias  && node ./dist/server/src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nyariv/sandboxjs": "^0.8.25",
+    "@types/amqplib": "^0.10.7",
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.3",
+    "@types/express-fileupload": "^1.5.1",
+    "ajv": "^8.17.1",
+    "ajv-errors": "^3.0.0",
+    "ajv-formats": "^3.0.1",
+    "ajv-i18n": "^4.2.0",
+    "amqplib": "^0.10.8",
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "dayjs": "^1.11.13",
+    "express-fileupload": "^1.5.1",
+    "glob": "^11.0.3",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.2",
+    "winston": "^3.17.0",
+    "zip-lib": "^1.1.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0"
+  }
+}
