@@ -10,11 +10,6 @@
     "server"
   ],
   "scripts": {
-    "server:dev": "tsx --require tsconfig-paths/register ./server/src/index.ts",
-    "server:update-nodes": "tsx --require tsconfig-paths/register ./server/src/seeders/update-node-permissions.ts",
-    "server:migrate": "tsx --require tsconfig-paths/register ./server/src/run-migration.ts",
-    "worker:dev": "tsx --require tsconfig-paths/register ./worker/index.ts",
-    "worker:test": "tsx --require tsconfig-paths/register ./worker/index.ts --FLOW=test-workflow --PORT=3001",
     "build": "tsc",
     "start": "tsc  && tsc-alias  && node ./dist/server/src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
