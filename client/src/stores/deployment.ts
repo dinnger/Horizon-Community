@@ -3,6 +3,7 @@ import type { IDeployment } from '@shared/interfaces/deployment.interface'
 import socketService from '@/services/socket'
 import { ref } from 'vue'
 import { useWorkflowsStore } from './workflows'
+import { useWorkspaceStore } from './workspace'
 
 // Tipos para la validación de publicación de workflow
 interface WorkflowPublicationValidationResult {
@@ -25,6 +26,7 @@ export const useDeploymentStore = defineStore('deployment', () => {
 	const error = ref<string | null>(null)
 
 	const workflowStore = useWorkflowsStore()
+	const workspaceStore = useWorkspaceStore()
 
 	// Cargar deployments desde el servidor
 	const loadDeployments = async () => {
@@ -51,11 +53,7 @@ export const useDeploymentStore = defineStore('deployment', () => {
 		scheduledAt?: Date
 	}) => {
 		try {
-			// Obtener el workflow completo desde el socket service
-			const workflow = await workflowStore.getWorkflowById(queueItem.workflowId)
-			if (!workflow) throw new Error('Workflow no encontrado')
-
-			return await socketService.createDeploymentQueueItem({ ...queueItem, flow: workflow })
+			return await socketService.createDeploymentQueueItem({ ...queueItem, workspaceId: workspaceStore.currentWorkspaceId })
 		} catch (err: any) {
 			error.value = err.message || 'Error al reintentar elemento de la cola'
 			throw err
