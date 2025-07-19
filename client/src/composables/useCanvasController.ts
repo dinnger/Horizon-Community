@@ -608,12 +608,6 @@ export function useCanvasController() {
 			} else if (typeof result === 'object' && result.base64) {
 				debugStore.addLog('info', 'Workflow generado exitosamente.', 'Canvas')
 				toast.success('Workflow generado exitosamente.')
-				const link = document.createElement('a')
-				link.href = result.base64
-				link.download = `${currentWorkflowInfo.value?.name}.zip` || '' // Nombre del archivo que se descargará
-				document.body.appendChild(link)
-				link.click()
-				document.body.removeChild(link)
 			}
 
 			closeDeploymentSelector()

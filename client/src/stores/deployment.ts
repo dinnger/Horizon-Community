@@ -51,11 +51,7 @@ export const useDeploymentStore = defineStore('deployment', () => {
 		scheduledAt?: Date
 	}) => {
 		try {
-			// Obtener el workflow completo desde el socket service
-			const workflow = await workflowStore.getWorkflowById(queueItem.workflowId)
-			if (!workflow) throw new Error('Workflow no encontrado')
-
-			return await socketService.createDeploymentQueueItem({ ...queueItem, flow: workflow })
+			return await socketService.createDeploymentQueueItem({ ...queueItem })
 		} catch (err: any) {
 			error.value = err.message || 'Error al reintentar elemento de la cola'
 			throw err
@@ -152,6 +148,15 @@ export const useDeploymentStore = defineStore('deployment', () => {
 			}
 
 			const result = await createDeploymentQueue(queueItem)
+
+			if (typeof result === 'object' && result.base64) {
+				const link = document.createElement('a')
+				link.href = result.base64
+				link.download = `${workflowStore.context?.info.name}.zip` || '' // Nombre del archivo que se descargará
+				document.body.appendChild(link)
+				link.click()
+				document.body.removeChild(link)
+			}
 			return result
 		} catch (err: any) {
 			error.value = err.message || 'Error al publicar workflow en despliegue'

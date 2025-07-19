@@ -25,6 +25,18 @@ export async function compressPathToBase64(targetPath: string): Promise<string> 
 		archive.on('end', () => {
 			const buffer = Buffer.concat(chunks)
 			const base64 = buffer.toString('base64')
+
+			// Delete the original path after successful compression
+			try {
+				if (stat.isDirectory()) {
+					fs.rmSync(targetPath, { recursive: true, force: true })
+				} else if (stat.isFile()) {
+					fs.unlinkSync(targetPath)
+				}
+			} catch (deleteError) {
+				console.error(`Warning: Could not delete original path ${targetPath}:`, deleteError)
+			}
+
 			resolve(base64)
 		})
 

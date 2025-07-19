@@ -38,7 +38,7 @@
 
       <button class="btn btn-primary btn-sm" @click="$emit('publish')">
         <span class="mdi mdi-upload"></span>
-        Publicar
+        Descargar
       </button>
     </div>
   </div>
