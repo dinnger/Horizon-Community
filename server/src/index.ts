@@ -10,7 +10,7 @@ import { socketRoutes } from './routes/socket/index.js'
 import { envs } from './config/envs.js'
 import { nodeRestRoutes } from './routes/nodeRest.js'
 import { workerManager } from './services/workerManager.js'
-import { deploymentQueueService } from './services/deploymentQueueService.js'
+import { deploymentQueueService } from './services/deploy.service.js'
 
 const app = express()
 const server = createServer(app)
@@ -49,7 +49,7 @@ const startServer = async () => {
 		await initDatabase()
 
 		// Initialize deployment queue service
-		await deploymentQueueService.init(socketRoutes, io)
+		await deploymentQueueService.init()
 
 		// Seed database if needed
 		if (envs.SEED_DATABASE) {

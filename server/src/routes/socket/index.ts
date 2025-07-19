@@ -1,4 +1,3 @@
-import { EventEmitter } from 'node:events'
 import type { Server } from 'socket.io'
 import type { AuthenticatedSocket } from '../../middleware/socketAuth.js'
 import { envs } from '../../config/envs.js'
@@ -41,7 +40,7 @@ export interface SocketData {
 	data: any
 	callback: (data: { success: boolean } & Record<string, any>) => void
 }
-export class SocketRoutes extends EventEmitter {
+export class SocketRoutes {
 	private io: Server | undefined
 
 	init(io: Server) {
@@ -76,7 +75,6 @@ export class SocketRoutes extends EventEmitter {
 					return
 				}
 				if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', event, typeof data === 'object' ? JSON.stringify(data) : data)
-				this.emit(event, data)
 				serverRouter[event]({ io: this.io, socket, data, callback })
 				next()
 			})

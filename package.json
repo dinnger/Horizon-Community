@@ -19,6 +19,7 @@
   "devDependencies": {
     "@nyariv/sandboxjs": "^0.8.25",
     "@types/amqplib": "^0.10.7",
+    "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.3",
     "@types/express-fileupload": "^1.5.1",
@@ -27,6 +28,7 @@
     "ajv-formats": "^3.0.1",
     "ajv-i18n": "^4.2.0",
     "amqplib": "^0.10.8",
+    "archiver": "^7.0.1",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "dayjs": "^1.11.13",
@@ -42,8 +44,7 @@
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.2",
-    "winston": "^3.17.0",
-    "zip-lib": "^1.1.2"
+    "winston": "^3.17.0"
   },
   "dependencies": {
     "cors": "^2.8.5",

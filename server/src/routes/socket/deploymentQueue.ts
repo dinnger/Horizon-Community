@@ -10,7 +10,7 @@ import {
 } from '../../models/index.js'
 import { Op } from 'sequelize'
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
-import { deploymentQueueService } from '../../services/deploymentQueueService.js'
+import { deploymentQueueService } from '../../services/deploy.service.js'
 
 export const setupDeploymentQueueRoutes = {
 	// Listar solicitudes de despliegue

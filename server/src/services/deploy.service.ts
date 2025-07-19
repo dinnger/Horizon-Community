@@ -1,35 +1,20 @@
-import { EventEmitter } from 'node:events'
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
-import { DeploymentQueue, DeploymentInstanceAssignment, DeploymentInstance, Workflow } from '../models/index.js'
-import type { SocketRoutes } from '../routes/socket/index.js'
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
+import { promises as fs } from 'node:fs'
 import { getNodeClassDependencies } from '@shared/store/node.store.js'
-import * as WorkflowHistoryService from './WorkflowHistoryService.js'
+import { DeploymentQueue, DeploymentInstanceAssignment, DeploymentInstance, Workflow } from '../models/index.js'
+import path from 'node:path'
 
-interface QueueEventData {
-	queueItem: any
-	previousStatus?: string
-}
-
-export class DeploymentQueueService extends EventEmitter {
-	private socketRoutes: SocketRoutes | null = null
-	private io: any = null
+export class DeploymentQueueService {
 	private readonly deployBasePath: string
 
 	constructor() {
-		super()
 		this.deployBasePath = path.join(process.cwd(), 'data', 'deploys')
 	}
 
 	/**
 	 * Inicializa el servicio y se suscribe a los eventos de SocketRoutes
 	 */
-	async init(socketRoutes: SocketRoutes, io?: any) {
-		this.socketRoutes = socketRoutes
-		this.io = io
-		this.setupEventListeners()
-
+	async init() {
 		// Asegurar que existe el directorio base de deploys
 		await this.ensureDeployDirectory()
 
@@ -77,39 +62,6 @@ export class DeploymentQueueService extends EventEmitter {
 		} catch (error) {
 			console.error('Error procesando cola actualizada:', error)
 		}
-	}
-
-	/**
-	 * Configura los listeners para los eventos de la cola de despliegues
-	 */
-	private setupEventListeners() {
-		if (!this.socketRoutes) return
-
-		// Escuchar cuando una nueva cola se crea
-		this.socketRoutes.on('deployment-queue:create', async (data: any) => {
-			// Este evento se ejecuta cuando se llama al endpoint, aquí tenemos los datos de entrada
-			console.log('Cola de despliegue creándose...', data)
-		})
-
-		// Escuchar cuando una cola se actualiza
-		this.socketRoutes.on('deployment-queue:update', async (data: any) => {
-			// Este evento se ejecuta cuando se llama al endpoint, aquí tenemos los datos de entrada
-			console.log('Cola de despliegue actualizándose...', data)
-		})
-	}
-
-	/**
-	 * Maneja la creación de una nueva cola de despliegue
-	 */
-	private async handleQueueCreate(data: QueueEventData) {
-		return this.processQueueCreated(data.queueItem)
-	}
-
-	/**
-	 * Maneja la actualización de una cola de despliegue
-	 */
-	private async handleQueueUpdate(data: QueueEventData) {
-		return this.processQueueUpdated(data.queueItem, data.previousStatus)
 	}
 
 	/**
