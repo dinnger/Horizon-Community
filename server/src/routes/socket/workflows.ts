@@ -48,7 +48,7 @@ export const setupWorkflowRoutes = {
 	// Get workflow by ID - requires read permission
 	'workflows:get': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const { workspaceId, id } = data
+			const { workspaceId, id, hidratation = true } = data
 
 			const workflow = await Workflow.findOne({
 				include: [
@@ -70,7 +70,7 @@ export const setupWorkflowRoutes = {
 			})
 
 			// Hidratación de propiedades
-			if (workflow?.workflowData?.nodes) {
+			if (hidratation && workflow?.workflowData?.nodes) {
 				for (const nodes of Object.values(workflow.workflowData.nodes)) {
 					if (!nodes?.properties) continue
 					// Si no existe el nodo, eliminarlo
@@ -88,18 +88,18 @@ export const setupWorkflowRoutes = {
 				}
 			}
 
-			if (!workflow) {
-				callback({ success: false, message: 'Workflow no encontrado' })
-				return
-			}
+			// if (!workflow) {
+			// 	callback({ success: false, message: 'Workflow no encontrado' })
+			// 	return
+			// }
 
-			// leave all
-			for (const room of socket.rooms) {
-				if (room.startsWith('workflow:')) socket.leave(room)
-			}
+			// // leave all
+			// for (const room of socket.rooms) {
+			// 	if (room.startsWith('workflow:')) socket.leave(room)
+			// }
 
-			// join
-			socket.join(`workflow:${id}`)
+			// // join
+			// socket.join(`workflow:${id}`)
 
 			callback({ success: true, workflow })
 		} catch (error) {

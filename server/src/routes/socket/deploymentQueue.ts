@@ -12,12 +12,13 @@ import { Op } from 'sequelize'
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { deploymentQueueService } from '../../services/deploy.service.js'
 import { compressPathToBase64 } from '@server/src/services/deployDownload.service.js'
+import { setupWorkflowRoutes } from './workflows.js'
 
 export const setupDeploymentQueueRoutes = {
 	// Crear nueva solicitud de despliegue
-	'deployment-queue:create': async ({ socket, data, callback }: SocketData) => {
+	'deployment-queue:create': async ({ io, socket, data, callback }: SocketData) => {
 		try {
-			const { deploymentId, workflowId, workflowVersionId, description, flow, meta = {}, scheduledAt } = data
+			const { workspaceId, deploymentId, workflowId, workflowVersionId, description, meta = {}, scheduledAt } = data
 			const { userId } = socket
 
 			// Validar que el deployment y workflow existan
@@ -31,17 +32,6 @@ export const setupDeploymentQueueRoutes = {
 			if (!workflow) {
 				callback({ success: false, message: 'Workflow no encontrado' })
 				return
-			}
-
-			// Si se especifica una versión específica, validar que exista
-			let flowData = flow
-			if (workflowVersionId) {
-				const historyEntry = await WorkflowHistory.findByPk(workflowVersionId)
-				if (!historyEntry) {
-					callback({ success: false, message: 'Versión de workflow no encontrada' })
-					return
-				}
-				flowData = historyEntry.newData as IWorkflowFull
 			}
 
 			// Obtener las instancias asignadas al deployment ordenadas por executionOrder
@@ -59,6 +49,15 @@ export const setupDeploymentQueueRoutes = {
 				],
 				order: [['executionOrder', 'ASC']]
 			})
+
+			const flowData: IWorkflowFull = await new Promise((resolve) =>
+				setupWorkflowRoutes['workflows:get']({
+					io,
+					socket,
+					data: { workspaceId, id: workflowId, hidratation: false },
+					callback: (data) => resolve(data.workflow)
+				})
+			)
 
 			// Si no hay instancias, crear un elemento genérico
 			const queueItem = await DeploymentQueue.create({

@@ -215,6 +215,7 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 	return {
 		// State
 		workflows,
+		context,
 		loading,
 		error,
 

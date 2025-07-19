@@ -647,12 +647,12 @@ class SocketService {
 	}
 
 	createDeploymentQueueItem(queueItem: {
+		workspaceId: string
 		deploymentId: string
 		workflowId: string
 		workflowVersionId?: string
 		description?: string
 		meta?: Record<string, any>
-		flow: any
 		requestedBy?: string
 		scheduledAt?: Date
 	}): Promise<boolean | { base64: string }> {
