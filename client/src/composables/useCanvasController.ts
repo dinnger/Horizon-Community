@@ -602,9 +602,18 @@ export function useCanvasController() {
 
 			const result = await deploymentStore.publishWorkflowToDeployment(deploymentData)
 
-			if (result) {
+			if (typeof result === 'boolean' && result) {
 				debugStore.addLog('info', 'Workflow publicado exitosamente en la cola de despliegue', 'Canvas')
 				toast.success('Workflow agregado a la cola de despliegue exitosamente')
+			} else if (typeof result === 'object' && result.base64) {
+				debugStore.addLog('info', 'Workflow generado exitosamente.', 'Canvas')
+				toast.success('Workflow generado exitosamente.')
+				const link = document.createElement('a')
+				link.href = result.base64
+				link.download = `${currentWorkflowInfo.value?.name}.zip` || '' // Nombre del archivo que se descargará
+				document.body.appendChild(link)
+				link.click()
+				document.body.removeChild(link)
 			}
 
 			closeDeploymentSelector()

@@ -24,113 +24,84 @@ export class DeploymentQueueService {
 	/**
 	 * Método público para procesar una cola de despliegue creada
 	 */
-	async processQueueCreated(queueItem: any) {
+	async processQueueCreated(queueItem: any): Promise<string | null> {
 		try {
 			console.log('Procesando cola de despliegue creada:', queueItem?.id)
 
-			if (!queueItem) return
+			if (!queueItem) return null
 
 			// Si la cola está en pending, verificar autoaprobación
 			if (queueItem.status === 'pending') {
-				await this.checkAutoApproval(queueItem)
+				return await this.checkAutoApproval(queueItem)
 			}
+			return null
 		} catch (error) {
 			console.error('Error procesando cola creada:', error)
+			return null
 		}
 	}
 
 	/**
 	 * Método público para procesar una cola de despliegue actualizada
 	 */
-	async processQueueUpdated(queueItem: any, previousStatus?: string) {
+	async processQueueUpdated(queueItem: any, previousStatus?: string): Promise<string | null> {
 		try {
 			console.log('Procesando cola de despliegue actualizada:', queueItem?.id)
 
-			if (!queueItem) return
+			if (!queueItem) return null
 
 			const currentStatus = queueItem.status
 
 			// Si la cola está en pending, verificar autoaprobación
-			if (currentStatus === 'pending') {
-				await this.checkAutoApproval(queueItem)
-			}
+			if (currentStatus === 'pending') return await this.checkAutoApproval(queueItem)
 
 			// Si la cola está en running, crear estructura de archivos
-			if (currentStatus === 'running' && previousStatus !== 'running') {
-				await this.createDeploymentStructure(queueItem)
-			}
+			if (currentStatus === 'running' && previousStatus !== 'running') return await this.createDeploymentStructure(queueItem)
+
+			return null
 		} catch (error) {
 			console.error('Error procesando cola actualizada:', error)
+			return null
 		}
 	}
 
 	/**
 	 * Verifica si la instancia tiene autoaprobación habilitada
 	 */
-	private async checkAutoApproval(queueItem: any) {
+	private async checkAutoApproval(queueItem: any): Promise<string | null> {
 		try {
-			if (!queueItem.instanceId) {
-				console.log(`Cola ${queueItem.id} no tiene instanceId, saltando autoaprobación`)
-				return
-			}
-
-			// Obtener la asignación de la instancia para verificar autoaprobación
-			const instanceAssignment = await DeploymentInstanceAssignment.findOne({
-				where: {
-					deploymentId: queueItem.deploymentId,
-					instanceId: queueItem.instanceId,
-					status: 'active'
+			// Actualizar el estado a running
+			await DeploymentQueue.update(
+				{
+					status: 'running',
+					startedAt: new Date()
 				},
-				include: [
-					{
-						model: DeploymentInstance,
-						as: 'instance',
-						required: true
-					}
-				]
-			})
-
-			if (!instanceAssignment) {
-				console.warn(`No se encontró asignación de instancia para deployment ${queueItem.deploymentId} e instancia ${queueItem.instanceId}`)
-				return
-			}
-
-			if (instanceAssignment?.autoApprove) {
-				console.log(`Instancia ${queueItem.instanceId} tiene autoaprobación habilitada, cambiando a running`)
-
-				// Actualizar el estado a running
-				await DeploymentQueue.update(
-					{
-						status: 'running',
-						startedAt: new Date()
-					},
-					{
-						where: { id: queueItem.id }
-					}
-				)
-
-				// Obtener el item actualizado y procesar el cambio a running
-				const updatedQueueItem = await DeploymentQueue.findByPk(queueItem.id)
-				if (updatedQueueItem) {
-					console.log(`Cola ${queueItem.id} auto-aprobada y cambiada a running`)
-					await this.processQueueUpdated(updatedQueueItem, 'pending')
+				{
+					where: { id: queueItem.id }
 				}
-			} else {
-				console.log(`Instancia ${queueItem.instanceId} NO tiene autoaprobación habilitada, permanece en pending`)
+			)
+
+			// Obtener el item actualizado y procesar el cambio a running
+			const updatedQueueItem = await DeploymentQueue.findByPk(queueItem.id)
+			if (updatedQueueItem) {
+				console.log(`Cola ${queueItem.id} auto-aprobada y cambiada a running`)
+				return await this.processQueueUpdated(updatedQueueItem, 'pending')
 			}
+			return null
 		} catch (error) {
 			console.error('Error verificando autoaprobación:', error)
+			return null
 		}
 	}
 
 	/**
 	 * Crea la estructura de archivos para el despliegue
 	 */
-	async createDeploymentStructure(queueItem: any) {
+	async createDeploymentStructure(queueItem: any): Promise<string | null> {
 		try {
 			if (!queueItem.flow || !queueItem.id) {
 				console.warn('No se puede crear estructura de despliegue: flow o id faltante')
-				return
+				return null
 			}
 
 			const flowId = queueItem.id.toString()
@@ -171,8 +142,7 @@ export class DeploymentQueueService {
 			console.log(`Estructura de despliegue creada exitosamente para flow ${flowId}`)
 			console.log(`Estado del despliegue ${queueItem.id} actualizado a success`)
 
-			// Crear la siguiente instancia si existe
-			await this.createNextDeploymentInstance(queueItem)
+			return deploymentPath
 		} catch (error) {
 			console.error('Error creando estructura de despliegue:', error)
 
@@ -189,8 +159,10 @@ export class DeploymentQueueService {
 					}
 				)
 				console.log(`Estado del despliegue ${queueItem.id} actualizado a failed debido a error`)
+				return null
 			} catch (updateError) {
 				console.error('Error actualizando estado a failed:', updateError)
+				return null
 			}
 		}
 	}
@@ -479,94 +451,6 @@ export class DeploymentQueueService {
 			console.log(`Versión del workflow ${workflow.name} incrementada de ${currentVersion} a ${newVersion} (${instance.versionChange})`)
 		} catch (error) {
 			console.error('Error incrementando versión del workflow:', error)
-		}
-	}
-
-	/**
-	 * Crea la siguiente instancia de despliegue en la secuencia
-	 */
-	private async createNextDeploymentInstance(queueItem: any) {
-		try {
-			if (!queueItem.deploymentId || !queueItem.instanceId) {
-				console.log('No se puede crear siguiente instancia: deploymentId o instanceId faltante')
-				return
-			}
-
-			// Obtener la asignación actual para determinar el executionOrder
-			const currentAssignment = await DeploymentInstanceAssignment.findOne({
-				where: {
-					deploymentId: queueItem.deploymentId,
-					instanceId: queueItem.instanceId,
-					status: 'active'
-				}
-			})
-
-			if (!currentAssignment) {
-				console.log(`No se encontró asignación activa para instancia ${queueItem.instanceId}`)
-				return
-			}
-
-			// Buscar la siguiente instancia basándose en executionOrder
-			const nextAssignment = (await DeploymentInstanceAssignment.findOne({
-				where: {
-					deploymentId: queueItem.deploymentId,
-					executionOrder: currentAssignment.executionOrder + 1,
-					status: 'active'
-				},
-				include: [
-					{
-						model: DeploymentInstance,
-						as: 'instance',
-						required: true
-					}
-				]
-			})) as any
-
-			if (!nextAssignment) {
-				console.log(`No hay siguiente instancia después del orden ${currentAssignment.executionOrder}`)
-				return
-			}
-
-			const nextInstance = nextAssignment.instance
-
-			// Eliminar cualquier cola pendiente existente para la siguiente instancia
-			const existingPendingQueue = await DeploymentQueue.findOne({
-				where: {
-					deploymentId: queueItem.deploymentId,
-					instanceId: nextInstance.id,
-					status: 'pending'
-				}
-			})
-
-			if (existingPendingQueue) {
-				console.log(`Eliminando cola pendiente existente ${existingPendingQueue.id} para la siguiente instancia`)
-				await DeploymentQueue.destroy({
-					where: { id: existingPendingQueue.id }
-				})
-			}
-
-			// Crear nueva cola para la siguiente instancia
-			const newQueueItem = await DeploymentQueue.create({
-				deploymentId: queueItem.deploymentId,
-				instanceId: nextInstance.id,
-				workflowId: queueItem.workflowId,
-				description: `Despliegue automático en ${nextInstance.name}`,
-				flow: queueItem.flow,
-				meta: {
-					trigger: 'auto-deployment',
-					previousInstanceId: queueItem.instanceId,
-					...queueItem.meta
-				},
-				status: 'pending'
-			})
-
-			console.log(`Nueva cola de despliegue creada para la siguiente instancia: ${newQueueItem.id}`)
-			console.log(`Instancia: ${nextInstance.name} (${nextInstance.id}) - Orden: ${nextAssignment.executionOrder}`)
-
-			// Procesar la nueva cola creada (verificar auto-aprobación)
-			await this.processQueueCreated(newQueueItem)
-		} catch (error) {
-			console.error('Error creando siguiente instancia de despliegue:', error)
 		}
 	}
 

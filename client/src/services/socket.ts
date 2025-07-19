@@ -655,7 +655,7 @@ class SocketService {
 		flow: any
 		requestedBy?: string
 		scheduledAt?: Date
-	}): Promise<IDeploymentQueue> {
+	}): Promise<boolean | { base64: string }> {
 		return new Promise((resolve, reject) => {
 			if (!this.socket) {
 				reject(new Error('Socket not connected'))
@@ -663,8 +663,11 @@ class SocketService {
 			}
 
 			this.socket.emit('deployment-queue:create', queueItem, (response: any) => {
-				if (response.success && response.queueItem) {
-					resolve(response.queueItem)
+				if (response.success) {
+					if (response.base64) {
+						return resolve({ base64: `data:application/zip;base64,${response.base64}` })
+					}
+					resolve(true)
 				} else {
 					reject(new Error(response.message || 'Failed to create deployment queue item'))
 				}
