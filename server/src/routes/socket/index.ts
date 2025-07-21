@@ -16,6 +16,7 @@ import { setupDeploymentTypesRoutes } from './deploymentsTypes.js'
 import { setupDeploymentRoutes } from './deployments.js'
 import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
+import { setupSubscribersRoutes } from './subscribers.js'
 
 export const serverRouter: Record<string, any> = {
 	...setupAuthRoutes,
@@ -31,7 +32,8 @@ export const serverRouter: Record<string, any> = {
 	...setupDeploymentRoutes,
 	...setupDeploymentQueueRoutes,
 	...setupDeploymentTypesRoutes,
-	...setupDeploymentInstancesRoutes
+	...setupDeploymentInstancesRoutes,
+	...setupSubscribersRoutes
 }
 
 export interface SocketData {
@@ -54,9 +56,10 @@ export class SocketRoutes {
 			console.log('Cliente conectado:', socket.id)
 
 			socket.use(([event, ...args], next) => {
-				const data = args.length > 1 ? args[0] : {}
-				const callback = args[args.length - 1]
-				const ommitedPermissions = ['auth:me', 'auth:login', /^worker:/]
+				const data = args.length >= 1 ? args[0] : {}
+				const callback = args.length > 1 ? args[args.length - 1] : () => {}
+				// Se agrega :\s*subscribe\s* para ignorar los métodos de suscripción
+				const ommitedPermissions = ['auth:me', 'auth:login', /^subscribe:\w+$/]
 
 				if (!socket.userId) {
 					next(new Error('No se encontró el usuario'))
@@ -64,7 +67,9 @@ export class SocketRoutes {
 
 				if (!verifyPermission(socket as Required<AuthenticatedSocket>, event, ommitedPermissions)) {
 					next(new Error(`No cumple permisos para ejecutar el método ${event}`))
-					callback({ success: false, message: `No cumple permisos para ejecutar el método ${event}` })
+					if (callback && typeof callback === 'function') {
+						callback({ success: false, message: `No cumple permisos para ejecutar el método ${event}` })
+					}
 					return
 				}
 

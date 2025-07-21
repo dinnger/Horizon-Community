@@ -39,7 +39,7 @@ export class CommunicationModule {
 		setInterval(() => {
 			// Enviar las animaciones como un lote
 			const animations = this.el.coreModule.trace.get()
-			if (animations) this.el.communicationModule.server.requestFromServer('worker:animations', { animations })
+			if (animations) this.server.subscribeFromServer({ event: 'workflow:animations', params: [this.el.flow], eventData: animations })
 		}, 2000)
 	}
 

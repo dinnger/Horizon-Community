@@ -4,7 +4,7 @@ import type { ISecurityUserEntity } from './security.interface.js'
 import type { IGlobalDeploymentsEntity } from './global.deployments.interface.js'
 import type { IWorkflowsWorkflowsHistoryEntity } from './workflows.history.interface.js'
 import type { IWorkflowsFlowsEntity } from './workflows.flows.interface.js'
-import { IWorkflowFull } from '../standardized.js'
+import type { IWorkflowFull } from '../standardized.js'
 
 export interface IGlobalDeploymentsQueueEntity
 	extends Model<InferAttributes<IGlobalDeploymentsQueueEntity>, InferCreationAttributes<IGlobalDeploymentsQueueEntity>> {

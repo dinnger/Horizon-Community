@@ -1,7 +1,7 @@
+import type { Worker } from '../../worker.js'
+import type { ISubscriberType } from '@shared/interfaces/subscriber/subscriber.interface.js'
 import { v4 as uuidv4 } from 'uuid'
 import { parentPort } from 'node:worker_threads'
-import type { Worker } from '../../worker.js'
-import { envs } from '@worker/config/envs.js'
 
 /**
  * Worker Server Communication Helper
@@ -80,6 +80,11 @@ class WorkerServerComm {
 				reject(new Error('No parent port available'))
 			}
 		})
+	}
+
+	async subscribeFromServer({ event, params, eventData }: { event: ISubscriberType; params?: string[]; eventData: any }) {
+		const newEvent = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
+		this.requestFromServer('worker:subscribe', { event: newEvent, eventData })
 	}
 
 	async sendStats(stats: any) {

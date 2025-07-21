@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useCanvas } from '@/stores'
-import { useCanvasController } from '@/composables/useCanvasController'
+import { useCanvasManager } from '@/composables/useCanvasManager'
 import CanvasHeader from '@/components/Canvas/CanvasHeader.vue'
 import CanvasExecutionPanel from '@/components/Canvas/CanvasExecutionPanel.vue'
 import CanvasArea from '@/components/Canvas/CanvasArea.vue'
@@ -159,7 +159,7 @@ const {
   loadWorkflow,
   selectVersion,
   closeNotePropertiesDialog
-} = useCanvasController()
+} = useCanvasManager()
 
 onMounted(async () => {
   await loadWorkflow()

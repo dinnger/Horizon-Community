@@ -17,7 +17,7 @@ import {
 import socketService from '@/services/socket'
 import { toast } from 'vue-sonner'
 
-export function useCanvasController() {
+export function useCanvasManager() {
 	const workflowStore = useWorkflowsStore()
 	const proyectStore = useProjectsStore()
 	const deploymentStore = useDeploymentStore()
@@ -177,6 +177,7 @@ export function useCanvasController() {
 	const handleNodeDuplicate = (node: INodeCanvas) => {
 		if (!canvasInstance) return
 
+		console.log('node', node)
 		// Crear una copia del nodo con nueva posición (offset para evitar superposición)
 		const duplicatedNode: INodeCanvas = {
 			...JSON.parse(JSON.stringify(node)),
@@ -190,6 +191,7 @@ export function useCanvasController() {
 				y: node.design.y + 50
 			}
 		}
+		console.log('duplicatedNode', duplicatedNode)
 
 		// Añadir el nodo duplicado
 		const nodeId = canvasInstance.actionAddNode({
@@ -627,13 +629,12 @@ export function useCanvasController() {
 
 		debugStore.addLog('info', 'Canvas inicializado correctamente', 'Canvas')
 
-		// Simular petición de red para cargar el workflow
-		debugStore.addNetworkRequest({
-			method: 'GET',
-			url: `/api/workflows/${router.currentRoute.value.params.id}`,
-			status: 200,
-			duration: 150,
-			size: 2048
+		socketService.listener({
+			event: 'workflow:animations',
+			params: [workflowStore.context?.info.uid || ''],
+			callback: (event: any) => {
+				console.log('recibió un evento', event)
+			}
 		})
 
 		canvasInstance.subscriber('mouse_move', (e) => {
@@ -725,16 +726,10 @@ export function useCanvasController() {
 	// Función para cargar el workflow
 	const loadWorkflow = async () => {
 		try {
-			console.log('iniciando carga del workflow')
 			debugStore.addLog('info', 'Iniciando carga del workflow', 'Canvas')
 			await canvasStore.loadWorkflow({ flow: router.currentRoute.value.params.id as string })
-			console.log('cargando eventos')
-			socketService.getWorkflowsEvents('worker:animations', (event: any) => {
-				console.log('recibió un evento', event)
-			})
 
 			isLoading.value = false
-
 			debugStore.addLog('info', 'Workflow cargado exitosamente', 'Canvas')
 
 			// Watch para actualizar las notas cuando se abra el administrador
@@ -759,15 +754,6 @@ export function useCanvasController() {
 			debugStore.addLog('error', `Error cargando flujo: ${error}`, 'Canvas', { error })
 			isLoading.value = false
 			isError.value = true
-
-			// Simular petición de red fallida
-			debugStore.addNetworkRequest({
-				method: 'GET',
-				url: `/api/workflows/${router.currentRoute.value.params.id}`,
-				status: 404,
-				duration: 500,
-				size: 128
-			})
 		}
 	}
 
