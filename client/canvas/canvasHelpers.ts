@@ -99,7 +99,7 @@ export function render_node({
 	theme: string
 	node: INodeCanvas
 	selected: boolean
-	infoTrace: { inputs: number; outputs: number }
+	infoTrace: Map<string, number>
 }) {
 	const background = theme === 'dark' ? '#333' : '#ECF0F1'
 	const invert_background = theme === 'dark' ? '#ECF0F1' : '#ECF0F1'
@@ -122,7 +122,7 @@ export function render_node({
 	ctx.beginPath()
 	ctx.strokeStyle = selected ? invert_background : node.info.color
 	ctx.lineWidth = 3
-	ctx.roundRect(node.design.x + 4, node.design.y + 4, node.design.width! - 8, node.design.height! - 8, 12)
+	ctx.roundRect(node.design.x + 4, node.design.y + 4, (node.design.width || 0) - 8, (node.design.height || 0) - 8, 12)
 	ctx.stroke()
 	ctx.lineWidth = 0
 	ctx.closePath()
@@ -130,28 +130,16 @@ export function render_node({
 	// icon
 	ctx.fillStyle = selected ? invert_background : node.info.color
 	ctx.font = '40px material-icons, sans-serif'
-	ctx.fillText(node.info.icon, node.design.x + node.design.width! / 2 - 20, node.design.y + 50)
+	ctx.fillText(node.info.icon, node.design.x + (node.design.width || 0) / 2 - 20, node.design.y + 50)
 	// name
 	ctx.font = '10px "Comfortaa Variable"'
 	ctx.textAlign = 'center'
-	ctx.fillText(node.info.name, node.design.x + node.design.width! / 2, node.design.y + 65, 700)
-	// info
-	if (infoTrace.inputs > 0 || infoTrace.outputs > 0) {
-		ctx.textAlign = 'right'
-		ctx.font = '9px "Comfortaa Variable"'
-		ctx.fillText(`${infoTrace.inputs}/${infoTrace.outputs}`, node.design.x + node.design.width! - 10, node.design.y + 18)
-	}
-
-	// if (node.info) {
-	// 	ctx.textAlign = 'right'
-	// 	ctx.font = '9px "Comfortaa Variable"'
-	// 	ctx.fillText(`${node.info.inputs.length}/${node.info.outputs.length}`, node.design.x + node.design.width - 10, node.design.y + 18)
-	// }
+	ctx.fillText(node.info.name, node.design.x + (node.design.width || 0) / 2, node.design.y + 65, 700)
 
 	ctx.textAlign = 'left'
 	ctx.closePath()
 
-	renderConnectors({ selected, node, ctx, theme })
+	renderConnectors({ selected, node, ctx, infoTrace, theme })
 
 	// render_inputs({ selected, node, ctx, theme })
 	// render_outputs({ selected, node, ctx, theme })
@@ -160,11 +148,13 @@ export function render_node({
 function renderConnectors({
 	node,
 	ctx,
+	infoTrace,
 	theme
 }: {
 	selected: boolean
 	node: INodeCanvas
 	ctx: CanvasRenderingContext2D
+	infoTrace: Map<string, number>
 	theme: string
 }) {
 	if (!node.info.connectors) return
@@ -180,40 +170,49 @@ function renderConnectors({
 				x = node.design.x - 5
 				y = node.design.y + (25 + Number.parseInt(key) * 20)
 				textAlign = 'right'
+				separator = 4
 			}
 			if (type === 'outputs') {
-				x = node.design.x + node.design.width! - 5
+				x = node.design.x + (node.design.width || 0) - 5
 				y = node.design.y + (25 + Number.parseInt(key) * 20)
 				textAlign = 'left'
 				separator = 4
 			}
 			if (type === 'callbacks') {
-				// Centramos los conectores de callbacks en la parte inferior del nodo
 				const total = Object.keys(connector).length
 				const spacing = 20 // separación entre conectores
 				const totalWidth = (total - 1) * spacing
-				x = node.design.x + (node.design.width! - 5) / 2 - totalWidth / 2 + Number.parseInt(key) * spacing
-				y = node.design.y + node.design.height! - 5
+				x = node.design.x + ((node.design.width || 0) - 5) / 2 - totalWidth / 2 + Number.parseInt(key) * spacing
+				y = node.design.y + (node.design.height || 0) - 5
 				separator = 4
 				textAlign = 'center'
 			}
-
-			// console.log({ input })
 			ctx.beginPath()
 
 			ctx.roundRect(x, y, 8, 10, 2)
 			if (connector.length > 0) {
-				const name = input?.name || input
+				const name = (input as any).name || input
 				ctx.textAlign = textAlign
 				ctx.fillStyle = theme === 'dark' ? '#fff' : '#333'
 				ctx.font = '9px "Comfortaa Variable"'
 				ctx.fillText(String(name), x + separator, y)
 			}
 			ctx.fillStyle = node.info.color
-			ctx.textAlign = 'left'
 			ctx.fill()
 			ctx.closePath()
+			ctx.textAlign = 'left'
 		}
+	}
+	let separacion = (infoTrace.size - 1) * 10
+	for (const [key, value] of infoTrace) {
+		ctx.beginPath()
+		ctx.fillStyle = node.info.color
+		ctx.font = '10px "Consolas"'
+		// Estandariza la clave para que tenga exactamente 10 palabras (rellena con vacío si faltan)
+		const standardizedKey = key.substring(0, 6).padEnd(6, ' ')
+		ctx.fillText(`${standardizedKey}: ${value}`, node.design.x + 10, node.design.y - separacion)
+		ctx.closePath()
+		separacion -= 10
 	}
 }
 
@@ -295,13 +294,14 @@ export function addAnimation({
 	connections
 }: {
 	node: NewNode
-	connections: { type: 'input' | 'output' | 'callback'; connectionName: string }[]
+	connections: { type: 'input' | 'output' | 'callback'; connectionName: string }
 }) {
 	// console.log(connectionNodes)
 	if (!node || !node.connections) return
 	if (!connections) return
-	const conn = connections[0]
-	for (const connection of node.connections.filter((f) => f.idNodeOrigin === node.id && f.connectorOriginName === conn.connectionName)) {
+	for (const connection of node.connections.filter(
+		(f) => f.idNodeOrigin === node.id && f.connectorOriginName === connections.connectionName
+	)) {
 		if (!connection.pointers) return
 		animationList.push({
 			id: uuidv4(),

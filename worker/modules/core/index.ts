@@ -4,7 +4,7 @@ import type { IClassNode } from '@shared/interfaces/class.interface.js'
 import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import { getMemoryUsage, getTime } from '../../shared/functions/utils.js'
 import { initProperties } from '../../worker_properties.js'
-import { CoreTrace } from './trace.module.js'
+import { CoreStats } from './stats.module.js'
 import { CoreDependencies } from './dependency.module.js'
 import { v4 as uid } from 'uuid'
 import { CoreCredential } from './credential.module.js'
@@ -23,7 +23,7 @@ export class CoreModule {
 	el: Worker
 	debug: CoreDebug
 	coreLogger: CoreLogger
-	trace: CoreTrace = new CoreTrace()
+	stats: CoreStats = new CoreStats()
 	globalStore: CoreGlobalStore = new CoreGlobalStore()
 
 	constructor(el: Worker) {
@@ -253,8 +253,7 @@ export class CoreModule {
 
 		// Observer
 		if (this.el.isDev) {
-			if (this.trace.dataNode.has(node.id)) this.trace.dataNode.set(node.id, classExecute)
-			this.trace.traceExecute({ id: node.id, type: 'inputs' })
+			this.stats.animations({ nodeId: node.id, connectName: inputData.inputName, executeTime: 0 })
 		}
 
 		// remplazando propiedades que se hayan definido en el nodo
@@ -340,10 +339,7 @@ export class CoreModule {
 				const executeTime: number = startTime ? Number.parseFloat((getTime() - startTime).toFixed(3)) : 0
 
 				// Observer
-				if (this.el.isDev) {
-					if (this.trace.dataNode.has(node.id)) this.trace.dataNode.set(node.id, classExecute)
-					this.trace.traceExecute({ id: node.id, type: 'outputs', connectName: connectorName, executeTime })
-				}
+				if (this.el.isDev) this.stats.animations({ nodeId: node.id, connectName: connectorName, executeTime })
 
 				// Registrando logs
 				if (logExec && logExec.type !== 'none') {

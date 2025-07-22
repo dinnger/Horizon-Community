@@ -38,9 +38,9 @@ export class CommunicationModule {
 	intiClientInfo() {
 		setInterval(() => {
 			// Enviar las animaciones como un lote
-			const animations = this.el.coreModule.trace.get()
+			const animations = this.el.coreModule.stats.get('animations')
 			if (animations) this.server.subscribeFromServer({ event: 'workflow:animations', params: [this.el.flow], eventData: animations })
-		}, 2000)
+		}, 500)
 	}
 
 	getEnvironment(uidFlow: string) {

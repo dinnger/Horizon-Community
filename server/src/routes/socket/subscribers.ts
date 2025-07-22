@@ -38,6 +38,8 @@ export const setupSubscribersRoutes = {
 				}
 			}
 
+			const leaves = []
+
 			for (const list of rooms) {
 				let shouldLeave = false
 
@@ -53,11 +55,12 @@ export const setupSubscribersRoutes = {
 				}
 
 				if (shouldLeave) {
+					leaves.push(list)
 					socket.leave(list)
 				}
 			}
 
-			callback({ success: true, message: 'Usuario eliminado de las salas correspondientes' })
+			callback({ success: true, list: leaves })
 		} catch (error) {
 			console.log('Error al eliminar usuario de la sala:', error)
 			callback({ success: false, message: 'Error al eliminar usuario de la sala' })

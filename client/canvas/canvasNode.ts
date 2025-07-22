@@ -20,10 +20,7 @@ export class NewNode {
 	isMove = false
 	private el: Nodes
 	public isLockedProperty = false
-	private infoTrace = {
-		inputs: 0,
-		outputs: 0
-	}
+	private infoTrace = new Map<string, number>()
 
 	constructor(value: INodeCanvas, el: Nodes) {
 		this.el = el
@@ -259,22 +256,18 @@ export class NewNode {
 	}
 
 	addAnimation(data: {
-		connections: { type: 'input' | 'output' | 'callback'; connectionName: string; length: number }[]
+		type: 'input' | 'output' | 'callback'
+		connectionName: string
+		length: number
 	}) {
 		if (this.el.ctx) {
 			console.log('addAnimation', data)
 			addAnimation({
 				node: this,
-				connections: data.connections
+				connections: data
 			})
 		}
-		for (const connection of data.connections) {
-			if (connection.type === 'input') {
-				this.infoTrace.inputs = connection.length
-			} else if (connection.type === 'output') {
-				this.infoTrace.outputs = connection.length
-			}
-		}
+		this.infoTrace.set(data.connectionName, data.length)
 	}
 
 	render({ ctx }: { ctx: CanvasRenderingContext2D }) {

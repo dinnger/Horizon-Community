@@ -20,6 +20,13 @@ type WorkflowData = {
 	timestamp: number
 }
 
+interface IStatsAnimations {
+	nodeId: string
+	connectName: string
+	executeTime: number
+	length?: number
+}
+
 const newStore = () => {
 	const workflowsStore = useWorkflowsStore()
 	const deploymentStore = useDeploymentStore()
@@ -227,11 +234,8 @@ const newStore = () => {
 	// Función para manejar la ejecución del workflow
 	const handleExecuteWorkflow = async (version?: string) => {
 		if (isExecuting.value) return
-
 		isExecuting.value = true
-
 		try {
-			const startTime = Date.now()
 			const result = await execute(version)
 			console.log('result', result)
 		} catch (error) {
@@ -416,25 +420,16 @@ const newStore = () => {
 		socketService.listener({
 			event: 'workflow:animations',
 			params: [workflowStore.context?.info.uid || ''],
-			callback: (event: any) => {
+			callback: (event: IStatsAnimations[]) => {
 				console.log('recibió un evento', event)
-				const connections: { type: 'input' | 'output' | 'callback'; connectionName: string; length: number }[] = []
-				for (const nodeId in event) {
-					const node = canvasInstance?.nodes.getNode({ id: nodeId })
+				for (const list of event) {
+					const node = canvasInstance?.nodes.getNode({ id: list.nodeId })
 					if (!node) continue
-					if (event[nodeId].inputs?.data)
-						connections.push({
-							type: 'input',
-							connectionName: Object.keys(event[nodeId].inputs.data)[0],
-							length: event[nodeId].inputs.length
-						})
-					if (event[nodeId].outputs?.data)
-						connections.push({
-							type: 'output',
-							connectionName: Object.keys(event[nodeId].outputs.data)[0],
-							length: event[nodeId].outputs.length
-						})
-					node.addAnimation({ connections })
+					node.addAnimation({
+						connectionName: list.connectName,
+						length: list.length || 0,
+						type: 'input'
+					})
 				}
 			}
 		})

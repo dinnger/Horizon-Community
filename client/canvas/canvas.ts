@@ -715,10 +715,13 @@ export class Canvas {
 	private eventResize() {
 		const parent = this.canvas.parentElement
 		if (parent) {
+			if (parent.clientHeight === 0 && parent.clientWidth === 0) return
 			this.canvasWidth = parent.clientWidth
 			this.canvasHeight = parent.clientHeight
 			this.canvas.width = this.canvasWidth
 			this.canvas.height = this.canvasHeight
+			console.log('canvasWidth', this.canvasWidth)
+			console.log('canvasHeight', this.canvasHeight)
 		}
 	}
 

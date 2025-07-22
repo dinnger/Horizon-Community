@@ -79,8 +79,21 @@ class SocketService {
 	closeListener({ event, params, callback }: { event: string | RegExp; params?: string[]; callback?: any }) {
 		if (!this.socket) return console.error('Socket not connected')
 		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
-		console.log('room', room)
-		this.socket.emit('subscribe:close', { room })
+		this.socket.emit(
+			'subscribe:close',
+			{ room },
+			(response: {
+				success: boolean
+				list?: string[]
+			}) => {
+				if (this.socket && response.success && Array.isArray(response.list)) {
+					for (const item of response.list) {
+						console.log(`Removing listener for ${item}`)
+						this.socket.off(item)
+					}
+				}
+			}
+		)
 	}
 
 	// Auth methods
