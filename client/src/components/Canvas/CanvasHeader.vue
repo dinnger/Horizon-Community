@@ -31,12 +31,12 @@
         Debug
       </button>
 
-      <button class="btn btn-success btn-sm" @click="$emit('save')" :disabled="!canvasStore.changes">
+      <button class="btn btn-success btn-sm" @click="handleSave" :disabled="!canvasStore.changes">
         <span class="mdi mdi-content-save"></span>
         Guardar
       </button>
 
-      <button class="btn btn-primary btn-sm" @click="$emit('publish')">
+      <button class="btn btn-primary btn-sm" @click="handlePublish">
         <span class="mdi mdi-upload"></span>
         Publicar
       </button>
@@ -47,6 +47,10 @@
 <script setup lang="ts">
 import { useDebugConsoleStore, useCanvas } from '@/stores'
 import VersionControlPanel from '@/components/VersionControlPanel.vue'
+import { toast } from 'vue-sonner';
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
 
 interface Props {
   projectName: string
@@ -56,10 +60,25 @@ defineProps<Props>()
 
 defineEmits<{
   showNotesManager: []
-  save: []
-  publish: []
 }>()
 
 const debugStore = useDebugConsoleStore()
 const canvasStore = useCanvas()
+
+const handleSave = async () => {
+  const startTime = Date.now()
+  await canvasStore.save()
+  toast.success('Workflow guardado exitosamente')
+}
+
+const handlePublish = async () => {
+  try {
+    // Primero guardamos el workflow
+    await canvasStore.publish(router.currentRoute.value.params.id as string)
+    toast.success('Workflow agregado a la cola de despliegue exitosamente')
+  } catch (error) {
+    debugStore.addLog('error', `Error al preparar la publicación del workflow: ${error}`, 'Canvas', { error })
+    toast.error('Error al preparar la publicación del workflow')
+  }
+}
 </script>

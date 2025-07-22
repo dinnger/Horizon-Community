@@ -7,8 +7,8 @@
         <span class="mdi mdi-chevron-down ml-1"></span>
       </label>
       <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-        <li><a @click="$emit('executeWorkflow')">Ejecutar Última Versión</a></li>
-        <li><a @click="$emit('executeWithVersionSelection')">Ejecutar Versión Específica...</a></li>
+        <li><a @click="() => canvasStore.handleExecuteWorkflow()">Ejecutar Última Versión</a></li>
+        <li><a @click="canvasStore.handleExecuteWithVersionSelection">Ejecutar Versión Específica...</a></li>
       </ul>
     </div>
     <h2 class="text-[10px]">Version: {{ version }}</h2>
@@ -16,6 +16,9 @@
 </template>
 
 <script setup lang="ts">
+import { useCanvas } from '@/stores';
+const canvasStore = useCanvas()
+
 interface Props {
   isExecuting: boolean
   version: string
@@ -24,7 +27,7 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  executeWorkflow: []
   executeWithVersionSelection: []
 }>()
+
 </script>

@@ -297,12 +297,9 @@ export const setupWorkflowRoutes = {
 					version: workflowVersion
 				})
 
-				console.log(`Worker ${worker.id} creado para ejecutar workflow ${workflowId}`)
-
 				// Set up worker event listeners for this execution
 				const handleWorkerReady = (workerInfo: any) => {
 					if (workerInfo.id === worker.id) {
-						console.log(`Worker ${worker.id} listo para ejecutar workflow ${workflowId}`)
 						socket.emit('workflows:worker-ready', {
 							workflowId,
 							executionId: execution.id,

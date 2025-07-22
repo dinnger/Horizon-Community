@@ -5,12 +5,12 @@
  * between the main server and worker processes.
  */
 
+import type { Server } from 'socket.io'
 import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
-import path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import { serverRouter } from '../routes/socket/index.js'
-import { Server } from 'socket.io'
+import path from 'node:path'
 
 export interface WorkerInfo {
 	id: string
@@ -116,8 +116,6 @@ class WorkerManager extends EventEmitter {
 
 			this.usedPorts.add(port)
 			this.emit('worker:created', workerInfo)
-
-			console.log(`Worker ${workerId} creado para workflow ${options.workflowId} en puerto ${port}`)
 
 			return workerInfo
 		} catch (error) {
@@ -324,8 +322,6 @@ class WorkerManager extends EventEmitter {
 		const workerPath = path.join(process.cwd(), 'dist', 'worker', 'index.js')
 
 		try {
-			console.log(`Iniciando worker ${workerId} con archivo: ${workerPath}`)
-
 			const worker = new Worker(workerPath, {
 				workerData: {
 					workerId,
