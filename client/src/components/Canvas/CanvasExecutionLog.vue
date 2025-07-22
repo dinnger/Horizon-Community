@@ -1,6 +1,7 @@
 <template>
   <div v-if="isVisible" class="absolute bottom-4 left-4 right-4 z-10">
-    <div class="bg-gray-900 text-white rounded-lg shadow-2xl border border-gray-700 h-64 flex flex-col">
+    <div
+      class="bg-base-100/70 backdrop-blur-md text-white rounded-lg shadow-2xl border border-gray-700 h-64 flex flex-col">
       <!-- Header del Panel de Logs -->
       <div class="flex items-center justify-between p-3 border-b border-gray-700">
         <div class="flex items-center gap-2">

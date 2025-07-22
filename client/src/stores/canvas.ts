@@ -7,10 +7,9 @@ import { computed, ref, watch } from 'vue'
 import { useWorkflowsStore } from '@/stores/workflows'
 import { useDeploymentStore } from './deployment'
 import { useSettingsStore } from './settings'
-import socketService from '@/services/socket'
 import { useNodesLibraryStore } from './nodesLibrary'
 import { useCanvasSubscribers } from './canvasSubscribers'
-import type { Point } from '@canvas/canvasConnector'
+import socketService from '@/services/socket'
 
 type WorkflowData = {
 	nodes: { [key: string]: INodeCanvas }
@@ -21,7 +20,7 @@ type WorkflowData = {
 	timestamp: number
 }
 
-export const useCanvas = defineStore('canvas', () => {
+const newStore = () => {
 	const workflowsStore = useWorkflowsStore()
 	const deploymentStore = useDeploymentStore()
 	const settingsStore = useSettingsStore()
@@ -109,11 +108,11 @@ export const useCanvas = defineStore('canvas', () => {
 		return canvasInstance
 	})
 
-	const load = async (data: { flow: string }) => {
+	const load = async (data: { workflowId: string; version?: string }) => {
 		try {
-			workflowId.value = data.flow
+			workflowId.value = data.workflowId
 			const dataFlow: { workflowData: WorkflowData; version: string } = await workflowsStore.getWorkflowById(workflowId.value, true)
-			console.log('canvas store ', { dataFlow })
+			console.log('canvasStore ', { dataFlow })
 			if (dataFlow?.workflowData) {
 				version.value.value = dataFlow.version
 				version.value.status = 'draft'
@@ -380,9 +379,9 @@ export const useCanvas = defineStore('canvas', () => {
 	}
 
 	// Función para cargar el workflow
-	const loadWorkflow = async (workflowId: string) => {
+	const loadWorkflow = async ({ workflowId, version }: { workflowId: string; version?: string }) => {
 		try {
-			await load({ flow: workflowId })
+			await load({ workflowId })
 
 			isLoading.value = false
 
@@ -410,6 +409,42 @@ export const useCanvas = defineStore('canvas', () => {
 	// Función para obtener el estado de bloqueo del canvas
 	const isCanvasLocked = () => {
 		return canvasInstance ? canvasInstance.isCanvasLocked() : false
+	}
+
+	// Función para inicializar las suscripciones
+	const initializeSubscriptions = () => {
+		socketService.listener({
+			event: 'workflow:animations',
+			params: [workflowStore.context?.info.uid || ''],
+			callback: (event: any) => {
+				console.log('recibió un evento', event)
+				const connections: { type: 'input' | 'output' | 'callback'; connectionName: string; length: number }[] = []
+				for (const nodeId in event) {
+					const node = canvasInstance?.nodes.getNode({ id: nodeId })
+					if (!node) continue
+					if (event[nodeId].inputs?.data)
+						connections.push({
+							type: 'input',
+							connectionName: Object.keys(event[nodeId].inputs.data)[0],
+							length: event[nodeId].inputs.length
+						})
+					if (event[nodeId].outputs?.data)
+						connections.push({
+							type: 'output',
+							connectionName: Object.keys(event[nodeId].outputs.data)[0],
+							length: event[nodeId].outputs.length
+						})
+					node.addAnimation({ connections })
+				}
+			}
+		})
+	}
+
+	const closeSubscriptions = () => {
+		const uid = workflowStore.context?.info.uid || ''
+		socketService.closeListener({
+			event: `/workflow:.*:${uid}/`
+		})
 	}
 
 	return {
@@ -474,6 +509,10 @@ export const useCanvas = defineStore('canvas', () => {
 		executeSelectedVersion,
 		initializeCanvas,
 		setCanvasLocked,
-		isCanvasLocked
+		isCanvasLocked,
+		initializeSubscriptions,
+		closeSubscriptions
 	}
-})
+}
+
+export const useCanvas = (uniqueStoreName: 'canvas' | 'execution' = 'canvas') => defineStore(uniqueStoreName, newStore)()

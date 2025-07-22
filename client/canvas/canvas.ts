@@ -323,6 +323,8 @@ export class Canvas {
 			this.newConnectionNode = this.nodes.selected({
 				relative: this.canvasRelativePos
 			})
+			if (this.isLocked) this.newConnectionNode = null
+
 			this.selectedNode = this.nodes.getSelected()
 
 			// Si hay nodos seleccionados, darles prioridad y salir
@@ -668,6 +670,8 @@ export class Canvas {
 	private eventMouseEnd() {
 		this.canvasSelect.show = false
 
+		if (this.isLocked) return
+
 		if (this.newConnectionNode && !getTempConnection()) {
 			const targetInput = this.nodes.getInputAtPosition({
 				x: this.canvasRelativePos.x,
@@ -867,20 +871,6 @@ export class Canvas {
 			node.properties = properties
 			this.emit('node_update_properties', node)
 		}
-	}
-
-	/**
-	 * Procesa datos de trazado de ejecución de nodos.
-	 * @param data - Datos de entrada y salida de cada nodo
-	 */
-	actionTrace(data: {
-		[id: string]: {
-			input: { data: { [key: string]: number }; length: number }
-			output: { data: { [key: string]: number }; length: number }
-			callback: { data: { [key: string]: number }; length: number }
-		}
-	}) {
-		// this.nodes.trace(data);
 	}
 
 	/**

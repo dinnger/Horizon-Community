@@ -21,11 +21,43 @@ export const setupSubscribersRoutes = {
 		try {
 			const { room, strict = false } = data
 			const rooms = socket.rooms
+
+			// Check if room is a regex pattern
+			const isRegex = room.startsWith('/') && room.endsWith('/')
+			let roomPattern: RegExp | null = null
+
+			if (isRegex) {
+				try {
+					// Extract regex pattern without the surrounding slashes
+					const regexString = room.slice(1, -1)
+					roomPattern = new RegExp(regexString)
+				} catch (regexError) {
+					console.error('Invalid regex pattern:', room, regexError)
+					callback({ success: false, message: 'Patrón regex inválido' })
+					return
+				}
+			}
+
 			for (const list of rooms) {
-				if ((!strict && list.startsWith(room)) || list === room) {
+				let shouldLeave = false
+
+				if (roomPattern) {
+					// Use regex matching
+					shouldLeave = roomPattern.test(list)
+				} else if (strict) {
+					// Exact match
+					shouldLeave = list === room
+				} else {
+					// Starts with match
+					shouldLeave = list.startsWith(room)
+				}
+
+				if (shouldLeave) {
 					socket.leave(list)
 				}
 			}
+
+			callback({ success: true, message: 'Usuario eliminado de las salas correspondientes' })
 		} catch (error) {
 			console.log('Error al eliminar usuario de la sala:', error)
 			callback({ success: false, message: 'Error al eliminar usuario de la sala' })

@@ -295,13 +295,13 @@ export function addAnimation({
 	connections
 }: {
 	node: NewNode
-	connections: { type: 'input' | 'output' | 'callback'; name: string }[]
+	connections: { type: 'input' | 'output' | 'callback'; connectionName: string }[]
 }) {
 	// console.log(connectionNodes)
 	if (!node || !node.connections) return
 	if (!connections) return
 	const conn = connections[0]
-	for (const connection of node.connections.filter((f) => f.idNodeOrigin === node.id && f.connectorOriginName === conn.name)) {
+	for (const connection of node.connections.filter((f) => f.idNodeOrigin === node.id && f.connectorOriginName === conn.connectionName)) {
 		if (!connection.pointers) return
 		animationList.push({
 			id: uuidv4(),

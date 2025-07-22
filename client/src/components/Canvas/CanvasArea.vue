@@ -14,12 +14,15 @@ import { useCanvas } from '@/stores';
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 
-const router = useRouter()
-const canvasStore = useCanvas()
 
 const props = defineProps<{
+  name?: 'canvas' | 'execution'
+  version?: string
   isLocked?: boolean
 }>()
+
+const router = useRouter()
+const canvasStore = useCanvas(props.name || 'canvas')
 
 const emit = defineEmits<{
   canvasReady: [canvas: HTMLCanvasElement]
@@ -30,7 +33,7 @@ const canvasElement = ref<HTMLCanvasElement>()
 console.log(router.currentRoute.value.params.id)
 watch(() => canvasElement.value, async (canvas) => {
   if (canvas) {
-    await canvasStore.loadWorkflow(router.currentRoute.value.params.id as string)
+    await canvasStore.loadWorkflow({ workflowId: router.currentRoute.value.params.id as string, version: props.version })
     canvasStore.initializeCanvas({ canvas, isLocked: props.isLocked })
     emit('canvasReady', canvas)
   }

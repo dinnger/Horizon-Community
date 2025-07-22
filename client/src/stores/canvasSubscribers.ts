@@ -39,15 +39,15 @@ export const useCanvasSubscribers = defineStore('canvasSubscribers', () => {
 			// Compatibilidad con el formato anterior
 			const nodes = Array.isArray(e) ? e : e.nodes
 			const isLocked = Array.isArray(e) ? false : e.isLocked
-			
+
 			if (nodes.length === 0) return
 			if (nodes.length > 1) {
 				alert('No se puede editar más de un nodo a la vez')
 				return
 			}
-			canvasEvents.emit('node:properties:open', { 
-				node: nodes[0], 
-				isReadOnly: isLocked 
+			canvasEvents.emit('node:properties:open', {
+				node: nodes[0],
+				isReadOnly: isLocked
 			})
 		})
 
@@ -157,17 +157,6 @@ export const useCanvasSubscribers = defineStore('canvasSubscribers', () => {
 				callbacks.onChanges?.()
 			}
 		)
-
-		// =============================================================================
-		// EVENTOS DE WORKFLOW (socket listeners)
-		// =============================================================================
-		socketService.listener({
-			event: 'workflow:animations',
-			params: [workflowStore.context?.info.uid || ''],
-			callback: (event: any) => {
-				console.log('recibió un evento', event)
-			}
-		})
 	}
 
 	return {

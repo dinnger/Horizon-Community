@@ -258,20 +258,23 @@ export class NewNode {
 		this.el.duplicateMultiple()
 	}
 
-	trace(data: {
-		input: { data: { [key: string]: number }; length: number }
-		output: { data: { [key: string]: number }; length: number }
-		callback: { data: { [key: string]: number }; length: number }
-		connections: { type: 'input' | 'output' | 'callback'; name: string }[]
+	addAnimation(data: {
+		connections: { type: 'input' | 'output' | 'callback'; connectionName: string; length: number }[]
 	}) {
-		if (this.infoTrace.outputs !== data.output.length && this.el.ctx) {
+		if (this.el.ctx) {
+			console.log('addAnimation', data)
 			addAnimation({
 				node: this,
 				connections: data.connections
 			})
 		}
-		this.infoTrace.inputs = data.input.length
-		this.infoTrace.outputs = data.output.length
+		for (const connection of data.connections) {
+			if (connection.type === 'input') {
+				this.infoTrace.inputs = connection.length
+			} else if (connection.type === 'output') {
+				this.infoTrace.outputs = connection.length
+			}
+		}
 	}
 
 	render({ ctx }: { ctx: CanvasRenderingContext2D }) {

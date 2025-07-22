@@ -76,9 +76,10 @@ class SocketService {
 		})
 	}
 
-	closeListener({ event, params, callback }: { event: ISubscriberType; params?: string[]; callback?: any }) {
+	closeListener({ event, params, callback }: { event: string | RegExp; params?: string[]; callback?: any }) {
 		if (!this.socket) return console.error('Socket not connected')
 		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
+		console.log('room', room)
 		this.socket.emit('subscribe:close', { room })
 	}
 

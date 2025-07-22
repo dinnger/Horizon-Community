@@ -44,36 +44,9 @@
           <span class="mdi mdi-upload"></span>
           Publicar
         </button>
-      </div>
-    </div>
-
-    <!-- Pestañas -->
-    <div class="tabs tabs-bordered bg-base-100 px-4">
-      <button class="tab tab-lg" :class="{ 'tab-active': activeTab === 'design' }"
-        @click="$emit('update:activeTab', 'design')">
-        <span class="mdi mdi-drawing mr-2"></span>
-        Diseño
-      </button>
-      <button class="tab tab-lg" :class="{ 'tab-active': activeTab === 'execution' }"
-        @click="$emit('update:activeTab', 'execution')">
-        <span class="mdi mdi-play mr-2"></span>
-        Ejecución
-        <span v-if="isExecuting" class="loading loading-spinner loading-xs ml-2"></span>
-        <div v-if="isExecuting" class="badge badge-warning badge-xs ml-2">Activo</div>
-      </button>
-    </div>
-
-    <!-- Panel de Ejecución (solo visible en pestaña de ejecución) -->
-    <div v-if="activeTab === 'execution'" class="bg-base-100 p-4 border-b border-base-300">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <h3 class="text-lg font-semibold">Panel de Ejecución</h3>
-          <div class="badge badge-outline">Versión: {{ version }}</div>
-        </div>
-
         <div class="flex items-center space-x-2">
           <div class="dropdown dropdown-end">
-            <label tabindex="0" class="btn btn-sm btn-primary" :class="{ 'loading': isExecuting }">
+            <label tabindex="0" class="btn btn-sm btn-success" :class="{ 'loading': isExecuting }">
               <span v-if="!isExecuting" class="mdi mdi-play"></span>
               {{ isExecuting ? 'Ejecutando...' : 'Ejecutar' }}
               <span v-if="!isExecuting" class="mdi mdi-chevron-down ml-1"></span>
@@ -86,6 +59,36 @@
         </div>
       </div>
     </div>
+
+    <!-- Pestañas -->
+    <div class="bg-base-100/70 p-2 absolute z-10 m-2  backdrop-blur-md rounded-lg join">
+      <button class="btn btn-sm join-item"
+        :class="{ 'btn-primary': activeTab === 'design', 'btn-soft': activeTab !== 'design' }"
+        @click="$emit('update:activeTab', 'design')">
+        <span class="mdi mdi-drawing mr-2"></span>
+        Diseño
+      </button>
+      <button class="btn btn-sm join-item"
+        :class="{ 'btn-primary': activeTab === 'execution', 'btn-soft': activeTab !== 'execution' }"
+        @click="$emit('update:activeTab', 'execution')">
+        <span class="mdi mdi-play mr-2"></span>
+        Ejecución
+        <span v-if="isExecuting" class="loading loading-spinner loading-xs ml-2"></span>
+        <div v-if="isExecuting" class="badge badge-warning badge-xs ml-2">Activo</div>
+      </button>
+    </div>
+
+    <!-- Panel de Ejecución (solo visible en pestaña de ejecución) -->
+    <!-- <div v-if="activeTab === 'execution'" class="bg-base-100 p-4 border-b border-base-300">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <h3 class="text-lg font-semibold">Panel de Ejecución</h3>
+          <div class="badge badge-outline">Versión: {{ version }}</div>
+        </div>
+
+        
+      </div>
+    </div> -->
   </div>
 </template>
 

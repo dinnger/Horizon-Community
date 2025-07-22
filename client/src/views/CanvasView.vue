@@ -13,14 +13,7 @@
           <CanvasArea />
         </div>
         <div v-if="activeTab === 'execution'">
-          <CanvasArea :is-locked="true" />
-        </div>
-
-        <!-- Execution Area (Execution Tab) -->
-        <div v-show="activeTab === 'execution'" class="h-full overflow-auto">
-          <CanvasExecutionArea :is-executing="canvasStore.isExecuting" :version="canvasStore.version.value"
-            @execute-workflow="canvasStore.handleExecuteWorkflow"
-            @execute-with-version-selection="canvasStore.handleExecuteWithVersionSelection" />
+          <CanvasViewExecute />
         </div>
       </div>
 
@@ -59,15 +52,13 @@ import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
 import CanvasErrorState from '@/components/Canvas/CanvasErrorState.vue'
 import DebugPanel from '@/components/DebugPanel.vue'
 import { useRouter } from 'vue-router'
+import CanvasViewExecute from './CanvasViewExecute.vue'
 
 const canvasStore = useCanvas()
 const canvasEvents = useCanvasEvents()
-const router = useRouter()
 
 // Estado de las pestañas
 const activeTab = ref<'design' | 'execution'>('design')
-
-
 
 const showNotesManager = () => {
   canvasEvents.emit('note:manager:open', undefined)
