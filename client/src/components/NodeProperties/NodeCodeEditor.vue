@@ -18,6 +18,7 @@ interface Props {
   property: any
   propertyKey: string
   modelValue: any
+  isReadOnly?: boolean // Prop para controlar el modo de solo lectura
 }
 
 interface Emits {
@@ -85,7 +86,7 @@ const initializeMonacoEditor = async () => {
       fontSize: 14,
       lineNumbers: 'on',
       roundedSelection: false,
-      readOnly: props.property.disabled || false,
+      readOnly: props.property.disabled || props.isReadOnly || false,
       automaticLayout: true,
       wordWrap: 'on',
       folding: true,
@@ -103,7 +104,7 @@ const initializeMonacoEditor = async () => {
 
     // Escuchar cambios en el editor con debounce
     editor.onDidChangeModelContent(() => {
-      if (editor && !isUpdatingFromProp.value) {
+      if (editor && !isUpdatingFromProp.value && !props.isReadOnly) {
         const value = editor.getValue()
         localValue.value = value
 
@@ -137,17 +138,22 @@ const initializeMonacoEditor = async () => {
 const createFallbackEditor = () => {
   if (!editorContainer.value) return
 
+  const isReadOnlyMode = props.property.disabled || props.isReadOnly || false
+
   editorContainer.value.innerHTML = `
     <textarea 
       class="w-full h-full p-3 bg-gray-900 text-green-400 font-mono text-sm resize-none border-0 outline-none"
       placeholder="Ingresa tu código aquí..."
+      ${isReadOnlyMode ? 'readonly' : ''}
     >${localValue.value}</textarea>
   `
 
   const textarea = editorContainer.value.querySelector('textarea')
-  if (textarea) {
+  if (textarea && !isReadOnlyMode) {
     let inputTimeout: number | null = null
     textarea.addEventListener('input', (e) => {
+      if (props.isReadOnly) return // Evitar cambios en modo de solo lectura
+
       const value = (e.target as HTMLTextAreaElement).value
       localValue.value = value
 
@@ -236,9 +242,9 @@ watch(() => props.property.lang, (newLang) => {
 })
 
 // Observar cambios en el estado de solo lectura
-watch(() => props.property.disabled, (isDisabled) => {
+watch(() => [props.property.disabled, props.isReadOnly], ([isDisabled, isReadOnly]) => {
   if (isReady.value && editor) {
-    editor.updateOptions({ readOnly: isDisabled || false })
+    editor.updateOptions({ readOnly: isDisabled || isReadOnly || false })
   }
 })
 
