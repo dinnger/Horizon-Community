@@ -9,6 +9,7 @@ import { useDeploymentStore } from './deployment'
 import { useSettingsStore } from './settings'
 import socketService from '@/services/socket'
 import { useNodesLibraryStore } from './nodesLibrary'
+import { useCanvasSubscribers } from './canvasSubscribers'
 import type { Point } from '@canvas/canvasConnector'
 
 type WorkflowData = {
@@ -26,6 +27,7 @@ export const useCanvas = defineStore('canvas', () => {
 	const settingsStore = useSettingsStore()
 	const workflowStore = useWorkflowsStore()
 	const nodesStore = useNodesLibraryStore()
+	const canvasSubscribers = useCanvasSubscribers()
 
 	let canvasInstance: Canvas
 
@@ -141,95 +143,10 @@ export const useCanvas = defineStore('canvas', () => {
 					canvasInstance.actionAddNode({ node: { ...node, design: { x: 60, y: 60 } } })
 				})
 			}
-			canvasInstance.subscriber(
-				['node_added', 'node_removed', 'node_moved', 'node_update_properties', 'note_added', 'note_updated', 'note_removed', 'note_moved'],
-				(e) => {
-					changes.value = true
-				}
-			)
+			// Los subscribers ahora se manejan en el store dedicado
 		} catch (error) {
 			console.error('Error inicializando canvas:', error)
 		}
-	}
-
-	const handleNodeSelection = (selectedNode: INodeCanvas) => {
-		if (!canvasInstance || !nodeOrigin.value) return
-
-		// Usar la posición del mouse si está disponible, sino usar la posición por defecto
-		const positionX = currentMousePosition.value.x || nextNodePosition.value.x
-		const positionY = currentMousePosition.value.y || nextNodePosition.value.y
-
-		// Crear una copia del nodo con nueva posición
-		const nodeToAdd: INodeCanvas = {
-			...JSON.parse(JSON.stringify(selectedNode)),
-			design: {
-				x: positionX,
-				y: positionY
-			}
-		}
-
-		// Añadir el nodo
-		const connectorOriginName =
-			typeof nodeOrigin.value.connection === 'string' ? nodeOrigin.value.connection : nodeOrigin.value.connection.name || ''
-		const nodeId = canvasInstance.actionAddNode({
-			origin: {
-				idNode: nodeOrigin.value.node.id as string,
-				connectorOriginName
-			},
-			node: nodeToAdd
-		})
-	}
-
-	const closeNodePropertiesDialog = () => {
-		showNodePropertiesDialog.value = false
-		selectedNodeForEdit.value = null
-	}
-
-	const handleNodePropertiesSave = (updatedNode: INodeCanvas) => {
-		if (!canvasInstance || !updatedNode.id) return
-		canvasInstance.actionUpdateNodeProperties({ id: updatedNode.id, properties: updatedNode.properties })
-	}
-
-	const closeContextMenu = () => {
-		showContextMenu.value = false
-		selectedNodesForContext.value = []
-	}
-
-	const handleNodesDelete = (nodes: INodeCanvas[]) => {
-		if (!canvasInstance || nodes.length === 0) return
-
-		// Confirmar eliminación si hay múltiples nodos
-		const confirmMessage =
-			nodes.length === 1
-				? `¿Estás seguro de que quieres eliminar el nodo "${nodes[0].info.name}"?`
-				: `¿Estás seguro de que quieres eliminar ${nodes.length} nodos?`
-
-		if (confirm(confirmMessage)) {
-			const nodeIds = nodes.map((n) => n.id).filter((id): id is string => id !== undefined)
-			canvasInstance.actionDeleteNodes({ ids: nodeIds })
-			console.log(
-				'Nodos eliminados:',
-				nodes.map((n) => n.info.name)
-			)
-		}
-	}
-
-	const handleNodeDuplicate = (node: INodeCanvas) => {
-		if (!canvasInstance || !node?.id) return
-		canvasInstance.nodes.duplicateNode({ id: node.id })
-	}
-
-	const handleNodeRename = (node: INodeCanvas, newName: string) => {
-		if (!canvasInstance || !node.id) return
-
-		// Actualizar el nombre usando el método del canvas
-		canvasInstance.actionUpdateNodeName({ id: node.id, newName })
-		console.log(`Nombre cambiado de "${node.info.name}" a "${newName}"`)
-	}
-
-	const closeConnectionContextMenu = () => {
-		showConnectionContextMenu.value = false
-		selectedConnectionForContext.value = null
 	}
 
 	const save = async () => {
@@ -303,204 +220,9 @@ export const useCanvas = defineStore('canvas', () => {
 	// MÉTODOS DE GRUPOS
 	// =============================================================================
 
-	const handleConnectionDelete = (connectionId: string) => {
-		if (!canvasInstance) return
-
-		// Confirmar eliminación de la conexión
-		const confirmMessage = '¿Estás seguro de que quieres eliminar esta conexión?'
-
-		if (confirm(confirmMessage)) {
-			canvasInstance.actionDeleteConnectionById({ id: connectionId })
-			console.log('Conexión eliminada:', connectionId)
-		}
-	}
-
-	// Funciones para el menú contextual del canvas
-	const closeCanvasContextMenu = () => {
-		showCanvasContextMenu.value = false
-	}
-
-	// Funciones para el modal de propiedades de nota
-	const closeNotePropertiesDialog = () => {
-		showNotePropertiesDialog.value = false
-		selectedNoteForEdit.value = null
-	}
-
-	const handleAddNoteRequest = (data: { position: { x: number; y: number } }) => {
-		noteDialogPosition.value = data.position
-		selectedNoteForEdit.value = null
-		showNotePropertiesDialog.value = true
-		closeCanvasContextMenu()
-	}
-
-	const handleEditNoteRequest = (note: INoteCanvas) => {
-		selectedNoteForEdit.value = note
-		showNotePropertiesDialog.value = true
-		closeNoteContextMenu()
-	}
-
-	const handleNoteSave = (noteData: {
-		id?: string
-		content: string
-		color: string
-		size: { width: number; height: number }
-		position?: { x: number; y: number }
-	}) => {
-		if (!canvasInstance) return
-
-		if (noteData.id) {
-			// Actualizar nota existente
-			const success = canvasInstance.actionUpdateNote(noteData.id, {
-				content: noteData.content,
-				color: noteData.color,
-				size: noteData.size
-			})
-
-			if (success) {
-				console.log('Nota actualizada:', noteData.id)
-				updateNotesFromCanvas()
-			}
-		} else {
-			// Crear nueva nota
-			const noteId = canvasInstance.actionAddNote({
-				content: noteData.content,
-				color: noteData.color,
-				position: noteData.position || canvasContextCanvasPosition.value,
-				size: noteData.size
-			})
-
-			console.log('Nota creada con ID:', noteId)
-			updateNotesFromCanvas()
-		}
-
-		closeNotePropertiesDialog()
-	}
-
-	// Funciones para el menú contextual de notas
-	const closeNoteContextMenu = () => {
-		showNoteContextMenu.value = false
-		selectedNoteForContext.value = null
-	}
-
-	const handleNoteDelete = (noteId: string) => {
-		if (!canvasInstance) return
-
-		const success = canvasInstance.actionDeleteNote(noteId)
-		if (success) {
-			console.log('Nota eliminada:', noteId)
-			updateNotesFromCanvas()
-		}
-		closeNoteContextMenu()
-	}
-
-	// Funciones para el administrador de notas
-	const closeNotesManager = () => {
-		showNotesManager.value = false
-	}
-
-	const handleNotesManagerSelectNote = (note: INoteCanvas) => {
-		console.log('Nota seleccionada desde el administrador:', note)
-		closeNotesManager()
-	}
-
-	const handleNotesManagerEditNote = (note: INoteCanvas) => {
-		selectedNoteForContext.value = note
-		noteContextPosition.value = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-		showNoteContextMenu.value = true
-		closeNotesManager()
-	}
-
-	const handleNotesManagerDeleteNote = (noteId: string) => {
-		if (!canvasInstance) return
-
-		const success = canvasInstance.actionDeleteNote(noteId)
-		if (success) {
-			console.log('Nota eliminada desde el administrador:', noteId)
-			updateNotesFromCanvas()
-		}
-	}
-
 	const updateNotesFromCanvas = () => {
 		if (!canvasInstance) return
 		allNotes.value = canvasInstance.getNotes() as INoteCanvas[]
-	}
-
-	// Funciones para el manejo de grupos
-	const handleCreateGroupRequest = (nodeIds: string[]) => {
-		selectedNodeIdsForGroup.value = nodeIds
-		isEditingGroup.value = false
-		selectedGroupForEdit.value = null
-		showGroupPropertiesDialog.value = true
-		closeContextMenu()
-	}
-
-	const closeGroupContextMenu = () => {
-		showGroupContextMenu.value = false
-		selectedGroupForContext.value = null
-	}
-
-	const handleEditGroupRequest = (group: INodeGroupCanvas) => {
-		selectedGroupForEdit.value = group
-		selectedNodeIdsForGroup.value = []
-		isEditingGroup.value = true
-		showGroupPropertiesDialog.value = true
-		closeGroupContextMenu()
-	}
-
-	const handleUngroupRequest = (group: INodeGroupCanvas) => {
-		if (!canvasInstance) return
-
-		const success = canvasInstance.actionUngroup(group.id)
-		if (success) {
-			console.log('Grupo desagrupado:', group.id)
-		}
-		closeGroupContextMenu()
-	}
-
-	const handleDeleteGroupRequest = (group: INodeGroupCanvas) => {
-		if (!canvasInstance) return
-
-		if (confirm(`¿Estás seguro de que quieres eliminar el grupo "${group.label}"?`)) {
-			const success = canvasInstance.actionDeleteGroup(group.id)
-			if (success) {
-				console.log('Grupo eliminado:', group.id)
-			}
-		}
-		closeGroupContextMenu()
-	}
-
-	const closeGroupPropertiesDialog = () => {
-		showGroupPropertiesDialog.value = false
-		selectedGroupForEdit.value = null
-		selectedNodeIdsForGroup.value = []
-		isEditingGroup.value = false
-	}
-
-	const handleGroupPropertiesSave = (data: { label: string; color: string; nodeIds?: string[]; groupId?: string }) => {
-		if (!canvasInstance) return
-
-		if (isEditingGroup.value && data.groupId) {
-			// Editar grupo existente
-			const success = canvasInstance.actionUpdateGroup(data.groupId, {
-				label: data.label,
-				color: data.color
-			})
-			if (success) {
-				console.log('Grupo actualizado:', data.groupId, data)
-			}
-		} else if (data.nodeIds && data.nodeIds.length > 0) {
-			// Crear nuevo grupo
-			const groupId = canvasInstance.actionCreateGroup({
-				label: data.label,
-				color: data.color,
-				nodeIds: data.nodeIds
-			})
-			if (groupId) {
-				console.log('Nuevo grupo creado:', groupId, data)
-			}
-		}
-
-		closeGroupPropertiesDialog()
 	}
 
 	// Función para manejar la ejecución del workflow
@@ -636,93 +358,21 @@ export const useCanvas = defineStore('canvas', () => {
 
 		initCanvas({ canvasInstance })
 
-		socketService.listener({
-			event: 'workflow:animations',
-			params: [workflowStore.context?.info.uid || ''],
-			callback: (event: any) => {
-				console.log('recibió un evento', event)
+		// Configurar todos los subscribers usando el store dedicado
+		canvasSubscribers.setupCanvasSubscribers(canvasInstance, {
+			onNodeAdded: (e: INodeCanvasAdd) => {
+				nodeOrigin.value = e
+			},
+			onMouseMove: (e: { x: number; y: number }) => {
+				currentMousePosition.value = { x: e.x, y: e.y }
+			},
+			onZoomChange: (e: { zoom: number }) => {
+				canvasZoom.value = e.zoom
+			},
+			onChanges: () => {
+				changes.value = true
 			}
 		})
-
-		canvasInstance.subscriber('mouse_move', (e) => {
-			currentMousePosition.value = { x: e.x, y: e.y }
-		})
-		canvasInstance.subscriber('zoom', (e) => {
-			canvasZoom.value = e.zoom
-		})
-		canvasInstance.subscriber('node_added', (e: INodeCanvasAdd) => {
-			nodeOrigin.value = e
-			nodesStore.showNodePanel()
-		})
-		canvasInstance.subscriber('node_dbclick', (e: INodeCanvas[]) => {
-			if (e.length === 0) return
-			if (e.length > 1) {
-				alert('No se puede añadir más de un nodo a la vez')
-				return
-			}
-			selectedNodeForEdit.value = e[0]
-			showNodePropertiesDialog.value = true
-		})
-		canvasInstance.subscriber('node_context', (e: { canvasTranslate: Point; selected: INodeCanvas[] }) => {
-			selectedNodesForContext.value = e.selected
-			showContextMenu.value = true
-		})
-		canvasInstance.subscriber(
-			'node_connection_context',
-			(e: {
-				id: string
-				nodeOrigin: INodeCanvas
-				nodeDestiny: INodeCanvas
-				input: string
-				output: string
-			}) => {
-				console.log('Nodo conexión contextual:', e)
-
-				// Guardar la información de la conexión para el menú contextual
-				selectedConnectionForContext.value = e
-
-				// Mostrar el menú contextual de conexión centrado
-				showConnectionContextMenu.value = true
-			}
-		)
-
-		canvasInstance.subscriber(
-			'canvas_context',
-			(e: {
-				position: { x: number; y: number }
-				canvasPosition: { x: number; y: number }
-			}) => {
-				console.log('Menú contextual del canvas:', e)
-				canvasContextPosition.value = e.position
-				canvasContextCanvasPosition.value = e.canvasPosition
-				showCanvasContextMenu.value = true
-			}
-		)
-
-		canvasInstance.subscriber(
-			'note_context',
-			(e: {
-				note: INoteCanvas
-				position: { x: number; y: number }
-			}) => {
-				console.log('Menú contextual de nota:', e)
-				selectedNoteForContext.value = e.note
-				noteContextPosition.value = e.position
-				showNoteContextMenu.value = true
-			}
-		)
-
-		canvasInstance.subscriber(
-			'group_context',
-			(e: {
-				group: INodeGroupCanvas
-				position: { x: number; y: number }
-			}) => {
-				console.log('Menú contextual de grupo:', e)
-				selectedGroupForContext.value = e.group
-				showGroupContextMenu.value = true
-			}
-		)
 
 		// Inicializar las notas
 		updateNotesFromCanvas()
@@ -763,6 +413,7 @@ export const useCanvas = defineStore('canvas', () => {
 		getCanvasInstance,
 		changes,
 		version,
+		nodeOrigin,
 
 		showNodePropertiesDialog,
 		selectedNodeForEdit,
@@ -807,47 +458,17 @@ export const useCanvas = defineStore('canvas', () => {
 		autoDeploymentInfo,
 
 		loadWorkflow,
-		initCanvas,
 		save,
 		publish,
 		execute,
-		getVersions,
 		getHistory,
 		selectHistory,
 		clearHistory,
 
-		handleNodeSelection,
-		closeNodePropertiesDialog,
-		handleNodePropertiesSave,
-		closeContextMenu,
-		handleNodesDelete,
-		handleNodeDuplicate,
-		handleNodeRename,
-		closeConnectionContextMenu,
-		handleConnectionDelete,
-		closeCanvasContextMenu,
-		handleAddNoteRequest,
-		handleEditNoteRequest,
-		handleNoteSave,
-		closeNoteContextMenu,
-		handleNoteDelete,
-		closeNotesManager,
-		handleNotesManagerSelectNote,
-		handleNotesManagerEditNote,
-		handleNotesManagerDeleteNote,
-		handleCreateGroupRequest,
-		closeGroupContextMenu,
-		handleEditGroupRequest,
-		handleUngroupRequest,
-		handleDeleteGroupRequest,
-		closeGroupPropertiesDialog,
-		handleGroupPropertiesSave,
 		handleExecuteWorkflow,
 		handleExecuteWithVersionSelection,
 		closeVersionSelector,
 		executeSelectedVersion,
-		handlePublish: publish,
-		initializeCanvas,
-		closeNotePropertiesDialog
+		initializeCanvas
 	}
 })
