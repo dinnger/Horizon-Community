@@ -19,18 +19,12 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	// ACCIONES DE NODOS
 	// =============================================================================
 	const handleNodeSelection = (node: INodeCanvas) => {
-		console.log({ node })
-
-		// Usar la posición del mouse si está disponible, sino usar la posición por defecto
-		const positionX = canvasStore.currentMousePosition.x || canvasStore.nextNodePosition.x
-		const positionY = canvasStore.currentMousePosition.y || canvasStore.nextNodePosition.y
-
 		// Crear una copia del nodo con nueva posición
 		const nodeToAdd: INodeCanvas = {
 			...JSON.parse(JSON.stringify(node)),
 			design: {
-				x: positionX,
-				y: positionY
+				x: canvasStore.currentMousePosition.x || canvasStore.nextNodePosition.x,
+				y: canvasStore.currentMousePosition.y || canvasStore.nextNodePosition.y
 			}
 		}
 
@@ -46,7 +40,6 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 			},
 			node: nodeToAdd
 		})
-		canvasEvents.emit('node:properties:open', { node: canvasStore.getCanvasInstance.nodes.getNode({ id: nodeId }) })
 	}
 
 	const handleNodePropertiesSave = (updatedNode: INodeCanvas) => {
