@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <h3 class="text-lg font-semibold mb-4">Propiedades</h3>
     <NodePropertyInput v-for="(property, key) in visibleProperties" :key="key" :property="property"
-      :property-key="String(key)" :model-value="property.value"
+      :property-key="String(key)" :model-value="property.value" :is-read-only="isReadOnly"
       @update:model-value="updateProperty(String(key), $event)" />
   </div>
 </template>
@@ -14,6 +14,7 @@ import NodePropertyInput from './NodePropertyInput.vue'
 
 interface Props {
   properties: INodePropertiesType
+  isReadOnly?: boolean
 }
 
 interface Emits {
@@ -30,6 +31,8 @@ const visibleProperties = computed(() => {
 })
 
 const updateProperty = (key: string, value: any) => {
-  emit('update:property', key, value)
+  if (!props.isReadOnly) {
+    emit('update:property', key, value)
+  }
 }
 </script>

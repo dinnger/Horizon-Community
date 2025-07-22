@@ -8,7 +8,9 @@ Usa el patrón Observer para comunicación entre componentes
 
   <!-- Diálogo de propiedades del nodo -->
   <NodePropertiesDialog :is-visible="canvasModals.nodePropertiesDialog.isVisible"
-    :node-data="canvasModals.nodePropertiesDialog.node" @close="canvasModals.closeNodePropertiesDialog"
+    :node-data="canvasModals.nodePropertiesDialog.node" 
+    :is-read-only="canvasModals.nodePropertiesDialog.isReadOnly"
+    @close="canvasModals.closeNodePropertiesDialog"
     @save="canvasActions.handleNodePropertiesSave" />
 
   <!-- Menú contextual del nodo -->
@@ -61,6 +63,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useCanvasEvents } from '@/stores/canvasEvents'
 import { useCanvasModals } from '@/stores/canvasModals'
 import { useCanvasActions } from '@/stores/canvasActions'
+import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 
 // Componentes
 import NodesLibraryPanel from '@/components/NodesLibraryPanel.vue'
@@ -87,8 +90,9 @@ onMounted(() => {
   // REGISTRAR LISTENERS PARA EVENTOS DE NODOS
   // =============================================================================
   eventUnsubscribers.push(
-    canvasEvents.on('node:properties:open', ({ node }) => {
-      canvasModals.openNodePropertiesDialog(node)
+    canvasEvents.on('node:properties:open', (data) => {
+      const { node, isReadOnly = false } = data as { node: INodeCanvas; isReadOnly?: boolean }
+      canvasModals.openNodePropertiesDialog(node, isReadOnly)
     })
   )
 

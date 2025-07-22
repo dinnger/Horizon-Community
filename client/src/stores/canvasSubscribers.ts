@@ -35,13 +35,20 @@ export const useCanvasSubscribers = defineStore('canvasSubscribers', () => {
 		// =============================================================================
 		// EVENTOS DE NODOS
 		// =============================================================================
-		canvasInstance.subscriber('node_dbclick', (nodes: INodeCanvas[]) => {
+		canvasInstance.subscriber('node_dbclick', (e: { nodes: INodeCanvas[]; isLocked: boolean } | INodeCanvas[]) => {
+			// Compatibilidad con el formato anterior
+			const nodes = Array.isArray(e) ? e : e.nodes
+			const isLocked = Array.isArray(e) ? false : e.isLocked
+			
 			if (nodes.length === 0) return
 			if (nodes.length > 1) {
 				alert('No se puede editar más de un nodo a la vez')
 				return
 			}
-			canvasEvents.emit('node:properties:open', { node: nodes[0] })
+			canvasEvents.emit('node:properties:open', { 
+				node: nodes[0], 
+				isReadOnly: isLocked 
+			})
 		})
 
 		canvasInstance.subscriber(

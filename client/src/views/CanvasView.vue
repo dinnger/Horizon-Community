@@ -1,14 +1,28 @@
 <template>
   <div>
-    <div v-if="!canvasStore.isLoading && !canvasStore.isError" class="h-screen bg-base-100 overflow-hidden">
-      <!-- Canvas Header -->
-      <CanvasHeader :project-name="canvasStore.projectName" @show-notes-manager="showNotesManager" />
+    <div class="h-screen bg-base-100 overflow-hidden flex flex-col">
+      <!-- Canvas Tabs Header -->
+      <CanvasTabsHeader :project-name="canvasStore.projectName" :active-tab="activeTab"
+        :is-executing="canvasStore.isExecuting" :version="canvasStore.version.value"
+        @show-notes-manager="showNotesManager" @update:active-tab="activeTab = $event" />
 
-      <!-- Execution Panel -->
-      <CanvasExecutionPanel :is-executing="canvasStore.isExecuting" :version="canvasStore.version.value" />
+      <!-- Content Area -->
+      <div class="flex-1 relative">
+        <!-- Canvas Area (Design Tab) -->
+        <div v-show="activeTab === 'design'" class="h-full">
+          <CanvasArea />
+        </div>
+        <div v-if="activeTab === 'execution'">
+          <CanvasArea :is-locked="true" />
+        </div>
 
-      <!-- Canvas Area -->
-      <CanvasArea @canvas-ready="handleCanvasReady" />
+        <!-- Execution Area (Execution Tab) -->
+        <div v-show="activeTab === 'execution'" class="h-full overflow-auto">
+          <CanvasExecutionArea :is-executing="canvasStore.isExecuting" :version="canvasStore.version.value"
+            @execute-workflow="canvasStore.handleExecuteWorkflow"
+            @execute-with-version-selection="canvasStore.handleExecuteWithVersionSelection" />
+        </div>
+      </div>
 
       <!-- Modals Manager - Sistema refactorizado -->
       <CanvasModalsManager />
@@ -33,12 +47,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useCanvas } from '@/stores'
 import { useCanvasEvents } from '@/stores/canvasEvents'
-import CanvasHeader from '@/components/Canvas/CanvasHeader.vue'
-import CanvasExecutionPanel from '@/components/Canvas/CanvasExecutionPanel.vue'
+import CanvasTabsHeader from '@/components/Canvas/CanvasTabsHeader.vue'
 import CanvasArea from '@/components/Canvas/CanvasArea.vue'
+import CanvasExecutionArea from '@/components/Canvas/CanvasExecutionArea.vue'
 import CanvasModalsManager from '@/components/Canvas/CanvasModalsManager.vue'
 import VersionSelectorModal from '@/components/Canvas/VersionSelectorModal.vue'
 import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
@@ -50,23 +64,16 @@ const canvasStore = useCanvas()
 const canvasEvents = useCanvasEvents()
 const router = useRouter()
 
-const handleCanvasReady = (canvas: HTMLCanvasElement) => {
-  // Inicializar el canvas
-  canvasStore.initializeCanvas(canvas)
+// Estado de las pestañas
+const activeTab = ref<'design' | 'execution'>('design')
 
-}
+
 
 const showNotesManager = () => {
   canvasEvents.emit('note:manager:open', undefined)
 }
 
-onMounted(async () => {
-  await canvasStore.loadWorkflow(router.currentRoute.value.params.id as string)
-})
+// onMounted(async () => {
+//   await canvasStore.loadWorkflow(router.currentRoute.value.params.id as string)
+// })
 </script>
-
-<style scoped>
-.canvas-container {
-  background-color: var(--fallback-b1, oklch(var(--b1)));
-}
-</style>

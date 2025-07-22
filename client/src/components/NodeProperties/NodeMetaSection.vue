@@ -21,7 +21,7 @@
           <span class="label-text font-medium">Posición X</span>
         </label>
         <input :value="meta.design.x" @input="updateMeta('design.x', Number(($event.target as HTMLInputElement).value))"
-          type="number" class="input input-bordered" />
+          type="number" class="input input-bordered" :disabled="isReadOnly" />
       </div>
 
       <div class="form-control">
@@ -29,7 +29,7 @@
           <span class="label-text font-medium">Posición Y</span>
         </label>
         <input :value="meta.design.y" @input="updateMeta('design.y', Number(($event.target as HTMLInputElement).value))"
-          type="number" class="input input-bordered" />
+          type="number" class="input input-bordered" :disabled="isReadOnly" />
       </div>
     </div>
   </div>
@@ -44,6 +44,7 @@ interface MetaData {
 
 interface Props {
   meta: MetaData
+  isReadOnly?: boolean
 }
 
 interface Emits {
@@ -54,7 +55,9 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const updateMeta = (path: string, value: any) => {
-  emit('update:meta', path, value)
+  if (!props.isReadOnly) {
+    emit('update:meta', path, value)
+  }
 }
 </script>
 

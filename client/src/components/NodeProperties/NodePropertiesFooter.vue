@@ -1,16 +1,16 @@
 <template>
   <div class="flex items-center justify-between p-6 border-t border-base-300">
     <div class="text-sm opacity-60">
-      Los cambios no se aplicarán hasta guardar
+      {{ isReadOnly ? 'Modo de solo lectura' : 'Los cambios no se aplicarán hasta guardar' }}
     </div>
     <div class="flex space-x-3">
       <button @click="$emit('cancel')" class="btn btn-ghost">
-        Cancelar
+        {{ isReadOnly ? 'Cerrar' : 'Cancelar' }}
       </button>
-      <button @click="$emit('reset')" class="btn btn-outline">
+      <button v-if="!isReadOnly" @click="$emit('reset')" class="btn btn-outline">
         Restablecer
       </button>
-      <button @click="$emit('save')" class="btn btn-primary" :disabled="!hasChanges">
+      <button v-if="!isReadOnly" @click="$emit('save')" class="btn btn-primary" :disabled="!hasChanges">
         <svg v-if="isSaving" class="animate-spin -ml-1 mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor"
@@ -27,6 +27,7 @@
 interface Props {
   hasChanges: boolean
   isSaving: boolean
+  isReadOnly?: boolean
 }
 
 interface Emits {

@@ -12,12 +12,12 @@
 
       <input v-if="credential.type === 'password'" :value="credential.value"
         @input="updateCredential(String(key), ($event.target as HTMLInputElement).value)" type="password"
-        :disabled="credential.disabled" class="input input-bordered"
+        :disabled="credential.disabled || isReadOnly" class="input input-bordered"
         :class="{ 'input-error': credential.required && !credential.value }" />
 
       <input v-else :value="credential.value"
         @input="updateCredential(String(key), ($event.target as HTMLInputElement).value)" type="text"
-        :disabled="credential.disabled" class="input input-bordered"
+        :disabled="credential.disabled || isReadOnly" class="input input-bordered"
         :class="{ 'input-error': credential.required && !credential.value }" />
 
       <div v-if="credential.description" class="label">
@@ -32,6 +32,7 @@ import type { INodePropertiesType } from '@canvas/interfaz/node.properties.inter
 
 interface Props {
   credentials: INodePropertiesType
+  isReadOnly?: boolean
 }
 
 interface Emits {
@@ -42,7 +43,9 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const updateCredential = (key: string, value: any) => {
-  emit('update:credential', key, value)
+  if (!props.isReadOnly) {
+    emit('update:credential', key, value)
+  }
 }
 </script>
 

@@ -14,7 +14,8 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 	// =============================================================================
 	const nodePropertiesDialog = ref({
 		isVisible: false,
-		node: null as INodeCanvas | null
+		node: null as INodeCanvas | null,
+		isReadOnly: false
 	})
 
 	const nodeContextMenu = ref({
@@ -82,17 +83,19 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 	// =============================================================================
 	// MÉTODOS PARA NODOS
 	// =============================================================================
-	const openNodePropertiesDialog = (node: INodeCanvas) => {
+	const openNodePropertiesDialog = (node: INodeCanvas, isReadOnly = false) => {
 		nodePropertiesDialog.value = {
 			isVisible: true,
-			node
+			node,
+			isReadOnly
 		}
 	}
 
 	const closeNodePropertiesDialog = () => {
 		nodePropertiesDialog.value = {
 			isVisible: false,
-			node: null
+			node: null,
+			isReadOnly: false
 		}
 	}
 

@@ -18,25 +18,25 @@
 
     <!-- String input -->
     <input v-else-if="property.type === 'string'" v-model="localValue" type="text" :placeholder="property.placeholder"
-      :disabled="property.disabled" class="input input-bordered w-full"
+      :disabled="property.disabled || isReadOnly" class="input input-bordered w-full"
       :class="{ 'input-error': property.required && !property.value }" />
 
     <!-- Number input -->
     <input v-else-if="property.type === 'number'" v-model.number="localValue" type="number" :min="property.min"
-      :max="property.max" :step="property.step" :disabled="property.disabled" class="input input-bordered w-full"
+      :max="property.max" :step="property.step" :disabled="property.disabled || isReadOnly" class="input input-bordered w-full"
       :class="{ 'input-error': property.required && !property.value }" />
 
     <!-- Boolean switch -->
     <div v-else-if="property.type === 'switch'" class="form-control">
       <label class="label cursor-pointer justify-start space-x-3">
-        <input v-model="localValue" type="checkbox" class="toggle toggle-primary" :disabled="property.disabled" />
+        <input v-model="localValue" type="checkbox" class="toggle toggle-primary" :disabled="property.disabled || isReadOnly" />
         <span class="label-text">{{ localValue ? 'Activado' : 'Desactivado' }}</span>
       </label>
     </div>
 
     <!-- Options dropdown -->
     <select v-else-if="property.type === 'options'" v-model="localValue" class="select select-bordered w-full"
-      :disabled="property.disabled" :class="{ 'select-error': property.required && !property.value }">
+      :disabled="property.disabled || isReadOnly" :class="{ 'select-error': property.required && !property.value }">
       <option value="" disabled>Selecciona una opción</option>
       <option v-for="option in property.options" :key="option.value" :value="option.value" :disabled="option.disabled">
         {{ option.label }}
@@ -45,16 +45,16 @@
 
     <!-- Textarea for long text -->
     <textarea v-else-if="property.type === 'textarea'" :value="String(localValue || '')"
-      @input="localValue = ($event.target as HTMLTextAreaElement).value" :disabled="property.disabled"
+      @input="localValue = ($event.target as HTMLTextAreaElement).value" :disabled="property.disabled || isReadOnly"
       :rows="property.rows || 3" class="textarea textarea-bordered w-full"
       :class="{ 'textarea-error': property.required && !property.value }" />
 
     <!-- Code Editor -->
     <NodeCodeEditor v-else-if="property.type === 'code'" :property="property" :property-key="propertyKey"
-      :model-value="localValue" @update:model-value="localValue = $event" />
+      :model-value="localValue" :is-read-only="isReadOnly" @update:model-value="localValue = $event" />
 
     <!-- Password input -->
-    <input v-else-if="property.type === 'password'" v-model="localValue" type="password" :disabled="property.disabled"
+    <input v-else-if="property.type === 'password'" v-model="localValue" type="password" :disabled="property.disabled || isReadOnly"
       class="input input-bordered" :class="{ 'input-error': property.required && !property.value }" />
 
     <!-- Default fallback -->
@@ -82,6 +82,7 @@ interface Props {
   property: any
   propertyKey: string
   modelValue: any
+  isReadOnly?: boolean
 }
 
 interface Emits {
@@ -93,7 +94,11 @@ const emit = defineEmits<Emits>()
 
 const localValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => {
+    if (!props.isReadOnly) {
+      emit('update:modelValue', value)
+    }
+  }
 })
 </script>
 

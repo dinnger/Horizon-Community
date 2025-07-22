@@ -11,9 +11,15 @@
 
 <script setup lang="ts">
 import { useCanvas } from '@/stores';
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 const canvasStore = useCanvas()
+
+const props = defineProps<{
+  isLocked?: boolean
+}>()
 
 const emit = defineEmits<{
   canvasReady: [canvas: HTMLCanvasElement]
@@ -21,9 +27,13 @@ const emit = defineEmits<{
 
 const canvasElement = ref<HTMLCanvasElement>()
 
-watch(() => canvasElement.value, (canvas) => {
+console.log(router.currentRoute.value.params.id)
+watch(() => canvasElement.value, async (canvas) => {
   if (canvas) {
+    await canvasStore.loadWorkflow(router.currentRoute.value.params.id as string)
+    canvasStore.initializeCanvas({ canvas, isLocked: props.isLocked })
     emit('canvasReady', canvas)
   }
 })
+
 </script>

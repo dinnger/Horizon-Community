@@ -17,18 +17,19 @@
         <!-- Main content -->
         <div class="flex-1 overflow-y-auto p-6">
           <NodePropertiesSection v-if="activeSection === 'properties'" :properties="editableProperties"
-            @update:property="updateProperty" />
+            :is-read-only="props.isReadOnly" @update:property="updateProperty" />
 
           <NodeCredentialsSection v-else-if="activeSection === 'credentials'" :credentials="editableCredentials"
-            @update:credential="updateCredential" />
+            :is-read-only="props.isReadOnly" @update:credential="updateCredential" />
 
-          <NodeMetaSection v-else-if="activeSection === 'meta'" :meta="editableMeta" @update:meta="updateMeta" />
+          <NodeMetaSection v-else-if="activeSection === 'meta'" :meta="editableMeta" :is-read-only="props.isReadOnly"
+            @update:meta="updateMeta" />
         </div>
       </div>
 
       <!-- Footer -->
-      <NodePropertiesFooter :has-changes="hasChanges" :is-saving="isSaving" @cancel="closeDialog" @reset="resetChanges"
-        @save="saveChanges" />
+      <NodePropertiesFooter :has-changes="hasChanges" :is-saving="isSaving" :is-read-only="props.isReadOnly"
+        @cancel="closeDialog" @reset="resetChanges" @save="saveChanges" />
     </div>
   </div>
 </template>
@@ -51,6 +52,7 @@ import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 interface Props {
   isVisible: boolean
   nodeData: INodeCanvas | null
+  isReadOnly?: boolean
 }
 
 interface Emits {

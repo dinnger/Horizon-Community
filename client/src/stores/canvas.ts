@@ -350,9 +350,10 @@ export const useCanvas = defineStore('canvas', () => {
 	}
 
 	// Función para inicializar el canvas cuando el elemento esté listo
-	const initializeCanvas = (canvas: HTMLCanvasElement) => {
+	const initializeCanvas = ({ canvas, isLocked = false }: { canvas: HTMLCanvasElement; isLocked?: boolean }) => {
 		canvasInstance = new Canvas({
 			canvas: canvas,
+			isLocked,
 			theme: settingsStore.currentTheme
 		})
 
@@ -385,16 +386,6 @@ export const useCanvas = defineStore('canvas', () => {
 
 			isLoading.value = false
 
-			// Watch para actualizar las notas cuando se abra el administrador
-			// watch(
-			// 	() => canvasStore.showNotesManager,
-			// 	(isVisible) => {
-			// 		if (isVisible) {
-			// 			updateNotesFromCanvas()
-			// 		}
-			// 	}
-			// )
-
 			watch(
 				() => settingsStore.currentTheme,
 				() => {
@@ -407,6 +398,18 @@ export const useCanvas = defineStore('canvas', () => {
 			isLoading.value = false
 			isError.value = true
 		}
+	}
+
+	// Función para cambiar el estado de bloqueo del canvas
+	const setCanvasLocked = (locked: boolean) => {
+		if (canvasInstance) {
+			canvasInstance.setLocked(locked)
+		}
+	}
+
+	// Función para obtener el estado de bloqueo del canvas
+	const isCanvasLocked = () => {
+		return canvasInstance ? canvasInstance.isCanvasLocked() : false
 	}
 
 	return {
@@ -469,6 +472,8 @@ export const useCanvas = defineStore('canvas', () => {
 		handleExecuteWithVersionSelection,
 		closeVersionSelector,
 		executeSelectedVersion,
-		initializeCanvas
+		initializeCanvas,
+		setCanvasLocked,
+		isCanvasLocked
 	}
 })

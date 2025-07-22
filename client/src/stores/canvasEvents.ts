@@ -1,5 +1,8 @@
 /**
- * Store para manejo centralizado de eventos del canvas
+ * Store para manejo centralizado de eve// Datos que acompañan a cada evento
+export type CanvasModalEventData = {
+	'node:properties:open': { node: INodeCanvas; isReadOnly?: boolean }
+	'node:properties:close': undefined del canvas
  * Implementa el patrón Observer/Publisher-Subscriber para eventos de UI
  */
 import { defineStore } from 'pinia'
@@ -45,7 +48,7 @@ export type CanvasModalEvent =
 
 // Datos que acompañan a cada evento
 export type CanvasModalEventData = {
-	'node:properties:open': { node: INodeCanvas }
+	'node:properties:open': { node: INodeCanvas; isReadOnly?: boolean }
 	'node:properties:close': undefined
 	'node:context:open': { nodes: INodeCanvas[] }
 	'node:context:close': undefined
