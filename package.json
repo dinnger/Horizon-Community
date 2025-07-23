@@ -32,6 +32,7 @@
     "bcrypt": "^6.0.0",
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
+    "oracledb": "^6.9.0",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
@@ -43,9 +44,9 @@
   "dependencies": {
     "@nyariv/sandboxjs": "^0.8.25",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
-    "dayjs": "^1.11.13",
     "express-fileupload": "^1.5.1",
     "glob": "^11.0.3",
     "helmet": "^8.1.0",

@@ -42,14 +42,14 @@ export class CoreLogger {
 			this.logger.add(new CustomTransport())
 			setInterval(() => {
 				if (logMessages.length > 0) {
-					this.sendLogs(logMessages)
+					// this.sendLogs(logMessages)
 				}
 				logMessages = []
 			}, 500)
 		}
 	}
 
-	sendLogs(logMessages: { date: string; level: string; message: string }[]) {
-		this.el.communicationModule.server.sendLogs(logMessages)
-	}
+	// sendLogs(logMessages: { date: string; level: string; message: string }[]) {
+	// 	this.el.communicationModule.server.sendLogs(logMessages)
+	// }
 }

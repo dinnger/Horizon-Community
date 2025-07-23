@@ -150,19 +150,6 @@ export const useDebugConsoleStore = defineStore('debugConsole', () => {
 		workerStats.value = stats
 	}
 
-	const addNetworkRequest = (request: Omit<(typeof networkRequests.value)[0], 'id' | 'timestamp'>) => {
-		networkRequests.value.unshift({
-			...request,
-			id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-			timestamp: new Date()
-		})
-
-		// Mantener solo las últimas 100 peticiones
-		if (networkRequests.value.length > 100) {
-			networkRequests.value = networkRequests.value.slice(0, 100)
-		}
-	}
-
 	const clearNetworkRequests = () => {
 		networkRequests.value = []
 	}
@@ -246,12 +233,6 @@ export const useDebugConsoleStore = defineStore('debugConsole', () => {
 			{ method: 'GET', url: '/api/workers/stats', status: 200, duration: 67, size: 1024 }
 		]
 
-		dummyRequests.forEach((req, index) => {
-			setTimeout(() => {
-				addNetworkRequest(req)
-			}, index * 800)
-		})
-
 		// Debug info dummy
 		setTimeout(() => {
 			setDebugInfo({
@@ -296,7 +277,6 @@ export const useDebugConsoleStore = defineStore('debugConsole', () => {
 		setDebugInfo,
 		clearDebugInfo,
 		updateWorkerStats,
-		addNetworkRequest,
 		clearNetworkRequests,
 		initializeDummyData
 	}

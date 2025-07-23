@@ -1,7 +1,7 @@
+import type { Worker } from '../../worker.js'
+import type { ISubscriberType } from '@shared/interfaces/subscriber/subscriber.interface.js'
 import { v4 as uuidv4 } from 'uuid'
 import { parentPort } from 'node:worker_threads'
-import type { Worker } from '../../worker.js'
-import { envs } from '@worker/config/envs.js'
 
 /**
  * Worker Server Communication Helper
@@ -82,6 +82,11 @@ class WorkerServerComm {
 		})
 	}
 
+	async subscribeFromServer({ event, params, eventData }: { event: ISubscriberType; params?: string[]; eventData: any }) {
+		const newEvent = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
+		this.requestFromServer('worker:subscribe', { event: newEvent, eventData })
+	}
+
 	async sendStats(stats: any) {
 		if (parentPort) {
 			parentPort.postMessage({
@@ -153,22 +158,6 @@ export class ServerCommunication extends WorkerServerComm {
 	}
 
 	/**
-	 * Send worker logs to server (for centralized logging)
-	 */
-	async sendWorkerLog(level: 'info' | 'warn' | 'error', message: string, data?: any): Promise<void> {
-		try {
-			await this.requestFromServer('worker:log', {
-				level,
-				message,
-				data,
-				timestamp: new Date().toISOString()
-			})
-		} catch (error) {
-			console.warn('Failed to send log to server:', error)
-		}
-	}
-
-	/**
 	 * Send debug data to server
 	 */
 	async sendDebug(data: any): Promise<void> {
@@ -177,20 +166,6 @@ export class ServerCommunication extends WorkerServerComm {
 		} catch (error) {
 			console.error('Error sending debug data to server:', error)
 			throw error
-		}
-	}
-
-	/**
-	 * Send worker logs to server (for centralized logging)
-	 */
-	async sendLogs(logMessages: { date: string; level: string; message: string }[]) {
-		try {
-			await this.requestFromServer('worker:logs', {
-				data: logMessages,
-				timestamp: new Date().toISOString()
-			})
-		} catch (error) {
-			console.warn('Failed to send logs to server:', error)
 		}
 	}
 

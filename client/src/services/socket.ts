@@ -13,6 +13,7 @@ import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 import type { IDeployment, IDeploymentInstance, IDeploymentType, IDeploymentQueue } from '@shared/interfaces/deployment.interface'
 import type { IRole } from '@shared/interfaces/standardized'
 import { ref } from 'vue'
+import type { ISubscriberType } from '@shared/interfaces/subscriber/subscriber.interface'
 
 class SocketService {
 	private socket: Socket | null = null
@@ -62,6 +63,37 @@ class SocketService {
 
 	isSocketConnected(): boolean {
 		return this.isConnected.value && this.socket?.connected === true
+	}
+
+	// Events
+	listener({ event, params, callback }: { event: ISubscriberType; params?: string[]; callback?: any }) {
+		if (!this.socket) return console.error('Socket not connected')
+
+		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
+		this.socket.emit('subscribe:join', { room })
+		this.socket.on(room, (response: any) => {
+			callback(response)
+		})
+	}
+
+	closeListener({ event, params, callback }: { event: string | RegExp; params?: string[]; callback?: any }) {
+		if (!this.socket) return console.error('Socket not connected')
+		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
+		this.socket.emit(
+			'subscribe:close',
+			{ room },
+			(response: {
+				success: boolean
+				list?: string[]
+			}) => {
+				if (this.socket && response.success && Array.isArray(response.list)) {
+					for (const item of response.list) {
+						console.log(`Removing listener for ${item}`)
+						this.socket.off(item)
+					}
+				}
+			}
+		)
 	}
 
 	// Auth methods
@@ -301,20 +333,6 @@ class SocketService {
 				} else {
 					reject(new Error(response.message || 'Failed to get workflows'))
 				}
-			})
-		})
-	}
-
-	getWorkflowsEvents(event: string, callback: any): Promise<any> {
-		return new Promise((resolve, reject) => {
-			if (!this.socket) {
-				reject(new Error('Socket not connected'))
-				return
-			}
-			resolve(true)
-			console.log('escuchando', event)
-			this.socket.on(event, (response: any) => {
-				callback(response)
 			})
 		})
 	}

@@ -1,7 +1,7 @@
 /**
  * Worker Routes
  */
-
+import { setupSubscribersRoutes } from './subscribers.js'
 import type { SocketData } from './index.js'
 
 export const setupWorkerRoutes = {
@@ -16,10 +16,10 @@ export const setupWorkerRoutes = {
 		}
 	},
 
-	'worker:animations': async ({ io, data, callback }: SocketData) => {
+	'worker:subscribe': async ({ io, data, callback }: SocketData) => {
 		try {
-			const animations = data.animations
-			io.to(`workflow:${data.workflowId}`).emit('worker:animations', animations)
+			const { event, eventData } = data
+			setupSubscribersRoutes['subscribe:emit']({ io, event, eventData })
 			callback({ success: true, message: 'Animaciones enviadas' })
 		} catch (error) {
 			console.error('Error enviando animaciones:', error)

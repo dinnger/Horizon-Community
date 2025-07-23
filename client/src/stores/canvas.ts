@@ -1,12 +1,15 @@
-import type { INodeCanvas, INodeConnections } from '@canvas/interfaz/node.interface'
-import type { INote } from '@canvas/interfaz/note.interface'
-import type { INodeGroup } from '@canvas/interfaz/group.interface'
-import type { Canvas } from '@canvas/canvas'
+import type { INodeCanvas, INodeConnections, INodeCanvasAdd } from '@canvas/interfaz/node.interface'
+import type { INote, INoteCanvas } from '@canvas/interfaz/note.interface'
+import type { INodeGroup, INodeGroupCanvas } from '@canvas/interfaz/group.interface'
+import { Canvas } from '@canvas/canvas'
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useWorkflowsStore } from '@/stores/workflows'
+import { useDeploymentStore } from './deployment'
+import { useSettingsStore } from './settings'
+import { useNodesLibraryStore } from './nodesLibrary'
+import { useCanvasSubscribers } from './canvasSubscribers'
 import socketService from '@/services/socket'
-import type { IWorkflowFull } from '@shared/interfaces/standardized'
 
 type WorkflowData = {
 	nodes: { [key: string]: INodeCanvas }
@@ -17,7 +20,91 @@ type WorkflowData = {
 	timestamp: number
 }
 
-export const useCanvas = defineStore('canvas', () => {
+interface IStatsAnimations {
+	nodeId: string
+	connectName: string
+	executeTime: number
+	length?: number
+}
+
+interface ExecutionTrace {
+	id: string
+	timestamp: Date
+	nodeId: string
+	connectionName: string
+	executeTime: number
+	length?: number
+}
+
+const newStore = () => {
+	const workflowsStore = useWorkflowsStore()
+	const deploymentStore = useDeploymentStore()
+	const settingsStore = useSettingsStore()
+	const workflowStore = useWorkflowsStore()
+	const nodesStore = useNodesLibraryStore()
+	const canvasSubscribers = useCanvasSubscribers()
+
+	let canvasInstance: Canvas
+
+	const showNodePropertiesDialog = ref(false)
+	// Estados para el diálogo de propiedades del nodo
+	const selectedNodeForEdit = ref<INodeCanvas | null>(null)
+	const showContextMenu = ref(false)
+	// Estados para el menú contextual
+	const selectedNodesForContext = ref<INodeCanvas[]>([])
+	// Estados para el menú contextual de conexión
+	const showConnectionContextMenu = ref(false)
+	const selectedConnectionForContext = ref<{
+		id: string
+		nodeOrigin: INodeCanvas
+		nodeDestiny: INodeCanvas
+		input: string
+		output: string
+	} | null>(null)
+	// Estados para el menú contextual del canvas
+	const showCanvasContextMenu = ref(false)
+	const canvasContextPosition = ref({ x: 0, y: 0 })
+	const showNoteContextMenu = ref(false)
+	const selectedNoteForContext = ref<INoteCanvas | null>(null)
+	const noteContextPosition = ref({ x: 0, y: 0 })
+	const showNotePropertiesDialog = ref(false)
+	const selectedNoteForEdit = ref<INoteCanvas | null>(null)
+
+	// Referencias reactivas del canvas
+	const canvasZoom = ref(1)
+	const nodeOrigin = ref<INodeCanvasAdd | null>(null)
+	const projectName = ref('Web Application')
+	const nextNodePosition = ref({ x: 100, y: 100 })
+	const currentMousePosition = ref({ x: 0, y: 0 })
+	const isExecuting = ref(false)
+	const isLoading = ref(true)
+	const isError = ref(false)
+	// Estados para el selector de versiones
+	const showVersionSelector = ref(false)
+	const availableVersions = ref<any[]>([])
+	const selectedVersion = ref<string | null>(null)
+	// Estados para el selector de despliegue
+	const showDeploymentSelector = ref(false)
+	const selectedDeploymentId = ref<string | null>(null)
+	const currentWorkflowInfo = ref<{ id: string; name: string; description?: string } | null>(null)
+	// Estados para el toast de despliegue automático
+	const showAutoDeploymentToast = ref(false)
+	const autoDeploymentInfo = ref<{ workflowName: string; deploymentName: string } | null>(null)
+	const canvasContextCanvasPosition = ref({ x: 0, y: 0 })
+	// Estados para el modal de propiedades de nota
+	const noteDialogPosition = ref({ x: 0, y: 0 })
+	// Estados para el administrador de notas
+	const showNotesManager = ref(false)
+	const allNotes = ref<INoteCanvas[]>([])
+	// Estados para el menú contextual de grupos
+	const showGroupContextMenu = ref(false)
+	const selectedGroupForContext = ref<INodeGroupCanvas | null>(null)
+	// Estados para el modal de propiedades de grupo
+	const showGroupPropertiesDialog = ref(false)
+	const selectedGroupForEdit = ref<INodeGroupCanvas | null>(null)
+	const selectedNodeIdsForGroup = ref<string[]>([])
+	const isEditingGroup = ref(false)
+
 	const history = ref<WorkflowData[]>([])
 	const workflowId = ref<string>('')
 	const flow = ref<{ workflowData: WorkflowData; version: string }>()
@@ -29,15 +116,22 @@ export const useCanvas = defineStore('canvas', () => {
 		status: 'draft'
 	})
 	const changes = ref(false)
-	const workflowsStore = useWorkflowsStore()
 
-	let canvasInstance: Canvas
+	// Estado para las trazas de ejecución
+	const executionTrace = ref<ExecutionTrace[]>([])
 
-	const loadWorkflow = async (data: { flow: string }) => {
+	// =============================================================================
+	// MÉTODOS DE GRUPOS
+	// =============================================================================
+	const getCanvasInstance = computed(() => {
+		return canvasInstance
+	})
+
+	const load = async (data: { workflowId: string; version?: string }) => {
 		try {
-			workflowId.value = data.flow
+			workflowId.value = data.workflowId
 			const dataFlow: { workflowData: WorkflowData; version: string } = await workflowsStore.getWorkflowById(workflowId.value, true)
-			console.log('canvas store ', { dataFlow })
+			console.log('canvasStore ', { dataFlow })
 			if (dataFlow?.workflowData) {
 				version.value.value = dataFlow.version
 				version.value.status = 'draft'
@@ -67,12 +161,7 @@ export const useCanvas = defineStore('canvas', () => {
 					canvasInstance.actionAddNode({ node: { ...node, design: { x: 60, y: 60 } } })
 				})
 			}
-			canvasInstance.subscriber(
-				['node_added', 'node_removed', 'node_moved', 'node_update_properties', 'note_added', 'note_updated', 'note_removed', 'note_moved'],
-				(e) => {
-					changes.value = true
-				}
-			)
+			// Los subscribers ahora se manejan en el store dedicado
 		} catch (error) {
 			console.error('Error inicializando canvas:', error)
 		}
@@ -145,16 +234,325 @@ export const useCanvas = defineStore('canvas', () => {
 		localStorage.removeItem(`workflow_${workflowId.value}`)
 	}
 
+	// =============================================================================
+	// MÉTODOS DE GRUPOS
+	// =============================================================================
+
+	const updateNotesFromCanvas = () => {
+		if (!canvasInstance) return
+		allNotes.value = canvasInstance.getNotes() as INoteCanvas[]
+	}
+
+	// Función para manejar la ejecución del workflow
+	const handleExecuteWorkflow = async (version?: string) => {
+		if (isExecuting.value) return
+		isExecuting.value = true
+		try {
+			const result = await execute(version)
+			console.log('result', result)
+		} catch (error) {
+			alert('Error inesperado ejecutando workflow')
+		} finally {
+			isExecuting.value = false
+		}
+	}
+
+	// Función para mostrar el selector de versiones
+	const handleExecuteWithVersionSelection = async () => {
+		try {
+			const versionsResult = await getVersions()
+
+			if (versionsResult?.success) {
+				availableVersions.value = versionsResult.versions
+				showVersionSelector.value = true
+			} else {
+				alert(`Error obteniendo versiones: ${versionsResult?.message || 'Error desconocido'}`)
+			}
+		} catch (error) {
+			console.error('Error obteniendo versiones:', error)
+			alert('Error obteniendo versiones del workflow')
+		}
+	}
+
+	// Función para cerrar el selector de versiones
+	const closeVersionSelector = () => {
+		showVersionSelector.value = false
+		selectedVersion.value = null
+	}
+
+	// Función para ejecutar la versión seleccionada
+	const executeSelectedVersion = async () => {
+		if (!selectedVersion.value) {
+			alert('Por favor selecciona una versión')
+			return
+		}
+
+		closeVersionSelector()
+		await handleExecuteWorkflow(selectedVersion.value)
+	}
+
+	// Función para manejar el guardado del canvas
+
+	// Función para manejar la publicación del canvas
+	const publish = async (workflowId: string) => {
+		try {
+			// Primero guardamos el workflow
+			await save()
+
+			if (!workflowId) return
+
+			// Validar y preparar la publicación usando el store de deployment
+			const validationResult = await deploymentStore.validateAndPrepareWorkflowPublication(workflowId)
+
+			if (validationResult.type === 'automatic' && validationResult.autoDeployment) {
+				// Despliegue automático
+				const { workflowInfo, autoDeployment } = validationResult
+
+				// Mostrar toast de despliegue automático
+				autoDeploymentInfo.value = {
+					workflowName: workflowInfo.name,
+					deploymentName: autoDeployment.deploymentName
+				}
+				showAutoDeploymentToast.value = true
+
+				// Usar el despliegue asignado al proyecto automáticamente
+				const deploymentData = {
+					workflowId,
+					deploymentId: autoDeployment.deploymentId,
+					priority: 3, // Prioridad normal por defecto
+					description: `Despliegue automático de ${workflowInfo.name} desde proyecto ${autoDeployment.projectName}`,
+					scheduledAt: undefined // Inmediato
+				}
+
+				// Ocultar el toast después de un momento
+				setTimeout(() => {
+					showAutoDeploymentToast.value = false
+					autoDeploymentInfo.value = null
+				}, 4000)
+
+				await handleDeploymentPublish(deploymentData)
+			} else {
+				// Despliegue manual
+				currentWorkflowInfo.value = validationResult.workflowInfo
+				showDeploymentSelector.value = true
+			}
+		} catch (error: any) {
+			throw new Error(error)
+		}
+	}
+
+	// Función para cerrar el selector de despliegue
+	const closeDeploymentSelector = () => {
+		showDeploymentSelector.value = false
+		selectedDeploymentId.value = null
+		currentWorkflowInfo.value = null
+	}
+
+	// Función para manejar la publicación en el despliegue seleccionado
+	const handleDeploymentPublish = async (deploymentData: {
+		workflowId: string
+		deploymentId: string
+		priority: number
+		description: string
+		scheduledAt?: Date
+	}) => {
+		try {
+			const result = await deploymentStore.publishWorkflowToDeployment(deploymentData)
+			closeDeploymentSelector()
+		} catch (error: any) {
+			throw new Error(error)
+		}
+	}
+
+	// Función para inicializar el canvas cuando el elemento esté listo
+	const initializeCanvas = ({ canvas, isLocked = false }: { canvas: HTMLCanvasElement; isLocked?: boolean }) => {
+		canvasInstance = new Canvas({
+			canvas: canvas,
+			isLocked,
+			theme: settingsStore.currentTheme
+		})
+
+		initCanvas({ canvasInstance })
+
+		// Configurar todos los subscribers usando el store dedicado
+		canvasSubscribers.setupCanvasSubscribers(canvasInstance, {
+			onNodeAdded: (e: INodeCanvasAdd) => {
+				nodeOrigin.value = e
+			},
+			onMouseMove: (e: { x: number; y: number }) => {
+				currentMousePosition.value = { x: e.x, y: e.y }
+			},
+			onZoomChange: (e: { zoom: number }) => {
+				canvasZoom.value = e.zoom
+			},
+			onChanges: () => {
+				changes.value = true
+			}
+		})
+
+		// Inicializar las notas
+		updateNotesFromCanvas()
+	}
+
+	// Función para cargar el workflow
+	const loadWorkflow = async ({ workflowId, version }: { workflowId: string; version?: string }) => {
+		try {
+			await load({ workflowId })
+
+			isLoading.value = false
+
+			watch(
+				() => settingsStore.currentTheme,
+				() => {
+					if (!canvasInstance) return
+					canvasInstance.changeTheme(settingsStore.currentTheme)
+				}
+			)
+		} catch (error) {
+			console.error(error)
+			isLoading.value = false
+			isError.value = true
+		}
+	}
+
+	// Función para cambiar el estado de bloqueo del canvas
+	const setCanvasLocked = (locked: boolean) => {
+		if (canvasInstance) {
+			canvasInstance.setLocked(locked)
+		}
+	}
+
+	// Función para obtener el estado de bloqueo del canvas
+	const isCanvasLocked = () => {
+		return canvasInstance ? canvasInstance.isCanvasLocked() : false
+	}
+
+	// Función para limpiar las trazas de ejecución
+	const clearExecutionTrace = () => {
+		executionTrace.value = []
+	}
+
+	// Función para agregar una nueva traza de ejecución
+	const addExecutionTrace = (trace: Omit<ExecutionTrace, 'id' | 'timestamp'>) => {
+		const newTrace: ExecutionTrace = {
+			id: `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			timestamp: new Date(),
+			...trace
+		}
+		executionTrace.value.push(newTrace)
+	}
+
+	// Función para inicializar las suscripciones
+	const initializeSubscriptions = () => {
+		socketService.listener({
+			event: 'workflow:animations',
+			params: [workflowStore.context?.info.uid || ''],
+			callback: (event: IStatsAnimations[]) => {
+				for (const animation of event) {
+					// Agregar a la traza de ejecución
+					addExecutionTrace({
+						nodeId: animation.nodeId,
+						connectionName: animation.connectName,
+						executeTime: animation.executeTime,
+						length: animation.length
+					})
+
+					// Aplicar animación al nodo
+					const node = canvasInstance?.nodes.getNode({ id: animation.nodeId })
+					if (!node) continue
+					node.addAnimation({
+						connectionName: animation.connectName,
+						length: animation.length || 0,
+						type: 'input'
+					})
+				}
+			}
+		})
+		socketService.listener({
+			event: 'workflow:console',
+			params: [workflowStore.context?.info.uid || ''],
+			callback: (event: any) => {
+				console.log('workflow:console', event)
+			}
+		})
+	}
+
+	const closeSubscriptions = () => {
+		const uid = workflowStore.context?.info.uid || ''
+		socketService.closeListener({
+			event: `/workflow:.*:${uid}/`
+		})
+	}
+
 	return {
+		getCanvasInstance,
+		changes,
+		version,
+		nodeOrigin,
+		executionTrace,
+
+		showNodePropertiesDialog,
+		selectedNodeForEdit,
+		showContextMenu,
+		canvasContextPosition,
+		selectedNodesForContext,
+		showConnectionContextMenu,
+		showCanvasContextMenu,
+		showNoteContextMenu,
+		selectedConnectionForContext,
+		selectedNoteForContext,
+		noteContextPosition,
+		showNotePropertiesDialog,
+		selectedNoteForEdit,
+		currentMousePosition,
+		nextNodePosition,
+		canvasContextCanvasPosition,
+		// Referencias reactivas
+		canvasZoom,
+		projectName,
+		isExecuting,
+		isLoading,
+		isError,
+		// Estados del selector de versiones
+		showVersionSelector,
+		availableVersions,
+		selectedVersion,
+		noteDialogPosition,
+		showNotesManager,
+		allNotes,
+		showGroupContextMenu,
+		selectedGroupForContext,
+		showGroupPropertiesDialog,
+		selectedGroupForEdit,
+		selectedNodeIdsForGroup,
+		isEditingGroup,
+		// Estados del selector de despliegue
+		showDeploymentSelector,
+		selectedDeploymentId,
+		currentWorkflowInfo,
+		showAutoDeploymentToast,
+		autoDeploymentInfo,
+
 		loadWorkflow,
-		initCanvas,
 		save,
+		publish,
 		execute,
-		getVersions,
 		getHistory,
 		selectHistory,
 		clearHistory,
-		changes,
-		version
+		clearExecutionTrace,
+		addExecutionTrace,
+
+		handleExecuteWorkflow,
+		handleExecuteWithVersionSelection,
+		closeVersionSelector,
+		executeSelectedVersion,
+		initializeCanvas,
+		setCanvasLocked,
+		isCanvasLocked,
+		initializeSubscriptions,
+		closeSubscriptions
 	}
-})
+}
+
+export const useCanvas = (uniqueStoreName: 'canvas' | 'execution' = 'canvas') => defineStore(uniqueStoreName, newStore)()

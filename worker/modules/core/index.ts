@@ -4,7 +4,7 @@ import type { IClassNode } from '@shared/interfaces/class.interface.js'
 import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import { getMemoryUsage, getTime } from '../../shared/functions/utils.js'
 import { initProperties } from '../../worker_properties.js'
-import { CoreTrace } from './trace.module.js'
+import { CoreStats } from './stats.module.js'
 import { CoreDependencies } from './dependency.module.js'
 import { v4 as uid } from 'uuid'
 import { CoreCredential } from './credential.module.js'
@@ -13,7 +13,7 @@ import { CoreGlobalStore } from './store.module.js'
 import { convertJson } from '../../../shared/utils/utilities.js'
 import { envs } from '@worker/config/envs.js'
 import { CoreLogger } from './logger.module.js'
-import dayjs from 'dayjs'
+
 // -----------------------------------------------------------------------------
 // Base
 // -----------------------------------------------------------------------------
@@ -23,15 +23,13 @@ export class CoreModule {
 	el: Worker
 	debug: CoreDebug
 	coreLogger: CoreLogger
-	trace: CoreTrace = new CoreTrace()
+	stats: CoreStats = new CoreStats()
 	globalStore: CoreGlobalStore = new CoreGlobalStore()
 
 	constructor(el: Worker) {
 		this.el = el
 		this.debug = new CoreDebug({ el })
 		this.coreLogger = new CoreLogger(el)
-
-		this.initConsole()
 	}
 
 	/**
@@ -45,28 +43,6 @@ export class CoreModule {
 	 * console.log('Hello, World!'); // Logs: console.log ['Hello, World!'] and then logs: Hello, World!
 	 * ```
 	 */
-	initConsole() {
-		const cl = console.log
-		console.log = (...args) => {
-			// console.warn('console.log', args)
-			if (args.length > 1) {
-				args[0] = `\x1b[42m Execute \x1b[0m \x1B[34m${args[0]} \x1B[0m`
-				args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			}
-			if (args.length === 1) args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			cl.apply(console, args)
-		}
-		console.debug = (...args) => {
-			this.el.communicationModule.server.sendLogs([
-				{
-					date: dayjs().format('DD/MM/YYYY HH:mm:ss.SSS'),
-					level: 'info',
-					message: JSON.stringify(args)
-				}
-			])
-			// cl.apply(console, args)
-		}
-	}
 
 	/**
 	 * Executes the given node with the provided execution data.
@@ -253,8 +229,7 @@ export class CoreModule {
 
 		// Observer
 		if (this.el.isDev) {
-			if (this.trace.dataNode.has(node.id)) this.trace.dataNode.set(node.id, classExecute)
-			this.trace.traceExecute({ id: node.id, type: 'inputs' })
+			this.stats.animations({ nodeId: node.id, connectName: inputData.inputName, executeTime: 0 })
 		}
 
 		// remplazando propiedades que se hayan definido en el nodo
@@ -340,10 +315,7 @@ export class CoreModule {
 				const executeTime: number = startTime ? Number.parseFloat((getTime() - startTime).toFixed(3)) : 0
 
 				// Observer
-				if (this.el.isDev) {
-					if (this.trace.dataNode.has(node.id)) this.trace.dataNode.set(node.id, classExecute)
-					this.trace.traceExecute({ id: node.id, type: 'outputs', connectName: connectorName, executeTime })
-				}
+				if (this.el.isDev) this.stats.animations({ nodeId: node.id, connectName: connectorName, executeTime })
 
 				// Registrando logs
 				if (logExec && logExec.type !== 'none') {

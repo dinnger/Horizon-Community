@@ -96,16 +96,21 @@ export class Canvas {
 		callback: (e: any) => any
 	}[] = []
 
+	isLocked = false
+
 	constructor({
 		canvas,
-		theme
+		theme,
+		isLocked = false
 	}: {
 		canvas: HTMLCanvasElement
 		theme: string
+		isLocked?: boolean
 	}) {
 		this.canvas = canvas
 		this.context = canvas.getContext('2d') as CanvasRenderingContext2D
 		this.ctx = this.context
+		this.isLocked = isLocked
 		this.nodes = new Nodes({
 			canvasTranslate: this.canvasTranslate,
 			ctx: this.ctx
@@ -149,12 +154,12 @@ export class Canvas {
 		})
 	}
 
-  changeTheme(theme:string){
-    this.theme = theme
-    this.addImageProcess(this.theme === 'light' ? pattern_light : pattern_dark).then((img) => {
+	changeTheme(theme: string) {
+		this.theme = theme
+		this.addImageProcess(this.theme === 'light' ? pattern_light : pattern_dark).then((img) => {
 			this.canvasPattern = this.ctx.createPattern(img, 'repeat') as CanvasPattern
-    })
-  }
+		})
+	}
 
 	/**
 	 * Carga nodos y conexiones en el canvas.
@@ -318,6 +323,8 @@ export class Canvas {
 			this.newConnectionNode = this.nodes.selected({
 				relative: this.canvasRelativePos
 			})
+			if (this.isLocked) this.newConnectionNode = null
+
 			this.selectedNode = this.nodes.getSelected()
 
 			// Si hay nodos seleccionados, darles prioridad y salir
@@ -466,6 +473,17 @@ export class Canvas {
 		}
 		this.emit('mouse_move', this.canvasRelativePos)
 
+		// En modo locked, solo permitir movimiento del espacio de trabajo
+		if (this.isLocked) {
+			// Permitir solo movimiento del canvas
+			if ((this.eventsType === 'move' && e.buttons === 1) || e.buttons === 4) {
+				if (e.buttons === 4) this.eventsType = 'move'
+				this.canvasTranslate.x = e.clientX - this.canvasTempPosX
+				this.canvasTranslate.y = e.clientY - this.canvasTempPosY
+			}
+			return
+		}
+
 		// Actualizar cursor para redimensionamiento
 		if (!this.isDragging) {
 			// Primero verificar si está sobre un handle de redimensionamiento
@@ -557,8 +575,20 @@ export class Canvas {
 	 * @param _e - Evento del mouse
 	 */
 	private eventDbClick = (_e: MouseEvent) => {
+		// En modo locked, permitir doble click para ver propiedades
 		const selected = this.nodes.getSelected()
-		this.emit('node_dbclick', selected)
+		if (selected.length > 0 || this.isLocked) {
+			// Si estamos en modo locked, seleccionar el nodo en la posición del click
+			if (this.isLocked && selected.length === 0) {
+				this.nodes.selected({
+					relative: this.canvasRelativePos
+				})
+			}
+			this.emit('node_dbclick', {
+				nodes: this.nodes.getSelected(),
+				isLocked: this.isLocked
+			})
+		}
 	}
 
 	/**
@@ -574,6 +604,11 @@ export class Canvas {
 	 * @param _e - Evento del mouse
 	 */
 	private eventContextMenu = (_e: MouseEvent) => {
+		// En modo locked, deshabilitar menús contextuales
+		if (this.isLocked) {
+			return
+		}
+
 		// PRIMERO: Verificar si hay nodos seleccionados (mayor prioridad)
 		const selected = this.nodes.getSelected()
 		if (selected.length > 0) {
@@ -635,6 +670,8 @@ export class Canvas {
 	private eventMouseEnd() {
 		this.canvasSelect.show = false
 
+		if (this.isLocked) return
+
 		if (this.newConnectionNode && !getTempConnection()) {
 			const targetInput = this.nodes.getInputAtPosition({
 				x: this.canvasRelativePos.x,
@@ -678,6 +715,7 @@ export class Canvas {
 	private eventResize() {
 		const parent = this.canvas.parentElement
 		if (parent) {
+			if (parent.clientHeight === 0 && parent.clientWidth === 0) return
 			this.canvasWidth = parent.clientWidth
 			this.canvasHeight = parent.clientHeight
 			this.canvas.width = this.canvasWidth
@@ -746,6 +784,11 @@ export class Canvas {
 		}
 		node: INodeCanvas
 	}) {
+		// En modo locked, no permitir agregar nodos
+		if (this.isLocked) {
+			return null
+		}
+
 		const id = uuidv4()
 		this.newConnectionNode = null
 		const data: INodeCanvas = {
@@ -829,20 +872,6 @@ export class Canvas {
 			node.properties = properties
 			this.emit('node_update_properties', node)
 		}
-	}
-
-	/**
-	 * Procesa datos de trazado de ejecución de nodos.
-	 * @param data - Datos de entrada y salida de cada nodo
-	 */
-	actionTrace(data: {
-		[id: string]: {
-			input: { data: { [key: string]: number }; length: number }
-			output: { data: { [key: string]: number }; length: number }
-			callback: { data: { [key: string]: number }; length: number }
-		}
-	}) {
-		// this.nodes.trace(data);
 	}
 
 	/**
@@ -1085,5 +1114,30 @@ export class Canvas {
 	 */
 	clearGroups(): void {
 		this.groups.clear()
+	}
+
+	/**
+	 * Cambia el estado de bloqueo del canvas
+	 * @param locked - Nuevo estado de bloqueo
+	 */
+	setLocked(locked: boolean): void {
+		this.isLocked = locked
+
+		// Limpiar selecciones activas si se bloquea
+		if (locked) {
+			this.selectedNode = []
+			this.newConnectionNode = null
+			this.canvasSelect.show = false
+			this.notes.clearSelection()
+			this.groups.clearSelection()
+		}
+	}
+
+	/**
+	 * Obtiene el estado actual de bloqueo del canvas
+	 * @returns Estado de bloqueo
+	 */
+	isCanvasLocked(): boolean {
+		return this.isLocked
 	}
 }

@@ -7,6 +7,7 @@ import { workerManager } from '../../services/workerManager.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { setupWorkersRoutes } from './workers.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -193,7 +194,7 @@ export const setupWorkflowRoutes = {
 
 	// Execute workflow - requires authentication and project access
 	// Execute workflow - requires execute permission
-	'workflows:execute': async ({ socket, data, callback }: SocketData) => {
+	'workflows:execute': async ({ io, socket, data, callback }: SocketData) => {
 		try {
 			const { workflowId, trigger = 'manual', version } = data
 
@@ -291,24 +292,28 @@ export const setupWorkflowRoutes = {
 
 			// Create and start worker for workflow execution
 			try {
+				const exist = await workerManager.getWorkersByWorkflow(workflowId)
+				if (exist.length > 0) {
+					setupWorkersRoutes['workers:restart']({
+						io,
+						socket,
+						data: { workerId: exist[0].id },
+						callback: (data: any) => {
+							callback(data)
+						}
+					})
+					return
+				}
+
 				const worker = await workerManager.createWorker({
 					workflowId,
 					executionId: execution.id.toString(),
 					version: workflowVersion
 				})
 
-				console.log(`Worker ${worker.id} creado para ejecutar workflow ${workflowId}`)
-
 				// Set up worker event listeners for this execution
 				const handleWorkerReady = (workerInfo: any) => {
 					if (workerInfo.id === worker.id) {
-						console.log(`Worker ${worker.id} listo para ejecutar workflow ${workflowId}`)
-						socket.emit('workflows:worker-ready', {
-							workflowId,
-							executionId: execution.id,
-							workerId: worker.id,
-							port: worker.port
-						})
 						workerManager.off('worker:ready', handleWorkerReady)
 					}
 				}
@@ -328,13 +333,6 @@ export const setupWorkflowRoutes = {
 						if (!version) {
 							Workflow.update({ status: 'failed' }, { where: { id: workflowId } })
 						}
-
-						socket.emit('workflows:execution-error', {
-							workflowId,
-							executionId: execution.id,
-							workerId: worker.id,
-							error: errorData.error
-						})
 
 						workerManager.off('worker:error', handleWorkerError)
 					}
@@ -365,16 +363,6 @@ export const setupWorkflowRoutes = {
 								{ where: { id: workflowId } }
 							)
 						}
-
-						socket.emit('workflows:execution-completed', {
-							workflowId,
-							executionId: execution.id,
-							status: finalStatus,
-							version: workflowVersion,
-							duration,
-							workerId: worker.id
-						})
-
 						workerManager.off('worker:exit', handleWorkerExit)
 					}
 				}
