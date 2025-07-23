@@ -9,7 +9,7 @@ type IStatsType = 'animations' | 'console' | 'worker'
 
 type IStatsMap = {
 	animations: Map<string, Map<string, IStatsAnimations>>
-	console: { data: { [key: string]: number }; length: number }[]
+	console: { date: string; level: string; message: string }[]
 	worker: { data: { [key: string]: number }; length: number }[]
 }
 
@@ -43,6 +43,10 @@ export class CoreStats {
 		}
 	}
 
+	console(data: { date: string; level: string; message: string }) {
+		this.dataStats.console.push(data)
+	}
+
 	get(type: IStatsType) {
 		if (type === 'animations') {
 			if (this.dataStats.animations.size === 0) return null
@@ -55,6 +59,13 @@ export class CoreStats {
 			// Limpiar datos
 			this.dataStats.animations = new Map()
 			return animationsArray
+		}
+		if (type === 'console') {
+			if (this.dataStats.console.length === 0) return null
+			const consoleArray = [...this.dataStats.console]
+			// Limpiar datos
+			this.dataStats.console = []
+			return consoleArray
 		}
 		return null
 	}

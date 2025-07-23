@@ -27,6 +27,15 @@ interface IStatsAnimations {
 	length?: number
 }
 
+interface ExecutionTrace {
+	id: string
+	timestamp: Date
+	nodeId: string
+	connectionName: string
+	executeTime: number
+	length?: number
+}
+
 const newStore = () => {
 	const workflowsStore = useWorkflowsStore()
 	const deploymentStore = useDeploymentStore()
@@ -107,6 +116,9 @@ const newStore = () => {
 		status: 'draft'
 	})
 	const changes = ref(false)
+
+	// Estado para las trazas de ejecución
+	const executionTrace = ref<ExecutionTrace[]>([])
 
 	// =============================================================================
 	// MÉTODOS DE GRUPOS
@@ -415,22 +427,52 @@ const newStore = () => {
 		return canvasInstance ? canvasInstance.isCanvasLocked() : false
 	}
 
+	// Función para limpiar las trazas de ejecución
+	const clearExecutionTrace = () => {
+		executionTrace.value = []
+	}
+
+	// Función para agregar una nueva traza de ejecución
+	const addExecutionTrace = (trace: Omit<ExecutionTrace, 'id' | 'timestamp'>) => {
+		const newTrace: ExecutionTrace = {
+			id: `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			timestamp: new Date(),
+			...trace
+		}
+		executionTrace.value.push(newTrace)
+	}
+
 	// Función para inicializar las suscripciones
 	const initializeSubscriptions = () => {
 		socketService.listener({
 			event: 'workflow:animations',
 			params: [workflowStore.context?.info.uid || ''],
 			callback: (event: IStatsAnimations[]) => {
-				console.log('recibió un evento', event)
-				for (const list of event) {
-					const node = canvasInstance?.nodes.getNode({ id: list.nodeId })
+				for (const animation of event) {
+					// Agregar a la traza de ejecución
+					addExecutionTrace({
+						nodeId: animation.nodeId,
+						connectionName: animation.connectName,
+						executeTime: animation.executeTime,
+						length: animation.length
+					})
+
+					// Aplicar animación al nodo
+					const node = canvasInstance?.nodes.getNode({ id: animation.nodeId })
 					if (!node) continue
 					node.addAnimation({
-						connectionName: list.connectName,
-						length: list.length || 0,
+						connectionName: animation.connectName,
+						length: animation.length || 0,
 						type: 'input'
 					})
 				}
+			}
+		})
+		socketService.listener({
+			event: 'workflow:console',
+			params: [workflowStore.context?.info.uid || ''],
+			callback: (event: any) => {
+				console.log('workflow:console', event)
 			}
 		})
 	}
@@ -447,6 +489,7 @@ const newStore = () => {
 		changes,
 		version,
 		nodeOrigin,
+		executionTrace,
 
 		showNodePropertiesDialog,
 		selectedNodeForEdit,
@@ -497,6 +540,8 @@ const newStore = () => {
 		getHistory,
 		selectHistory,
 		clearHistory,
+		clearExecutionTrace,
+		addExecutionTrace,
 
 		handleExecuteWorkflow,
 		handleExecuteWithVersionSelection,

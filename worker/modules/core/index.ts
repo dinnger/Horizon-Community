@@ -13,7 +13,7 @@ import { CoreGlobalStore } from './store.module.js'
 import { convertJson } from '../../../shared/utils/utilities.js'
 import { envs } from '@worker/config/envs.js'
 import { CoreLogger } from './logger.module.js'
-import dayjs from 'dayjs'
+
 // -----------------------------------------------------------------------------
 // Base
 // -----------------------------------------------------------------------------
@@ -30,8 +30,6 @@ export class CoreModule {
 		this.el = el
 		this.debug = new CoreDebug({ el })
 		this.coreLogger = new CoreLogger(el)
-
-		this.initConsole()
 	}
 
 	/**
@@ -45,28 +43,6 @@ export class CoreModule {
 	 * console.log('Hello, World!'); // Logs: console.log ['Hello, World!'] and then logs: Hello, World!
 	 * ```
 	 */
-	initConsole() {
-		const cl = console.log
-		console.log = (...args) => {
-			// console.warn('console.log', args)
-			if (args.length > 1) {
-				args[0] = `\x1b[42m Execute \x1b[0m \x1B[34m${args[0]} \x1B[0m`
-				args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			}
-			if (args.length === 1) args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			cl.apply(console, args)
-		}
-		console.debug = (...args) => {
-			this.el.communicationModule.server.sendLogs([
-				{
-					date: dayjs().format('DD/MM/YYYY HH:mm:ss.SSS'),
-					level: 'info',
-					message: JSON.stringify(args)
-				}
-			])
-			// cl.apply(console, args)
-		}
-	}
 
 	/**
 	 * Executes the given node with the provided execution data.

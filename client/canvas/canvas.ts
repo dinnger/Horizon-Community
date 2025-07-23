@@ -720,8 +720,6 @@ export class Canvas {
 			this.canvasHeight = parent.clientHeight
 			this.canvas.width = this.canvasWidth
 			this.canvas.height = this.canvasHeight
-			console.log('canvasWidth', this.canvasWidth)
-			console.log('canvasHeight', this.canvasHeight)
 		}
 	}
 
