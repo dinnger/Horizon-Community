@@ -6,10 +6,28 @@ export const setupSubscribersRoutes = {
 		io.to(event).emit(event, eventData)
 	},
 	// Joins a specific room
-	'subscribe:join': async ({ socket, data, callback }: SocketData) => {
+	'subscribe:join': async ({ io, socket, data, callback, emitter }: SocketData) => {
 		const { room } = data
 		try {
 			socket.join(room)
+			const [domain, action, ...args] = room.split(':')
+
+			// Emit general subscription event
+			if (domain === 'worker' && action === 'status' && args.length > 0) {
+				;['worker:status']
+			}
+
+			// // Special handling for worker status subscriptions
+			// if (domain === 'worker' && action === 'status' && args.length > 0) {
+			// 	const workflowId = args[0]
+			// 	// Emit event to request current worker status for this workflow
+			// 	emitter.emit('worker:send-current-status', {
+			// 		workflowId,
+			// 		room,
+			// 		socketId: socket.id
+			// 	})
+			// }
+
 			callback({ success: true, message: `Suscrito a eventos de ${room}` })
 		} catch (error) {
 			console.error('Error al suscribirse a eventos', room, error)
@@ -17,7 +35,7 @@ export const setupSubscribersRoutes = {
 		}
 	},
 	// Leaves a specific room
-	'subscribe:close': async ({ socket, data, callback }: SocketData) => {
+	'subscribe:close': async ({ socket, data, callback, emitter }: SocketData) => {
 		try {
 			const { room, strict = false } = data
 			const rooms = socket.rooms
@@ -60,6 +78,8 @@ export const setupSubscribersRoutes = {
 				}
 			}
 
+			const [domain, action, ...args] = room.split(':')
+			emitter.emit(`${domain}:${action}`, args)
 			callback({ success: true, list: leaves })
 		} catch (error) {
 			console.log('Error al eliminar usuario de la sala:', error)

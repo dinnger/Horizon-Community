@@ -27,13 +27,20 @@ interface IStatsAnimations {
 	length?: number
 }
 
-interface ExecutionTrace {
+interface PanelTrace {
 	id: string
 	timestamp: Date
 	nodeId: string
 	connectionName: string
 	executeTime: number
 	length?: number
+}
+
+interface PanelConsole {
+	id: string
+	date: Date
+	level: string
+	message: string
 }
 
 const newStore = () => {
@@ -118,7 +125,8 @@ const newStore = () => {
 	const changes = ref(false)
 
 	// Estado para las trazas de ejecución
-	const executionTrace = ref<ExecutionTrace[]>([])
+	const panelTrace = ref<PanelTrace[]>([])
+	const panelConsole = ref<PanelConsole[]>([])
 
 	// =============================================================================
 	// MÉTODOS DE GRUPOS
@@ -427,61 +435,69 @@ const newStore = () => {
 		return canvasInstance ? canvasInstance.isCanvasLocked() : false
 	}
 
-	// Función para limpiar las trazas de ejecución
-	const clearExecutionTrace = () => {
-		executionTrace.value = []
+	// Función para limpiar las trazas de ejecución del panel
+	const clearPanelTrace = () => {
+		panelTrace.value = []
 	}
 
 	// Función para agregar una nueva traza de ejecución
-	const addExecutionTrace = (trace: Omit<ExecutionTrace, 'id' | 'timestamp'>) => {
-		const newTrace: ExecutionTrace = {
+	const addPanelTrace = (trace: Omit<PanelTrace, 'id' | 'timestamp'>) => {
+		const newTrace: PanelTrace = {
 			id: `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 			timestamp: new Date(),
 			...trace
 		}
-		executionTrace.value.push(newTrace)
+		panelTrace.value.push(newTrace)
+	}
+
+	// Función para agregar una nueva traza de ejecución
+	const addPanelConsole = (trace: PanelConsole) => {
+		const newTrace: PanelConsole = {
+			id: `console_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			date: new Date(),
+			level: 'info',
+			message: trace.message
+		}
+		panelConsole.value.push(newTrace)
+	}
+
+	// Función para limpiar las trazas de ejecución del panel
+	const clearPanelConsole = () => {
+		panelConsole.value = []
 	}
 
 	// Función para inicializar las suscripciones
 	const initializeSubscriptions = () => {
-		socketService.listener({
-			event: 'workflow:animations',
-			params: [workflowStore.context?.info.uid || ''],
-			callback: (event: IStatsAnimations[]) => {
-				for (const animation of event) {
-					// Agregar a la traza de ejecución
-					addExecutionTrace({
-						nodeId: animation.nodeId,
-						connectionName: animation.connectName,
-						executeTime: animation.executeTime,
-						length: animation.length
-					})
+		socketService.onWorkflowAnimations(workflowStore.context?.info.uid || '', (event: IStatsAnimations[]) => {
+			for (const animation of event) {
+				// Agregar a la traza de ejecución para la pantalla de estado
+				addPanelTrace({
+					nodeId: animation.nodeId,
+					connectionName: animation.connectName,
+					executeTime: animation.executeTime,
+					length: animation.length
+				})
 
-					// Aplicar animación al nodo
-					const node = canvasInstance?.nodes.getNode({ id: animation.nodeId })
-					if (!node) continue
-					node.addAnimation({
-						connectionName: animation.connectName,
-						length: animation.length || 0,
-						type: 'input'
-					})
-				}
+				// Aplicar animación al nodo
+				const node = canvasInstance?.nodes.getNode({ id: animation.nodeId })
+				if (!node) continue
+				node.addAnimation({
+					connectionName: animation.connectName,
+					length: animation.length || 0,
+					type: 'input'
+				})
 			}
 		})
-		socketService.listener({
-			event: 'workflow:console',
-			params: [workflowStore.context?.info.uid || ''],
-			callback: (event: any) => {
-				console.log('workflow:console', event)
+		socketService.onWorkflowConsole(workflowStore.context?.info.uid || '', (events: PanelConsole[]) => {
+			for (const event of events) {
+				addPanelConsole(event)
 			}
 		})
 	}
 
 	const closeSubscriptions = () => {
 		const uid = workflowStore.context?.info.uid || ''
-		socketService.closeListener({
-			event: `/workflow:.*:${uid}/`
-		})
+		socketService.removeListeners(`/workflow:.*:${uid}/`)
 	}
 
 	return {
@@ -489,7 +505,8 @@ const newStore = () => {
 		changes,
 		version,
 		nodeOrigin,
-		executionTrace,
+		panelTrace,
+		panelConsole,
 
 		showNodePropertiesDialog,
 		selectedNodeForEdit,
@@ -540,8 +557,8 @@ const newStore = () => {
 		getHistory,
 		selectHistory,
 		clearHistory,
-		clearExecutionTrace,
-		addExecutionTrace,
+		clearPanelTrace,
+		addPanelTrace,
 
 		handleExecuteWorkflow,
 		handleExecuteWithVersionSelection,

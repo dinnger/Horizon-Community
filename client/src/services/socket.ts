@@ -14,6 +14,7 @@ import type { IDeployment, IDeploymentInstance, IDeploymentType, IDeploymentQueu
 import type { IRole } from '@shared/interfaces/standardized'
 import { ref } from 'vue'
 import type { ISubscriberType } from '@shared/interfaces/subscriber/subscriber.interface'
+import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
 
 class SocketService {
 	private socket: Socket | null = null
@@ -63,37 +64,6 @@ class SocketService {
 
 	isSocketConnected(): boolean {
 		return this.isConnected.value && this.socket?.connected === true
-	}
-
-	// Events
-	listener({ event, params, callback }: { event: ISubscriberType; params?: string[]; callback?: any }) {
-		if (!this.socket) return console.error('Socket not connected')
-
-		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
-		this.socket.emit('subscribe:join', { room })
-		this.socket.on(room, (response: any) => {
-			callback(response)
-		})
-	}
-
-	closeListener({ event, params, callback }: { event: string | RegExp; params?: string[]; callback?: any }) {
-		if (!this.socket) return console.error('Socket not connected')
-		const room = params && Array.isArray(params) ? `${event}:${params.join(':')}` : event
-		this.socket.emit(
-			'subscribe:close',
-			{ room },
-			(response: {
-				success: boolean
-				list?: string[]
-			}) => {
-				if (this.socket && response.success && Array.isArray(response.list)) {
-					for (const item of response.list) {
-						console.log(`Removing listener for ${item}`)
-						this.socket.off(item)
-					}
-				}
-			}
-		)
 	}
 
 	// Auth methods
@@ -690,7 +660,31 @@ class SocketService {
 		})
 	}
 
+	// Workers
+	getWorkersByWorkflow(workflowId: string): Promise<IWorkerInfo[]> {
+		return new Promise((resolve, reject) => {
+			if (!this.socket) {
+				reject(new Error('Socket not connected'))
+				return
+			}
+
+			this.socket.emit('workers:by-workflow', { workflowId }, (response: any) => {
+				if (response.success && response.workers) {
+					resolve(response.workers)
+				} else {
+					reject(new Error(response.message || 'Failed to get workers by workflow'))
+				}
+			})
+		})
+	}
+
 	// Event listeners
+	private subscribe(room: string, callback: (data: any) => void) {
+		this.socket?.emit('subscribe:join', { room }, (response: any) => {
+			callback(response)
+		})
+	}
+
 	onWorkspaceCreated(callback: (workspace: any) => void): void {
 		this.socket?.on('workspaces:created', callback)
 	}
@@ -709,6 +703,48 @@ class SocketService {
 
 	onWorkflowExecutionCompleted(callback: (data: any) => void): void {
 		this.socket?.on('workflows:execution-completed', callback)
+	}
+
+	onWorkflowAnimations(workflowId: string, callback: (data: any) => void): void {
+		this.subscribe(`workflow:animations:${workflowId}`, () => {
+			this.socket?.on(`workflow:animations:${workflowId}`, (response: any) => {
+				callback(response)
+			})
+		})
+	}
+
+	onWorkflowConsole(workflowId: string, callback: (data: any) => void): void {
+		this.subscribe(`workflow:console:${workflowId}`, () => {
+			this.socket?.on(`workflow:console:${workflowId}`, (response: any) => {
+				callback(response)
+			})
+		})
+	}
+
+	onWorkerStatus(workflowId: string, callback: (data: any) => boolean): void {
+		this.subscribe(`worker:status:${workflowId}`, () => {
+			this.socket?.on(`worker:status:${workflowId}`, (response: any) => {
+				callback(response)
+			})
+		})
+	}
+
+	// Remove listeners
+	removeListeners(room: string | RegExp) {
+		this.socket?.emit(
+			'subscribe:close',
+			{ room },
+			(response: {
+				success: boolean
+				list?: string[]
+			}) => {
+				if (response.success && Array.isArray(response.list)) {
+					for (const item of response.list) {
+						this.socket?.off(item)
+					}
+				}
+			}
+		)
 	}
 
 	// Remove all listeners

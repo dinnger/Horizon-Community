@@ -42,12 +42,25 @@ export interface SocketData {
 	data: any
 	callback: (data: { success: boolean } & Record<string, any>) => void
 }
+
 export class SocketRoutes {
 	private io: Server | undefined
 
 	init(io: Server) {
 		this.io = io
 		this.setupRoutes()
+	}
+
+	execRoute(socket: AuthenticatedSocket, event: string, data: any, callback: (data: { success: boolean } & Record<string, any>) => void) {
+		// Se agrega :\s*subscribe\s* para ignorar los métodos de suscripción
+		if (!serverRouter[event]) {
+			if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', 'No se encontró el método', event)
+			console.error(`No se encontró el método ${event}`)
+			throw new Error(`No se encontró el método ${event}`)
+		}
+		if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', event, typeof data === 'object' ? JSON.stringify(data) : data)
+
+		serverRouter[event]({ io: this.io, socket, data, callback })
 	}
 
 	private setupRoutes() {
@@ -58,14 +71,13 @@ export class SocketRoutes {
 			socket.use(([event, ...args], next) => {
 				const data = args.length >= 1 ? args[0] : {}
 				const callback = args.length > 1 ? args[args.length - 1] : () => {}
-				// Se agrega :\s*subscribe\s* para ignorar los métodos de suscripción
-				const ommitedPermissions = ['auth:me', 'auth:login', /^subscribe:\w+$/]
 
 				if (!socket.userId) {
 					next(new Error('No se encontró el usuario'))
 				}
+				const bypassPermissions = ['auth:me', 'auth:login', /^subscribe:\w+$/]
 
-				if (!verifyPermission(socket as Required<AuthenticatedSocket>, event, ommitedPermissions)) {
+				if (!verifyPermission(socket as Required<AuthenticatedSocket>, event, bypassPermissions)) {
 					next(new Error(`No cumple permisos para ejecutar el método ${event}`))
 					if (callback && typeof callback === 'function') {
 						callback({ success: false, message: `No cumple permisos para ejecutar el método ${event}` })
@@ -73,14 +85,8 @@ export class SocketRoutes {
 					return
 				}
 
-				if (!serverRouter[event]) {
-					if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', 'No se encontró el método', event)
-					console.error(`No se encontró el método ${event}`)
-					next(new Error(`No se encontró el método ${event}`))
-					return
-				}
-				if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', event, typeof data === 'object' ? JSON.stringify(data) : data)
-				serverRouter[event]({ io: this.io, socket, data, callback })
+				this.execRoute(socket, event, data, callback)
+
 				next()
 			})
 

@@ -22,11 +22,11 @@
         @clearCurrentTab="clearCurrentTab" @toggleAutoScroll="toggleAutoScroll" />
 
       <!-- Contenido de Logs -->
-      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef" :executionLogs="executionLogs"
+      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef" :panelConsole="panelConsole"
         :autoScroll="autoScroll" />
 
       <!-- Contenido de Traza de Ejecución -->
-      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef" :executionTrace="executionTrace"
+      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef" :panelTrace="panelTrace"
         :autoScroll="autoScroll" />
 
     </div>
@@ -39,15 +39,14 @@ import CanvasExecutionHeader from './CanvasExecutionHeader.vue'
 import CanvasExecutionLogsTab from './CanvasExecutionLogsTab.vue'
 import CanvasExecutionTraceTab from './CanvasExecutionTraceTab.vue'
 
-interface ExecutionLog {
+interface PanelConsole {
   id: string
-  timestamp: Date
-  type: 'info' | 'warning' | 'error' | 'debug'
+  date: Date
+  level: string
   message: string
-  nodeId?: string
 }
 
-interface ExecutionTrace {
+interface PanelTrace {
   id: string
   timestamp: Date
   nodeId: string
@@ -57,8 +56,8 @@ interface ExecutionTrace {
 }
 
 interface Props {
-  executionLogs: ExecutionLog[]
-  executionTrace: ExecutionTrace[]
+  panelConsole: PanelConsole[]
+  panelTrace: PanelTrace[]
   isVisible: boolean
 }
 

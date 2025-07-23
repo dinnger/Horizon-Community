@@ -44,7 +44,7 @@
           <span class="mdi mdi-upload"></span>
           Publicar
         </button>
-        <div class="flex items-center space-x-2">
+        <!-- <div class="flex items-center space-x-2">
           <div class="dropdown dropdown-end">
             <label tabindex="0" class="btn btn-sm btn-success" :class="{ 'loading': isExecuting }">
               <span v-if="!isExecuting" class="mdi mdi-play"></span>
@@ -56,7 +56,7 @@
               <li><a @click="canvasStore.handleExecuteWithVersionSelection">Ejecutar Versión Específica...</a></li>
             </ul>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
 

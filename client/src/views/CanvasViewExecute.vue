@@ -1,8 +1,8 @@
 <template>
   <div>
     <CanvasArea name="execution" :is-locked="true" version="0.0.1" @canvas-ready="canvasReady" />
-    <CanvasExecutionTabs :is-visible="true" :execution-logs="list" :execution-trace="canvasStore.executionTrace"
-      @clear-logs="clearLogs" @clear-trace="clearTrace" />
+    <CanvasExecutionTabs :is-visible="true" :panel-console="canvasStore.panelConsole"
+      :panel-trace="canvasStore.panelTrace" @clear-logs="clearLogs" @clear-trace="clearTrace" />
   </div>
 </template>
 
@@ -58,7 +58,7 @@ const clearLogs = () => {
 
 const clearTrace = () => {
   // Limpiar trazas de ejecución
-  canvasStore.clearExecutionTrace()
+  canvasStore.clearPanelTrace()
 }
 
 onUnmounted(() => {

@@ -6,55 +6,18 @@
  */
 
 import type { Server } from 'socket.io'
+import type { IWorkerInfo, IWorkerMessage } from '@shared/interfaces/worker.interface.js'
 import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
 import { serverRouter } from '../routes/socket/index.js'
 import path from 'node:path'
 
-export interface WorkerInfo {
-	id: string
-	workflowId: string
-	processId: number
-	port: number
-	status: 'starting' | 'running' | 'stopping' | 'stopped' | 'error'
-	startTime: Date
-	lastActivity: Date
-	executionId?: string
-	version?: string
-	memoryUsage?: {
-		rss: number
-		heapUsed: number
-		heapTotal: number
-		external: number
-	}
-	cpuUsage?: {
-		user: number
-		system: number
-	}
-}
-
-export interface WorkerMessage {
-	type: string
-	data?: any
-	requestId?: string
-	workerId?: string
-	route?: string
-	success?: boolean
-	message?: string
-}
-
-export interface WorkerRequest {
-	route: string
-	data: any
-	callback: (response: any) => void
-}
-
 class WorkerManager extends EventEmitter {
 	private workers: Map<
 		string,
 		{
-			info: WorkerInfo
+			info: IWorkerInfo
 			process: Worker
 			pendingRequests: Map<string, (response: any) => void>
 		}
@@ -80,7 +43,7 @@ class WorkerManager extends EventEmitter {
 		workflowId: string
 		executionId?: string
 		version?: string
-	}): Promise<WorkerInfo> {
+	}): Promise<IWorkerInfo> {
 		const workerId = uuidv4()
 		const port = this.getAvailablePort()
 
@@ -88,7 +51,7 @@ class WorkerManager extends EventEmitter {
 			throw new Error('No hay puertos disponibles para el worker')
 		}
 
-		const workerInfo: WorkerInfo = {
+		const workerInfo: IWorkerInfo = {
 			id: workerId,
 			workflowId: options.workflowId,
 			processId: 0, // Will be set when process starts
@@ -245,21 +208,21 @@ class WorkerManager extends EventEmitter {
 	/**
 	 * Get all active workers
 	 */
-	getActiveWorkers(): WorkerInfo[] {
+	getActiveWorkers(): IWorkerInfo[] {
 		return Array.from(this.workers.values()).map((w) => w.info)
 	}
 
 	/**
 	 * Get worker by ID
 	 */
-	getWorker(workerId: string): WorkerInfo | undefined {
+	getWorker(workerId: string): IWorkerInfo | undefined {
 		return this.workers.get(workerId)?.info
 	}
 
 	/**
 	 * Get workers by workflow ID
 	 */
-	getWorkersByWorkflow(workflowId: string): WorkerInfo[] {
+	getWorkersByWorkflow(workflowId: string): IWorkerInfo[] {
 		return Array.from(this.workers.values())
 			.filter((w) => w.info.workflowId === workflowId)
 			.map((w) => w.info)
@@ -271,8 +234,8 @@ class WorkerManager extends EventEmitter {
 	updateWorkerStats(
 		workerId: string,
 		stats: {
-			memoryUsage?: WorkerInfo['memoryUsage']
-			cpuUsage?: WorkerInfo['cpuUsage']
+			memoryUsage?: IWorkerInfo['memoryUsage']
+			cpuUsage?: IWorkerInfo['cpuUsage']
 		}
 	): void {
 		const worker = this.workers.get(workerId)
@@ -292,7 +255,7 @@ class WorkerManager extends EventEmitter {
 			const workerProcess = await this.trySpawnWorker(workerId, workflowId, port)
 
 			// Handle worker messages
-			workerProcess.on('message', (message: WorkerMessage) => {
+			workerProcess.on('message', (message: IWorkerMessage) => {
 				this.handleWorkerMessage(workerId, message)
 			})
 
@@ -363,7 +326,7 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private handleWorkerMessage(workerId: string, message: WorkerMessage): void {
+	private handleWorkerMessage(workerId: string, message: IWorkerMessage): void {
 		const worker = this.workers.get(workerId)
 		if (!worker) return
 

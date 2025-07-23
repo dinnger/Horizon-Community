@@ -126,7 +126,7 @@
 
     </div>
     <div class="border-t border-gray-700 p-2 flex items-center justify-between text-xs text-gray-400">
-      <span>Total: {{ executionTrace.length }} trazas</span>
+      <span>Total: {{ panelTrace.length }} trazas</span>
       <div class="flex gap-4">
         <span>
           <span class="text-blue-400">●</span> Nodos: {{ uniqueNodesCount }}
@@ -135,7 +135,7 @@
           <span class="text-green-400">●</span> Conexiones: {{ uniqueConnectionsCount }}
         </span>
         <span>
-          <span class="text-orange-400">●</span> Total ejecuciones: {{ executionTrace.length }}
+          <span class="text-orange-400">●</span> Total ejecuciones: {{ panelTrace.length }}
         </span>
       </div>
     </div>
@@ -149,7 +149,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 
 const canvasStore = useCanvas()
 
-interface ExecutionTrace {
+interface PanelTrace {
   id: string
   timestamp: Date
   nodeId: string
@@ -159,7 +159,7 @@ interface ExecutionTrace {
 }
 
 interface Props {
-  executionTrace: ExecutionTrace[]
+  panelTrace: PanelTrace[]
   autoScroll: boolean
 }
 
@@ -179,18 +179,18 @@ interface NodeGroup {
     name: string
     executions: number
     avgTime: number
-    history: ExecutionTrace[]
+    history: PanelTrace[]
   }[]
 }
 
 const uniqueNodesCount = computed(() => {
-  const uniqueNodes = new Set(props.executionTrace.map(trace => trace.nodeId))
+  const uniqueNodes = new Set(props.panelTrace.map(trace => trace.nodeId))
   return uniqueNodes.size
 })
 
 const uniqueConnectionsCount = computed(() => {
   const uniqueConnections = new Set(
-    props.executionTrace.map(trace => `${trace.nodeId}-${trace.connectionName}`)
+    props.panelTrace.map(trace => `${trace.nodeId}-${trace.connectionName}`)
   )
   return uniqueConnections.size
 })
@@ -199,7 +199,7 @@ const uniqueConnectionsCount = computed(() => {
 const groupedTraces = computed(() => {
   const groups: Record<string, NodeGroup> = {}
 
-  for (const trace of props.executionTrace) {
+  for (const trace of props.panelTrace) {
     if (!groups[trace.nodeId]) {
       groups[trace.nodeId] = {
         name: canvasStore.getCanvasInstance.nodes.getNode({ id: trace.nodeId }).info.name,
@@ -273,7 +273,7 @@ const getTimeBarColor = (avgTime: number) => {
 }
 
 // Auto-scroll cuando se agregan nuevas trazas
-watch(() => props.executionTrace.length, () => {
+watch(() => props.panelTrace.length, () => {
   if (props.autoScroll) {
     nextTick(() => {
       if (traceContainer.value) {
