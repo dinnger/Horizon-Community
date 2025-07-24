@@ -1,3 +1,5 @@
+import type { ServerRouterEvents } from '@server/src/routes/socket'
+
 export interface IWorkerInfo {
 	id: string
 	workflowId: string
@@ -25,7 +27,7 @@ export interface IWorkerMessage {
 	data?: any
 	requestId?: string
 	workerId?: string
-	route?: string
+	route?: ServerRouterEvents
 	success?: boolean
 	message?: string
 }

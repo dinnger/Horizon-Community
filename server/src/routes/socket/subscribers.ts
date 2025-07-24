@@ -5,8 +5,9 @@ export const setupSubscribersRoutes = {
 	'subscribe:emit': async ({ io, event, eventData }: { io: any; event: string; eventData: any }) => {
 		io.to(event).emit(event, eventData)
 	},
+
 	// Joins a specific room
-	'subscribe:join': async ({ io, socket, data, callback, emitter }: SocketData) => {
+	'subscribe:join': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
 		const { room } = data
 		try {
 			socket.join(room)
@@ -14,19 +15,15 @@ export const setupSubscribersRoutes = {
 
 			// Emit general subscription event
 			if (domain === 'worker' && action === 'status' && args.length > 0) {
-				;['worker:status']
+				eventRouter('workers:by-workflow', { workflowId: args[0] }, ({ success, workers }) => {
+					if (success) {
+						callback({ success, workers })
+					} else {
+						callback({ success: false })
+					}
+					return
+				})
 			}
-
-			// // Special handling for worker status subscriptions
-			// if (domain === 'worker' && action === 'status' && args.length > 0) {
-			// 	const workflowId = args[0]
-			// 	// Emit event to request current worker status for this workflow
-			// 	emitter.emit('worker:send-current-status', {
-			// 		workflowId,
-			// 		room,
-			// 		socketId: socket.id
-			// 	})
-			// }
 
 			callback({ success: true, message: `Suscrito a eventos de ${room}` })
 		} catch (error) {
@@ -34,8 +31,9 @@ export const setupSubscribersRoutes = {
 			callback({ success: false, message: 'Error al suscribirse a eventos de animaciones' })
 		}
 	},
+
 	// Leaves a specific room
-	'subscribe:close': async ({ socket, data, callback, emitter }: SocketData) => {
+	'subscribe:close': async ({ socket, data, callback }: SocketData) => {
 		try {
 			const { room, strict = false } = data
 			const rooms = socket.rooms
@@ -78,8 +76,7 @@ export const setupSubscribersRoutes = {
 				}
 			}
 
-			const [domain, action, ...args] = room.split(':')
-			emitter.emit(`${domain}:${action}`, args)
+			// const [domain, action, ...args] = room.split(':')
 			callback({ success: true, list: leaves })
 		} catch (error) {
 			console.log('Error al eliminar usuario de la sala:', error)

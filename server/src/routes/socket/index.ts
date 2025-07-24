@@ -18,7 +18,7 @@ import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
 import { setupSubscribersRoutes } from './subscribers.js'
 
-export const serverRouter: Record<string, any> = {
+export const serverRouter = {
 	...setupAuthRoutes,
 	...setupWorkspaceRoutes,
 	...setupProjectRoutes,
@@ -34,13 +34,39 @@ export const serverRouter: Record<string, any> = {
 	...setupDeploymentTypesRoutes,
 	...setupDeploymentInstancesRoutes,
 	...setupSubscribersRoutes
-}
+} as const
 
+// Tipo dinámico que extrae todas las claves del serverRouter
+export type ServerRouterEvents = keyof typeof serverRouter
+
+// Tipo helper para el eventRouter con mejor tipado
+// Esto proporciona autocompletado para todos los eventos disponibles en serverRouter
+export type EventRouter = <T extends ServerRouterEvents>(
+	event: T,
+	data: any,
+	callback: (data: { success: boolean } & Record<string, any>) => void
+) => void
+
+/**
+ * Interfaz principal para los datos que reciben las rutas de Socket.IO
+ *
+ * @example
+ * // En un archivo de rutas, cuando uses eventRouter tendrás autocompletado:
+ * export const setupExampleRoutes = {
+ *   'example:action': async ({ eventRouter, data, callback }: SocketData) => {
+ *     // eventRouter ahora tiene tipado dinámico para todos los eventos disponibles
+ *     eventRouter('auth:login', { email: 'test', password: 'test' }, callback)
+ *     eventRouter('subscribe:join', { room: 'test' }, callback)
+ *     // Y muchos más eventos con autocompletado...
+ *   }
+ * }
+ */
 export interface SocketData {
 	io: Server
 	socket: Required<AuthenticatedSocket>
 	data: any
 	callback: (data: { success: boolean } & Record<string, any>) => void
+	eventRouter: EventRouter
 }
 
 export class SocketRoutes {
@@ -51,18 +77,62 @@ export class SocketRoutes {
 		this.setupRoutes()
 	}
 
-	execRoute(socket: AuthenticatedSocket, event: string, data: any, callback: (data: { success: boolean } & Record<string, any>) => void) {
-		// Se agrega :\s*subscribe\s* para ignorar los métodos de suscripción
-		if (!serverRouter[event]) {
+	/**
+	 * Executes a server route based on the provided event name, socket, and data.
+	 *
+	 * @param socket - The authenticated socket instance associated with the request.
+	 * @param event - The name of the event or route to execute.
+	 * @param data - The payload data to pass to the route handler.
+	 * @param callback - A callback function to send the result back to the client. Receives an object with a `success` boolean and additional properties.
+	 *
+	 * @throws {Error} If the socket does not have permission to execute the event or if the event handler is not found.
+	 *
+	 * @remarks
+	 * - Certain events can bypass permission checks as defined in `bypassPermissions`.
+	 * - Logs tracking information if `envs.TRACKING_ROUTE` is enabled.
+	 * - Invokes the corresponding handler from `serverRouter` if found.
+	 */
+	private execRoute(
+		socket: AuthenticatedSocket,
+		event: string,
+		data: any,
+		callback: (data: { success: boolean } & Record<string, any>) => void
+	) {
+		// Verificar si existe el método en el router
+		if (!(event in serverRouter)) {
 			if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', 'No se encontró el método', event)
 			console.error(`No se encontró el método ${event}`)
 			throw new Error(`No se encontró el método ${event}`)
 		}
+		// Registrar el método en el router
 		if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', event, typeof data === 'object' ? JSON.stringify(data) : data)
 
-		serverRouter[event]({ io: this.io, socket, data, callback })
+		// Ejecutar el método en el router (usamos type assertion después de validar que existe)
+		const routeHandler = (serverRouter as Record<string, any>)[event]
+		routeHandler({
+			io: this.io,
+			socket,
+			data,
+			callback,
+			eventRouter: (<T extends ServerRouterEvents>(
+				event: T,
+				data: any,
+				callback: (data: { success: boolean } & Record<string, any>) => void
+			) => {
+				this.execRoute(socket, event, data, callback)
+			}) as EventRouter
+		})
 	}
 
+	/**
+	 * Sets up Socket.IO event routes for handling client connections.
+	 *
+	 * - Registers a connection handler that logs when a client connects or disconnects.
+	 * - Applies middleware to each socket to validate the presence of a user ID and execute route logic.
+	 * - Handles errors during route execution and passes them to the next middleware.
+	 *
+	 * @private
+	 */
 	private setupRoutes() {
 		if (!this.io) return
 		this.io.on('connection', (socket: AuthenticatedSocket) => {
@@ -74,20 +144,23 @@ export class SocketRoutes {
 
 				if (!socket.userId) {
 					next(new Error('No se encontró el usuario'))
-				}
-				const bypassPermissions = ['auth:me', 'auth:login', /^subscribe:\w+$/]
-
-				if (!verifyPermission(socket as Required<AuthenticatedSocket>, event, bypassPermissions)) {
-					next(new Error(`No cumple permisos para ejecutar el método ${event}`))
-					if (callback && typeof callback === 'function') {
-						callback({ success: false, message: `No cumple permisos para ejecutar el método ${event}` })
-					}
 					return
 				}
 
-				this.execRoute(socket, event, data, callback)
-
-				next()
+				try {
+					// Verificar si el usuario tiene permisos para ejecutar el evento
+					const bypassPermissions = ['auth:me', 'auth:login', /^subscribe:\w+$/]
+					if (!verifyPermission(socket as Required<AuthenticatedSocket>, event, bypassPermissions)) {
+						if (callback && typeof callback === 'function') {
+							callback({ success: false, message: `No cumple permisos para ejecutar el método ${event}` })
+						}
+						throw new Error(`No cumple permisos para ejecutar el método ${event}`)
+					}
+					this.execRoute(socket, event, data, callback)
+					next()
+				} catch (error: any) {
+					next(error)
+				}
 			})
 
 			socket.on('disconnect', () => {

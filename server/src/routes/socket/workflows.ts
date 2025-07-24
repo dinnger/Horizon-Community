@@ -194,7 +194,7 @@ export const setupWorkflowRoutes = {
 
 	// Execute workflow - requires authentication and project access
 	// Execute workflow - requires execute permission
-	'workflows:execute': async ({ io, socket, data, callback }: SocketData) => {
+	'workflows:execute': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
 		try {
 			const { workflowId, trigger = 'manual', version } = data
 
@@ -294,13 +294,8 @@ export const setupWorkflowRoutes = {
 			try {
 				const exist = await workerManager.getWorkersByWorkflow(workflowId)
 				if (exist.length > 0) {
-					setupWorkersRoutes['workers:restart']({
-						io,
-						socket,
-						data: { workerId: exist[0].id },
-						callback: (data: any) => {
-							callback(data)
-						}
+					eventRouter('workers:restart', { workerId: exist[0].id }, (data: any) => {
+						callback(data)
 					})
 					return
 				}

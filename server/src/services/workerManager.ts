@@ -7,10 +7,10 @@
 
 import type { Server } from 'socket.io'
 import type { IWorkerInfo, IWorkerMessage } from '@shared/interfaces/worker.interface.js'
+import { serverRouter, type ServerRouterEvents } from '../routes/socket/index.js'
 import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
-import { serverRouter } from '../routes/socket/index.js'
 import path from 'node:path'
 
 class WorkerManager extends EventEmitter {
@@ -167,7 +167,7 @@ class WorkerManager extends EventEmitter {
 	/**
 	 * Handle requests from workers to the main server
 	 */
-	async handleWorkerRequest(workerId: string, route: string, data: any, requestId: string): Promise<void> {
+	async handleWorkerRequest(workerId: string, route: ServerRouterEvents, data: any, requestId: string): Promise<void> {
 		const worker = this.workers.get(workerId)
 		if (!worker) {
 			return
@@ -178,9 +178,8 @@ class WorkerManager extends EventEmitter {
 				throw new Error(`Ruta no encontrada: ${route}`)
 			}
 
-			await serverRouter[route]({
+			await (serverRouter as any)[route]({
 				io: this.io,
-				socket: null,
 				data,
 				callback: (data: any) => {
 					worker.process.postMessage({

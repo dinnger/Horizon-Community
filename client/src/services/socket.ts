@@ -721,9 +721,10 @@ class SocketService {
 		})
 	}
 
-	onWorkerStatus(workflowId: string, callback: (data: any) => boolean): void {
-		this.subscribe(`worker:status:${workflowId}`, () => {
-			this.socket?.on(`worker:status:${workflowId}`, (response: any) => {
+	onWorkerStatus(workflowId: string, callback: (data: any) => void): void {
+		this.subscribe(`worker:status:${workflowId}`, (response) => {
+			callback(response)
+			this.socket?.on(`worker:status:${workflowId}`, (response: IWorkerInfo) => {
 				callback(response)
 			})
 		})

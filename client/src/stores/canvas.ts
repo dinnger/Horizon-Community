@@ -10,6 +10,7 @@ import { useSettingsStore } from './settings'
 import { useNodesLibraryStore } from './nodesLibrary'
 import { useCanvasSubscribers } from './canvasSubscribers'
 import socketService from '@/services/socket'
+import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
 
 type WorkflowData = {
 	nodes: { [key: string]: INodeCanvas }
@@ -492,6 +493,9 @@ const newStore = () => {
 			for (const event of events) {
 				addPanelConsole(event)
 			}
+		})
+		socketService.onWorkerStatus(workflowStore.context?.info.uid || '', (event: { status: boolean; workers: IWorkerInfo[] }) => {
+			console.log('workerStatus', event)
 		})
 	}
 
