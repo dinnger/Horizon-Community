@@ -10,10 +10,10 @@
       <div class="flex-1 relative">
         <!-- Canvas Area (Design Tab) -->
         <div v-show="activeTab === 'design'" class="h-full">
-          <CanvasArea />
+          <CanvasArea @canvas-ready="canvasReady" :is-context="true" />
         </div>
         <div v-if="activeTab === 'execution'">
-          <CanvasViewExecute />
+          <CanvasAreaExecute :version="version" />
         </div>
       </div>
 
@@ -34,37 +34,41 @@
     <!-- Error State -->
     <CanvasErrorState v-if="canvasStore.isError" />
 
-    <!-- Panel de Debug/Consola -->
-    <DebugPanel />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useCanvas } from '@/stores'
+import { computed, onUnmounted, ref } from 'vue'
+import { useCanvas, useWorkflowsStore } from '@/stores'
 import { useCanvasEvents } from '@/stores/canvasEvents'
 import CanvasTabsHeader from '@/components/Canvas/CanvasTabsHeader.vue'
 import CanvasArea from '@/components/Canvas/CanvasArea.vue'
-import CanvasExecutionArea from '@/components/Canvas/CanvasExecutionArea.vue'
 import CanvasModalsManager from '@/components/Canvas/CanvasModalsManager.vue'
 import VersionSelectorModal from '@/components/Canvas/VersionSelectorModal.vue'
 import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
 import CanvasErrorState from '@/components/Canvas/CanvasErrorState.vue'
-import DebugPanel from '@/components/DebugPanel.vue'
-import { useRouter } from 'vue-router'
-import CanvasViewExecute from './CanvasViewExecute.vue'
+import CanvasAreaExecute from '@/components/Canvas/CanvasAreaExecute.vue'
 
+const workflowStore = useWorkflowsStore()
 const canvasStore = useCanvas()
 const canvasEvents = useCanvasEvents()
 
 // Estado de las pestañas
 const activeTab = ref<'design' | 'execution'>('design')
 
+const version = computed(() => {
+  return canvasStore.workerInfo?.version && workflowStore.context?.info.version !== canvasStore.workerInfo?.version ? canvasStore.workerInfo?.version : undefined
+})
+
 const showNotesManager = () => {
   canvasEvents.emit('note:manager:open', undefined)
 }
 
-// onMounted(async () => {
-//   await canvasStore.loadWorkflow(router.currentRoute.value.params.id as string)
-// })
+const canvasReady = () => {
+  canvasStore.initSubscriptionsCanvas()
+}
+
+onUnmounted(() => {
+  canvasStore.closeSubscriptionsCanvas()
+})
 </script>

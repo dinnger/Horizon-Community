@@ -307,15 +307,16 @@ class SocketService {
 		})
 	}
 
-	getWorkflowsById(workspaceId: string, id: string): Promise<any> {
+	getWorkflowsById(data: { workspaceId: string; workflowId: string; version?: string }): Promise<any> {
 		return new Promise((resolve, reject) => {
 			if (!this.socket) {
 				reject(new Error('Socket not connected'))
 				return
 			}
 
-			this.socket.emit('workflows:get', { workspaceId, id }, (response: any) => {
+			this.socket.emit('workflows:get', data, (response: any) => {
 				if (response.success) {
+					console.log('workflows:get', response.workflow)
 					resolve(response.workflow)
 				} else {
 					reject(new Error(response.message || 'Failed to get workflow'))

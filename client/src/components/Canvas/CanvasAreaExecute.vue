@@ -1,6 +1,6 @@
 <template>
   <div>
-    <CanvasArea name="execution" :is-locked="true" version="0.0.1" @canvas-ready="canvasReady" />
+    <CanvasArea name="execution" :is-locked="true" :version="version" @canvas-ready="canvasReady" />
     <CanvasExecutionTabs :is-visible="true" :panel-console="canvasStore.panelConsole"
       :panel-trace="canvasStore.panelTrace" @clear-logs="clearLogs" @clear-trace="clearTrace" />
   </div>
@@ -8,11 +8,16 @@
 
 <script setup lang="ts">
 import CanvasArea from '@/components/Canvas/CanvasArea.vue';
-import CanvasExecutionTabs from '../components/Canvas/CanvasExecutionTabs.vue';
+import CanvasExecutionTabs from './CanvasExecutionTabs.vue';
 import { useCanvas } from '@/stores';
 import { onUnmounted } from 'vue';
 
 const canvasStore = useCanvas('execution')
+
+defineProps<{
+  version?: string
+}>()
+
 
 interface ExecutionLog {
   id: string
@@ -47,7 +52,7 @@ const list: ExecutionLog[] = [
 ]
 
 const canvasReady = () => {
-  canvasStore.initializeSubscriptions()
+  canvasStore.initSubscriptionsExecution()
 
 }
 
@@ -62,7 +67,7 @@ const clearTrace = () => {
 }
 
 onUnmounted(() => {
-  canvasStore.closeSubscriptions()
+  canvasStore.closeSubscriptionsExecution()
 })
 
 </script>

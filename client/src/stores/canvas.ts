@@ -1,6 +1,7 @@
 import type { INodeCanvas, INodeConnections, INodeCanvasAdd } from '@canvas/interfaz/node.interface'
 import type { INote, INoteCanvas } from '@canvas/interfaz/note.interface'
 import type { INodeGroup, INodeGroupCanvas } from '@canvas/interfaz/group.interface'
+import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
 import { Canvas } from '@canvas/canvas'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
@@ -10,7 +11,6 @@ import { useSettingsStore } from './settings'
 import { useNodesLibraryStore } from './nodesLibrary'
 import { useCanvasSubscribers } from './canvasSubscribers'
 import socketService from '@/services/socket'
-import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
 
 type WorkflowData = {
 	nodes: { [key: string]: INodeCanvas }
@@ -112,6 +112,8 @@ const newStore = () => {
 	const selectedGroupForEdit = ref<INodeGroupCanvas | null>(null)
 	const selectedNodeIdsForGroup = ref<string[]>([])
 	const isEditingGroup = ref(false)
+	// Estados del worker
+	const workerInfo = ref<IWorkerInfo | null>(null)
 
 	const history = ref<WorkflowData[]>([])
 	const workflowId = ref<string>('')
@@ -136,10 +138,14 @@ const newStore = () => {
 		return canvasInstance
 	})
 
-	const load = async (data: { workflowId: string; version?: string }) => {
+	const load = async (data: { workflowId: string; version?: string; isContext?: boolean }) => {
 		try {
 			workflowId.value = data.workflowId
-			const dataFlow: { workflowData: WorkflowData; version: string } = await workflowsStore.getWorkflowById(workflowId.value, true)
+			const dataFlow: any = await workflowsStore.getWorkflowById({ workflowId: workflowId.value, version: data.version })
+
+			// Si se está cargando un contexto, se debe actualizar el contexto
+			if (data.isContext) await workflowsStore.setWorkflowContext(dataFlow)
+
 			console.log('canvasStore ', { dataFlow })
 			if (dataFlow?.workflowData) {
 				version.value.value = dataFlow.version
@@ -179,7 +185,7 @@ const newStore = () => {
 	const save = async () => {
 		if (!canvasInstance) return
 		try {
-			await workflowsStore.updateWorkflow(workflowId.value, canvasInstance.getWorkflowData())
+			await workflowsStore.updateWorkflow({ workflowId: workflowId.value, data: canvasInstance.getWorkflowData(), isContext: true })
 			changes.value = false
 		} catch (error) {}
 	}
@@ -374,7 +380,22 @@ const newStore = () => {
 	}
 
 	// Función para inicializar el canvas cuando el elemento esté listo
-	const initializeCanvas = ({ canvas, isLocked = false }: { canvas: HTMLCanvasElement; isLocked?: boolean }) => {
+	const initializeCanvas = async ({
+		workflowId,
+		version,
+		canvas,
+		isContext = false,
+		isLocked = false
+	}: { workflowId: string; version?: string; canvas: HTMLCanvasElement; isContext?: boolean; isLocked?: boolean }) => {
+		try {
+			await load({ workflowId, version, isContext })
+			isLoading.value = false
+		} catch (error) {
+			console.error(error)
+			isLoading.value = false
+			isError.value = true
+			return
+		}
 		canvasInstance = new Canvas({
 			canvas: canvas,
 			isLocked,
@@ -382,6 +403,15 @@ const newStore = () => {
 		})
 
 		initCanvas({ canvasInstance })
+
+		// Configurar todos los subscribers usando el store dedicado
+		watch(
+			() => settingsStore.currentTheme,
+			() => {
+				if (!canvasInstance) return
+				canvasInstance.changeTheme(settingsStore.currentTheme)
+			}
+		)
 
 		// Configurar todos los subscribers usando el store dedicado
 		canvasSubscribers.setupCanvasSubscribers(canvasInstance, {
@@ -401,27 +431,6 @@ const newStore = () => {
 
 		// Inicializar las notas
 		updateNotesFromCanvas()
-	}
-
-	// Función para cargar el workflow
-	const loadWorkflow = async ({ workflowId, version }: { workflowId: string; version?: string }) => {
-		try {
-			await load({ workflowId })
-
-			isLoading.value = false
-
-			watch(
-				() => settingsStore.currentTheme,
-				() => {
-					if (!canvasInstance) return
-					canvasInstance.changeTheme(settingsStore.currentTheme)
-				}
-			)
-		} catch (error) {
-			console.error(error)
-			isLoading.value = false
-			isError.value = true
-		}
 	}
 
 	// Función para cambiar el estado de bloqueo del canvas
@@ -468,7 +477,18 @@ const newStore = () => {
 	}
 
 	// Función para inicializar las suscripciones
-	const initializeSubscriptions = () => {
+	const initSubscriptionsCanvas = () => {
+		socketService.onWorkerStatus(workflowStore.context?.info.uid || '', (event: { success: boolean; workers: IWorkerInfo[] }) => {
+			console.log('workerStatus', event)
+			if (event.workers?.length > 0) {
+				workerInfo.value = event.workers[0]
+			} else {
+				workerInfo.value = null
+			}
+		})
+	}
+
+	const initSubscriptionsExecution = () => {
 		socketService.onWorkflowAnimations(workflowStore.context?.info.uid || '', (event: IStatsAnimations[]) => {
 			for (const animation of event) {
 				// Agregar a la traza de ejecución para la pantalla de estado
@@ -494,12 +514,14 @@ const newStore = () => {
 				addPanelConsole(event)
 			}
 		})
-		socketService.onWorkerStatus(workflowStore.context?.info.uid || '', (event: { status: boolean; workers: IWorkerInfo[] }) => {
-			console.log('workerStatus', event)
-		})
 	}
 
-	const closeSubscriptions = () => {
+	const closeSubscriptionsCanvas = () => {
+		const uid = workflowStore.context?.info.uid || ''
+		socketService.removeListeners(`/worker:.*:${uid}/`)
+	}
+
+	const closeSubscriptionsExecution = () => {
 		const uid = workflowStore.context?.info.uid || ''
 		socketService.removeListeners(`/workflow:.*:${uid}/`)
 	}
@@ -553,8 +575,9 @@ const newStore = () => {
 		currentWorkflowInfo,
 		showAutoDeploymentToast,
 		autoDeploymentInfo,
+		// Estados del worker
+		workerInfo,
 
-		loadWorkflow,
 		save,
 		publish,
 		execute,
@@ -571,8 +594,10 @@ const newStore = () => {
 		initializeCanvas,
 		setCanvasLocked,
 		isCanvasLocked,
-		initializeSubscriptions,
-		closeSubscriptions
+		initSubscriptionsCanvas,
+		initSubscriptionsExecution,
+		closeSubscriptionsCanvas,
+		closeSubscriptionsExecution
 	}
 }
 

@@ -2,12 +2,13 @@ import type { SocketData } from './index.js'
 
 export const setupSubscribersRoutes = {
 	// Emits an event to a specific room
-	'subscribe:emit': async ({ io, event, eventData }: { io: any; event: string; eventData: any }) => {
+	'subscribe:emit': async ({ io, data }: { io: any; data: { event: string; eventData: any } }) => {
+		const { event, eventData } = data
 		io.to(event).emit(event, eventData)
 	},
 
 	// Joins a specific room
-	'subscribe:join': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
+	'subscribe:join': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		const { room } = data
 		try {
 			socket.join(room)

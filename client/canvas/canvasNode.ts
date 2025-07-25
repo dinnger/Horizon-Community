@@ -261,7 +261,6 @@ export class NewNode {
 		length: number
 	}) {
 		if (this.el.ctx) {
-			console.log('addAnimation', data)
 			addAnimation({
 				node: this,
 				connections: data

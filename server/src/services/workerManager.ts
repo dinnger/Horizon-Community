@@ -3,8 +3,13 @@
  *
  * Manages workflow execution workers, their lifecycle, and communication
  * between the main server and worker processes.
+ *
+ * Emits events to subscribers:
+ * - worker:request - A request has been received from a worker
+ * - worker:error - A worker encountered an error
+ * - worker:exit - A worker has exited
+ * - worker:ready - A worker has finished initializing
  */
-
 import type { Server } from 'socket.io'
 import type { IWorkerInfo, IWorkerMessage } from '@shared/interfaces/worker.interface.js'
 import { serverRouter, type ServerRouterEvents } from '../routes/socket/index.js'
@@ -12,6 +17,7 @@ import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'node:path'
+import WorkflowExecution from '../models/WorkflowExecution.js'
 
 class WorkerManager extends EventEmitter {
 	private workers: Map<
@@ -41,7 +47,6 @@ class WorkerManager extends EventEmitter {
 	 */
 	async createWorker(options: {
 		workflowId: string
-		executionId?: string
 		version?: string
 	}): Promise<IWorkerInfo> {
 		const workerId = uuidv4()
@@ -51,6 +56,15 @@ class WorkerManager extends EventEmitter {
 			throw new Error('No hay puertos disponibles para el worker')
 		}
 
+		// Create execution record
+		const execution = await WorkflowExecution.create({
+			workflowId: options.workflowId,
+			status: 'running',
+			startTime: new Date(),
+			trigger: 'manual',
+			version: options.version // Store the executed version
+		})
+
 		const workerInfo: IWorkerInfo = {
 			id: workerId,
 			workflowId: options.workflowId,
@@ -59,7 +73,7 @@ class WorkerManager extends EventEmitter {
 			status: 'starting',
 			startTime: new Date(),
 			lastActivity: new Date(),
-			executionId: options.executionId,
+			executionId: execution.id,
 			version: options.version
 		}
 
@@ -80,7 +94,7 @@ class WorkerManager extends EventEmitter {
 			this.usedPorts.add(port)
 			this.emit('worker:created', workerInfo)
 
-			return workerInfo
+			return { ...workerInfo, executionId: execution.id }
 		} catch (error) {
 			this.usedPorts.delete(port)
 			workerInfo.status = 'error'
@@ -174,14 +188,10 @@ class WorkerManager extends EventEmitter {
 		}
 
 		try {
-			if (!serverRouter[route]) {
-				throw new Error(`Ruta no encontrada: ${route}`)
-			}
-
-			await (serverRouter as any)[route]({
-				io: this.io,
+			this.emit('worker:request', {
+				route,
 				data,
-				callback: (data: any) => {
+				callback: (data: { success: boolean; message?: string }) => {
 					worker.process.postMessage({
 						type: 'response',
 						requestId,
@@ -191,6 +201,7 @@ class WorkerManager extends EventEmitter {
 					})
 				}
 			})
+
 			worker.info.lastActivity = new Date()
 		} catch (error) {
 			console.error(`Error manejando solicitud de worker ${workerId}:`, error)
@@ -357,17 +368,52 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private handleWorkerError(workerId: string, error: Error): void {
+	private async handleWorkerError(workerId: string, error: Error): Promise<void> {
 		const worker = this.workers.get(workerId)
 		if (worker) {
 			worker.info.status = 'error'
-			this.emit('worker:error', { workerId, error: error.message })
+			await WorkflowExecution.update(
+				{
+					status: 'failed',
+					endTime: new Date(),
+					errorMessage: error.message
+				},
+				{
+					where: {
+						id: worker.info.executionId
+					}
+				}
+			)
+			this.emit('worker:error', { workerId, workflowId: worker.info.workflowId, error: error.message })
 		}
 	}
 
-	private handleWorkerExit(workerId: string, code: number | null, signal: NodeJS.Signals | null): void {
+	private async handleWorkerExit(workerId: string, code: number | null, signal: NodeJS.Signals | null): Promise<void> {
+		const worker = this.workers.get(workerId)
 		this.cleanupWorker(workerId)
-		this.emit('worker:exit', { workerId, code, signal })
+		if (!worker) return
+
+		const endTime = new Date()
+		const duration = `${Math.floor((endTime.getTime() - worker.info.startTime.getTime()) / 1000)}s`
+
+		// Determine final status based on exit code
+		const finalStatus = code === 0 ? 'success' : 'failed'
+
+		// Update execution record
+		await WorkflowExecution.update(
+			{
+				status: finalStatus,
+				endTime,
+				duration
+			},
+			{
+				where: {
+					id: worker.info.executionId
+				}
+			}
+		)
+
+		this.emit('worker:exit', { workerId, workflowId: worker.info.workflowId, code, signal })
 	}
 
 	private cleanupWorker(workerId: string): void {

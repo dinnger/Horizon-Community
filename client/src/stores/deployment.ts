@@ -67,7 +67,7 @@ export const useDeploymentStore = defineStore('deployment', () => {
 			error.value = null
 
 			// Obtener información del workflow
-			const workflow = await workflowStore.getWorkflowById(workflowId)
+			const workflow = await workflowStore.getWorkflowById({ workflowId })
 			if (!workflow) {
 				throw new Error('No se pudo obtener el workflow')
 			}

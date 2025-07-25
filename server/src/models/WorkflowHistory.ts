@@ -1,10 +1,13 @@
+import type { IWorkflowData } from '@shared/interfaces/standardized.js'
 import { DataTypes, Model, type Optional } from 'sequelize'
 import { sequelize } from '../config/database.js'
 import Workflow from './Workflow.js'
 import User from './User.js'
+import Project from './Project.js'
 
 export interface WorkflowHistoryAttributes {
 	id: string
+	projectId: string
 	workflowId: string
 	userId?: string // Usuario que realizó el cambio
 	changeType: 'created' | 'updated' | 'published' | 'archived' | 'restored' | 'deleted'
@@ -24,11 +27,12 @@ export class WorkflowHistory
 	implements WorkflowHistoryAttributes
 {
 	public id!: string
+	public projectId!: string
 	public workflowId!: string
 	public userId?: string
 	public changeType!: 'created' | 'updated' | 'published' | 'archived' | 'restored' | 'deleted'
 	public changeDescription!: string
-	public newData?: object
+	public newData?: IWorkflowData
 	public version!: string
 	public metadata?: object
 
@@ -42,6 +46,16 @@ WorkflowHistory.init(
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true
+		},
+		projectId: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			references: {
+				model: Project,
+				key: 'id'
+			},
+			onUpdate: 'CASCADE',
+			onDelete: 'CASCADE'
 		},
 		workflowId: {
 			type: DataTypes.UUID,
@@ -138,5 +152,7 @@ User.hasMany(WorkflowHistory, {
 	foreignKey: 'userId',
 	as: 'workflowChanges'
 })
+WorkflowHistory.belongsTo(Project, { foreignKey: 'projectId', as: 'project' })
+Project.hasMany(WorkflowHistory, { foreignKey: 'projectId', as: 'workflowsHistory' })
 
 export default WorkflowHistory

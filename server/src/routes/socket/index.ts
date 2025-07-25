@@ -17,6 +17,7 @@ import { setupDeploymentRoutes } from './deployments.js'
 import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
 import { setupSubscribersRoutes } from './subscribers.js'
+import { workerManager } from '@server/src/services/workerManager.js'
 
 export const serverRouter = {
 	...setupAuthRoutes,
@@ -75,6 +76,55 @@ export class SocketRoutes {
 	init(io: Server) {
 		this.io = io
 		this.setupRoutes()
+		this.listenToWorkerEvents()
+	}
+
+	/**
+	 * Sets up Socket.IO event routes for handling client connections.
+	 *
+	 * - Registers a connection handler that logs when a client connects or disconnects.
+	 * - Applies middleware to each socket to validate the presence of a user ID and execute route logic.
+	 * - Handles errors during route execution and passes them to the next middleware.
+	 *
+	 * @private
+	 */
+	private listenToWorkerEvents() {
+		workerManager.on('worker:request', ({ route, data, callback }) => {
+			this.execRoute({ event: route as ServerRouterEvents, data, callback })
+		})
+		workerManager.on('worker:error', ({ workflowId }) => {
+			const event = `worker:status:${workflowId}`
+			this.execRoute({
+				event: 'subscribe:emit',
+				data: {
+					event,
+					eventData: { success: true, workers: [] }
+				},
+				callback: (data: any) => console.log(data)
+			})
+		})
+		workerManager.on('worker:exit', ({ workflowId }) => {
+			const event = `worker:status:${workflowId}`
+			this.execRoute({
+				event: 'subscribe:emit',
+				data: {
+					event,
+					eventData: { success: true, workers: [] }
+				},
+				callback: (data: any) => console.log(data)
+			})
+		})
+		workerManager.on('worker:ready', (workerInfo) => {
+			const event = `worker:status:${workerInfo.workflowId}`
+			this.execRoute({
+				event: 'subscribe:emit',
+				data: {
+					event,
+					eventData: { success: true, workers: [workerInfo] }
+				},
+				callback: (data: any) => console.log(data)
+			})
+		})
 	}
 
 	/**
@@ -92,16 +142,20 @@ export class SocketRoutes {
 	 * - Logs tracking information if `envs.TRACKING_ROUTE` is enabled.
 	 * - Invokes the corresponding handler from `serverRouter` if found.
 	 */
-	private execRoute(
-		socket: AuthenticatedSocket,
-		event: string,
-		data: any,
+	private execRoute({
+		socket,
+		event,
+		data,
+		callback
+	}: {
+		socket?: AuthenticatedSocket
+		event: ServerRouterEvents
+		data: any
 		callback: (data: { success: boolean } & Record<string, any>) => void
-	) {
+	}) {
 		// Verificar si existe el método en el router
 		if (!(event in serverRouter)) {
 			if (envs.TRACKING_ROUTE) console.log('[TRACKING_ROUTE]', 'No se encontró el método', event)
-			console.error(`No se encontró el método ${event}`)
 			throw new Error(`No se encontró el método ${event}`)
 		}
 		// Registrar el método en el router
@@ -119,7 +173,7 @@ export class SocketRoutes {
 				data: any,
 				callback: (data: { success: boolean } & Record<string, any>) => void
 			) => {
-				this.execRoute(socket, event, data, callback)
+				this.execRoute({ socket, event, data, callback })
 			}) as EventRouter
 		})
 	}
@@ -144,7 +198,6 @@ export class SocketRoutes {
 
 				if (!socket.userId) {
 					next(new Error('No se encontró el usuario'))
-					return
 				}
 
 				try {
@@ -156,7 +209,7 @@ export class SocketRoutes {
 						}
 						throw new Error(`No cumple permisos para ejecutar el método ${event}`)
 					}
-					this.execRoute(socket, event, data, callback)
+					this.execRoute({ socket, event: event as ServerRouterEvents, data, callback })
 					next()
 				} catch (error: any) {
 					next(error)

@@ -271,7 +271,6 @@ export const setupWorkersRoutes = {
 			// Create a new worker with the same configuration
 			const newWorker = await workerManager.createWorker({
 				workflowId: worker.workflowId,
-				executionId: worker.executionId,
 				version: worker.version
 			})
 

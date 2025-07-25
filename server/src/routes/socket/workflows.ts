@@ -49,39 +49,66 @@ export const setupWorkflowRoutes = {
 	// Get workflow by ID - requires read permission
 	'workflows:get': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const { workspaceId, id, hidratation = true } = data
+			const { workspaceId, workflowId, version, hidratation = true } = data
 
-			const workflow = await Workflow.findOne({
-				include: [
-					{
-						attributes: ['id', 'name', 'description', 'transportType'],
-						model: Project,
-						as: 'project',
-						where: {
-							workspaceId
+			let workflow: Workflow | WorkflowHistory | null
+
+			if (!version) {
+				workflow = await Workflow.findOne({
+					include: [
+						{
+							attributes: ['id', 'name', 'description', 'transportType'],
+							model: Project,
+							as: 'project',
+							where: {
+								workspaceId
+							}
+						}
+					],
+					where: {
+						id: workflowId,
+						status: {
+							[Op.ne]: 'archived'
 						}
 					}
-				],
-				where: {
-					id,
-					status: {
-						[Op.ne]: 'archived'
+				})
+			} else {
+				workflow = await WorkflowHistory.findOne({
+					include: [
+						{
+							attributes: ['id', 'name', 'description', 'transportType'],
+							model: Project,
+							as: 'project',
+							where: {
+								workspaceId
+							}
+						}
+					],
+					where: {
+						workflowId,
+						version
 					}
+				})
+				if (workflow) {
+					workflow = (workflow as any)?.newData
 				}
-			})
+			}
+
+			const flow: any = (workflow as any)?.workflowData
 
 			// Hidratación de propiedades
-			if (hidratation && workflow?.workflowData?.nodes) {
-				for (const nodes of Object.values(workflow.workflowData.nodes)) {
-					if (!nodes?.properties) continue
+			if (hidratation && flow && flow.nodes) {
+				for (const nodes of Object.values(flow.nodes)) {
+					const node: any = nodes
+					if (!node?.properties) continue
 					// Si no existe el nodo, eliminarlo
-					if (!nodeClass[nodes.type]) {
-						delete workflow.workflowData.nodes[nodes.id]
+					if (!nodeClass[node.type]) {
+						delete flow.nodes[node.id]
 						continue
 					}
-					const property = nodeClass[nodes.type].properties
-					for (const [key, value] of Object.entries(nodes.properties)) {
-						nodes.properties[key] = {
+					const property = nodeClass[node.type].properties
+					for (const [key, value] of Object.entries(node.properties)) {
+						node.properties[key] = {
 							...property[key],
 							...(value as object)
 						}
@@ -168,7 +195,15 @@ export const setupWorkflowRoutes = {
 
 			const [updatedRows] = await Workflow.update(updates, { where: { id }, individualHooks: true })
 			if (updatedRows > 0) {
-				const updatedWorkflow = await Workflow.findByPk(id)
+				const updatedWorkflow = await Workflow.findByPk(id, {
+					include: [
+						{
+							attributes: ['id', 'name', 'description', 'transportType'],
+							model: Project,
+							as: 'project'
+						}
+					]
+				})
 				callback({ success: true, workflow: updatedWorkflow })
 			} else {
 				callback({ success: false, message: 'Error al actualizar workflow' })
@@ -270,26 +305,6 @@ export const setupWorkflowRoutes = {
 				// Continue with execution even if file save fails
 			}
 
-			// Create execution record
-			const execution = await WorkflowExecution.create({
-				workflowId,
-				status: 'running',
-				startTime: new Date(),
-				trigger,
-				version: workflowVersion // Store the executed version
-			})
-
-			// Update workflow status (only if executing latest version)
-			if (!version) {
-				await Workflow.update(
-					{
-						status: 'running',
-						lastRun: new Date()
-					},
-					{ where: { id: workflowId } }
-				)
-			}
-
 			// Create and start worker for workflow execution
 			try {
 				const exist = await workerManager.getWorkersByWorkflow(workflowId)
@@ -302,74 +317,12 @@ export const setupWorkflowRoutes = {
 
 				const worker = await workerManager.createWorker({
 					workflowId,
-					executionId: execution.id.toString(),
 					version: workflowVersion
 				})
 
-				// Set up worker event listeners for this execution
-				const handleWorkerReady = (workerInfo: any) => {
-					if (workerInfo.id === worker.id) {
-						workerManager.off('worker:ready', handleWorkerReady)
-					}
-				}
-
-				const handleWorkerError = (errorData: any) => {
-					if (errorData.workerId === worker.id) {
-						console.error(`Error en worker ${worker.id}:`, errorData.error)
-
-						// Update execution status
-						execution.update({
-							status: 'failed',
-							endTime: new Date(),
-							errorMessage: errorData.error
-						})
-
-						// Update workflow status if executing latest version
-						if (!version) {
-							Workflow.update({ status: 'failed' }, { where: { id: workflowId } })
-						}
-
-						workerManager.off('worker:error', handleWorkerError)
-					}
-				}
-
-				const handleWorkerExit = (exitData: any) => {
-					if (exitData.workerId === worker.id) {
-						const endTime = new Date()
-						const duration = `${Math.floor((endTime.getTime() - execution.startTime.getTime()) / 1000)}s`
-
-						// Determine final status based on exit code
-						const finalStatus = exitData.code === 0 ? 'success' : 'failed'
-
-						// Update execution record
-						execution.update({
-							status: finalStatus,
-							endTime,
-							duration
-						})
-
-						// Update workflow status if executing latest version
-						if (!version) {
-							Workflow.update(
-								{
-									status: finalStatus,
-									duration
-								},
-								{ where: { id: workflowId } }
-							)
-						}
-						workerManager.off('worker:exit', handleWorkerExit)
-					}
-				}
-
-				// Listen for worker events
-				workerManager.on('worker:ready', handleWorkerReady)
-				workerManager.on('worker:error', handleWorkerError)
-				workerManager.on('worker:exit', handleWorkerExit)
-
 				callback({
 					success: true,
-					executionId: execution.id,
+					executionId: worker.executionId,
 					workerId: worker.id,
 					port: worker.port,
 					version: workflowVersion,
@@ -379,13 +332,6 @@ export const setupWorkflowRoutes = {
 				})
 			} catch (workerError) {
 				console.error('Error creando worker:', workerError)
-
-				// Update execution status
-				await execution.update({
-					status: 'failed',
-					endTime: new Date(),
-					errorMessage: workerError instanceof Error ? workerError.message : 'Error creating worker'
-				})
 
 				// Update workflow status if executing latest version
 				if (!version) {

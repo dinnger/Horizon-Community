@@ -115,25 +115,27 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	}
 
-	const getWorkflowById = async (id: string, isContext = false) => {
-		const data = await socketService.getWorkflowsById(workspaceStore.currentWorkspaceId, id)
-		if (isContext) {
-			context.value = {
-				project: {
-					type: data.project.transportType
-				},
-				info: {
-					name: data.name,
-					uid: data.id
-				},
-				properties: data.properties
-			}
-		}
-		return data
+	const getWorkflowById = async ({ workflowId, version }: { workflowId: string; version?: string }) => {
+		return await socketService.getWorkflowsById({ workspaceId: workspaceStore.currentWorkspaceId, workflowId, version })
 	}
 
 	const getWorkflowVersion = async (id: string) => {
 		return await socketService.getWorkflowVersions(workspaceStore.currentWorkspaceId, id)
+	}
+
+	const setWorkflowContext = (data: any) => {
+		console.log('setWorkflowContext', data)
+		context.value = {
+			project: {
+				type: data.project.transportType
+			},
+			info: {
+				name: data.name,
+				uid: data.id,
+				version: data.version
+			},
+			properties: data.properties
+		}
 	}
 
 	const getWorkflowContext = () => {
@@ -158,11 +160,17 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	}
 
-	const updateWorkflow = async (
-		workflowId: string,
+	const updateWorkflow = async ({
+		workflowId,
+		data,
+		isContext = false
+	}: {
+		workflowId: string
 		data: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[]; notes?: any[]; groups?: any[] }
-	) => {
-		await socketService.updateWorkflow(workflowId, data)
+		isContext?: boolean
+	}) => {
+		const update = await socketService.updateWorkflow(workflowId, data)
+		if (isContext) setWorkflowContext(update)
 		return null
 	}
 
@@ -225,6 +233,7 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		getActiveWorkflowsCount,
 		getWorkflowStats,
 		getAllWorkflowStats,
+		setWorkflowContext,
 		getWorkflowContext,
 
 		// Actions

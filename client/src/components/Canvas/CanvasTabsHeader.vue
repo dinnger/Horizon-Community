@@ -23,59 +23,74 @@
           Notas
         </button>
 
-        <!-- Botón del Panel de Debug -->
-        <button class="btn btn-ghost btn-sm" @click="debugStore.togglePanel()"
-          :class="{ 'btn-active': debugStore.isVisible }" title="Panel de Debug y Consola">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 002 2z" />
-          </svg>
-          Debug
-        </button>
 
         <!-- Botones de acción en pestaña de diseño -->
-        <template v-if="activeTab === 'design'">
-          <button class="btn btn-success btn-sm" @click="handleSave" :disabled="!canvasStore.changes">
-            <span class="mdi mdi-content-save"></span>
-            Guardar
-          </button>
-        </template>
-        <button class="btn btn-primary btn-sm" @click="handlePublish">
-          <span class="mdi mdi-upload"></span>
-          Publicar
-        </button>
-        <div class="flex items-center space-x-2">
-          <div class="dropdown dropdown-end">
-            <label tabindex="0" class="btn btn-sm btn-success" :class="{ 'loading': isExecuting }">
-              <span v-if="!isExecuting" class="mdi mdi-play"></span>
-              {{ isExecuting ? 'Ejecutando...' : 'Ejecutar' }}
-              <span v-if="!isExecuting" class="mdi mdi-chevron-down ml-1"></span>
-            </label>
-            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-              <li><a @click="() => canvasStore.handleExecuteWorkflow()">Ejecutar Última Versión</a></li>
-              <li><a @click="canvasStore.handleExecuteWithVersionSelection">Ejecutar Versión Específica...</a></li>
-            </ul>
-          </div>
-        </div>
+
+
       </div>
     </div>
 
     <!-- Pestañas -->
-    <div class="bg-base-100/70 p-2 absolute z-10 m-2  backdrop-blur-md rounded-lg join">
-      <button class="btn btn-sm join-item"
+    <div class="bg-base-100/70 p-2 absolute z-10 m-[15px]  backdrop-blur-md rounded-lg join">
+      <button class="btn btn-sm join-item h-12 w-30"
         :class="{ 'btn-primary': activeTab === 'design', 'btn-soft': activeTab !== 'design' }"
         @click="$emit('update:activeTab', 'design')">
-        <span class="mdi mdi-drawing mr-2"></span>
-        Diseño
+        <div>
+          <div>
+            <span class="mdi mdi-drawing mr-2"></span>
+            Diseño
+          </div>
+          <div>
+            <div v-if="workflowStore.context" class="badge badge-warning badge-xs ml-2">
+              {{ workflowStore.context?.info.version }}
+            </div>
+          </div>
+        </div>
       </button>
-      <button class="btn btn-sm join-item"
+      <button class="btn btn-sm join-item h-12 w-30"
         :class="{ 'btn-primary': activeTab === 'execution', 'btn-soft': activeTab !== 'execution' }"
-        @click="$emit('update:activeTab', 'execution')">
-        <span class="mdi mdi-play mr-2"></span>
-        Ejecución
-        <span v-if="isExecuting" class="loading loading-spinner loading-xs ml-2"></span>
-        <div v-if="isExecuting" class="badge badge-warning badge-xs ml-2">Activo</div>
+        @click="handleExecute">
+
+        <div>
+          <div class="flex">
+            <span v-if="!canvasStore.workerInfo" class="mdi mdi-play mr-2"></span>
+            <div v-else class="w-2 h-2 rounded-full top-[5px] -left-[5px] bg-red-400 relative">
+              <span class="absolute inset-0 w-2 h-2 rounded-full bg-red-400 animate-ping opacity-75"></span>
+            </div>
+            {{ isExecuting ? "Ejecutando..." : !canvasStore.workerInfo ? 'Ejecutar' : 'En ejecución' }}
+          </div>
+          <div v-if="canvasStore.workerInfo" class="badge badge-warning badge-xs ml-2">
+            {{ canvasStore.workerInfo.version }}
+          </div>
+        </div>
       </button>
+    </div>
+
+    <div v-if="activeTab === 'design'"
+      class="bg-base-100/70 p-2 right-0 absolute z-10 m-[15px]  backdrop-blur-md rounded-lg join">
+      <button class="btn btn-info btn-sm" @click="handlePublish">
+        <span class="mdi mdi-upload"></span>
+        Publicar
+      </button>
+      <div class="border-l border-base-300 ml-1 mr-1 h-8 relative"></div>
+      <button class="btn btn-primary btn-sm" @click="handleSave" :disabled="!canvasStore.changes">
+        <span class="mdi mdi-content-save"></span>
+        Guardar
+      </button>
+    </div>
+
+    <div v-if="activeTab === 'execution'"
+      class="bg-base-100/70 p-2 right-0 absolute z-10 m-[15px]  backdrop-blur-md rounded-lg join">
+      <template v-if="canvasStore.workerInfo || !isReloading">
+        <button class="btn btn-sm join-item" v-if="canvasStore.workerInfo" disabled>
+          V.{{ canvasStore.workerInfo?.version }}
+        </button>
+        <button v-if="canvasStore.workerInfo || isReloading" class="btn btn-sm join-item" @click="handleReload"
+          :disabled="!canvasStore.workerInfo">
+          <span class="mdi mdi-reload mr-2" :class="{ 'mdi-spin': !canvasStore.workerInfo }"></span>
+          {{ canvasStore.workerInfo ? 'Reiniciar' : 'Reiniciando...' }}
+        </button>
+      </template>
     </div>
 
     <!-- Panel de Ejecución (solo visible en pestaña de ejecución) -->
@@ -93,10 +108,11 @@
 </template>
 
 <script setup lang="ts">
-import { useDebugConsoleStore, useCanvas } from '@/stores'
+import { useCanvas, useWorkflowsStore } from '@/stores'
 import VersionControlPanel from '@/components/VersionControlPanel.vue'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
 
 interface Props {
   projectName: string
@@ -105,13 +121,15 @@ interface Props {
   version: string
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
-const debugStore = useDebugConsoleStore()
 const canvasStore = useCanvas()
 const router = useRouter()
+const workflowStore = useWorkflowsStore()
 
-defineEmits<{
+const isReloading = ref(false)
+
+const emit = defineEmits<{
   showNotesManager: []
   'update:activeTab': [tab: 'design' | 'execution']
 }>()
@@ -135,6 +153,23 @@ const handlePublish = async () => {
     console.error('Error publishing workflow:', error)
   }
 }
+
+const handleExecute = async () => {
+  if (props.activeTab === 'execution') return
+  emit('update:activeTab', 'execution')
+  if (!canvasStore.workerInfo) canvasStore.handleExecuteWorkflow()
+}
+
+const handleReload = async () => {
+  isReloading.value = true
+  canvasStore.handleExecuteWorkflow()
+}
+
+watch(() => canvasStore.workerInfo, () => {
+  console.log('isReloading', isReloading.value)
+  isReloading.value = false
+})
+
 </script>
 
 <style scoped>

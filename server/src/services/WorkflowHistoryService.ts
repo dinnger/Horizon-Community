@@ -12,6 +12,7 @@ export async function recordChange(data: WorkflowHistoryCreationAttributes): Pro
  * Registra la creación de un nuevo workflow
  */
 export async function recordCreation(
+	projectId: string,
 	workflowId: string,
 	userId?: string,
 	workflowData?: object,
@@ -19,6 +20,7 @@ export async function recordCreation(
 	metadata?: object
 ): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'created',
@@ -33,6 +35,7 @@ export async function recordCreation(
  * Registra una actualización del workflow
  */
 export async function recordUpdate(
+	projectId: string,
 	workflowId: string,
 	userId?: string,
 	newData?: object,
@@ -41,6 +44,7 @@ export async function recordUpdate(
 	metadata?: object
 ): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'updated',
@@ -55,12 +59,14 @@ export async function recordUpdate(
  * Registra la publicación de un workflow
  */
 export async function recordPublication(
+	projectId: string,
 	workflowId: string,
 	userId?: string,
 	version = '0.0.1',
 	metadata?: object
 ): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'published',
@@ -73,8 +79,15 @@ export async function recordPublication(
 /**
  * Registra el archivado de un workflow
  */
-export async function recordArchive(workflowId: string, userId?: string, version = '0.0.1', metadata?: object): Promise<WorkflowHistory> {
+export async function recordArchive(
+	projectId: string,
+	workflowId: string,
+	userId?: string,
+	version = '0.0.1',
+	metadata?: object
+): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'archived',
@@ -87,8 +100,15 @@ export async function recordArchive(workflowId: string, userId?: string, version
 /**
  * Registra la restauración de un workflow
  */
-export async function recordRestore(workflowId: string, userId?: string, version = '0.0.1', metadata?: object): Promise<WorkflowHistory> {
+export async function recordRestore(
+	projectId: string,
+	workflowId: string,
+	userId?: string,
+	version = '0.0.1',
+	metadata?: object
+): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'restored',
@@ -102,6 +122,7 @@ export async function recordRestore(workflowId: string, userId?: string, version
  * Registra la eliminación de un workflow
  */
 export async function recordDeletion(
+	projectId: string,
 	workflowId: string,
 	userId?: string,
 	workflowData?: object,
@@ -109,6 +130,7 @@ export async function recordDeletion(
 	metadata?: object
 ): Promise<WorkflowHistory> {
 	return await recordChange({
+		projectId,
 		workflowId,
 		userId,
 		changeType: 'deleted',
