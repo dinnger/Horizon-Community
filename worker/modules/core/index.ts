@@ -156,7 +156,7 @@ export class CoreModule {
 				const timeString = `[Duration: ${`${executeTimeString}ms`.toString().padEnd(10, ' ')} Accumulative: ${`${executeMeta.accumulativeTime}ms`.padEnd(10, ' ')} Memory: ${memory}mb]`
 				for (const o of destiny) {
 					if (!o) continue
-					console.log(
+					console.debug(
 						`\x1b[42m Execute \x1b[0m ${node.info.name.padEnd(13, ' ')} --> ${connectorName ? `${connectorName.padEnd(13, ' ')} --> ` : ''} ${o.padEnd(13, ' ')} \x1b[34m ${timeString.padEnd(40, ' ')} \x1b[0m`
 					)
 				}

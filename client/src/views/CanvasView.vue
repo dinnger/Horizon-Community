@@ -13,7 +13,7 @@
           <CanvasArea @canvas-ready="canvasReady" :is-context="true" />
         </div>
         <div v-if="activeTab === 'execution'">
-          <CanvasAreaExecute :version="version" />
+          <CanvasAreaExecute :workflowId="workflowId" :version="version" />
         </div>
       </div>
 
@@ -42,7 +42,9 @@ import CanvasModalsManager from '@/components/Canvas/CanvasModalsManager.vue'
 import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
 import CanvasErrorState from '@/components/Canvas/CanvasErrorState.vue'
 import CanvasAreaExecute from '@/components/Canvas/CanvasAreaExecute.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const workflowStore = useWorkflowsStore()
 const canvasStore = useCanvas()
 const canvasExecuteStore = useCanvas('execution')
@@ -54,6 +56,8 @@ const activeTab = ref<'design' | 'execution'>('design')
 const version = computed(() => {
   return canvasExecuteStore.workerInfo?.version && workflowStore.context?.info.version !== canvasExecuteStore.workerInfo?.version ? canvasExecuteStore.workerInfo?.version : undefined
 })
+
+const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const showNotesManager = () => {
   canvasEvents.emit('note:manager:open', undefined)

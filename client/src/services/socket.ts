@@ -679,14 +679,14 @@ class SocketService {
 		})
 	}
 
-	stopWorker(workflowId: string): Promise<{ success: boolean; message?: string }> {
+	stopWorker({ workerId }: { workerId: string }): Promise<{ success: boolean; message?: string }> {
 		return new Promise((resolve, reject) => {
 			if (!this.socket) {
 				reject(new Error('Socket not connected'))
 				return
 			}
 
-			this.socket.emit('workers:stop', { workflowId }, (response: any) => {
+			this.socket.emit('workers:stop', { workerId }, (response: any) => {
 				if (response.success) {
 					resolve(response)
 				} else {

@@ -19,7 +19,23 @@ export default class implements IClassNode {
 		}
 
 		this.properties = {
-			delay: {
+			value: {
+				name: 'Valor',
+				type: 'string',
+				value: '{{input.data}}'
+			},
+			type: {
+				name: 'Tipo',
+				type: 'options',
+				value: 'info',
+				options: [
+					{ label: 'Info', value: 'info' },
+					{ label: 'Warning', value: 'warning' },
+					{ label: 'Error', value: 'error' },
+					{ label: 'Debug', value: 'debug' }
+				]
+			},
+			showProduction: {
 				name: 'Mostrar en producción',
 				type: 'switch',
 				value: false
@@ -27,8 +43,23 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onExecute({ inputData, outputData }: classOnExecuteInterface) {
-		console.debug('[console]', inputData.data)
-		outputData('response', inputData.data)
+	async onExecute({ outputData }: classOnExecuteInterface) {
+		if (this.properties.showProduction.value === false && process.env.NODE_ENV === 'production') return
+		const value = this.properties.value.value
+		switch (this.properties.type.value) {
+			case 'info':
+				console.info('console', value)
+				break
+			case 'warning':
+				console.warn('console', value)
+				break
+			case 'error':
+				console.error('console', value)
+				break
+			case 'debug':
+				console.debug('console', value)
+				break
+		}
+		outputData('response', { data: this.properties.value.value })
 	}
 }

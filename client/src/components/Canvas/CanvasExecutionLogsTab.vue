@@ -39,7 +39,7 @@
           <span class="text-emerald-400">●</span> Info: {{ logCounts.info }}
         </span>
         <span>
-          <span class="text-yellow-400">●</span> Advertencia: {{ logCounts.warning }}
+          <span class="text-yellow-400">●</span> Advertencia: {{ logCounts.warn }}
         </span>
         <span>
           <span class="text-red-400">●</span> Error: {{ logCounts.error }}
@@ -72,7 +72,7 @@ const getLogClass = (type: string) => {
   switch (type) {
     case 'error':
       return 'text-red-400'
-    case 'warning':
+    case 'warn':
       return 'text-yellow-400'
     case 'info':
       return 'text-emerald-400'
@@ -91,7 +91,7 @@ const getLogIcon = (type: string) => {
   switch (type) {
     case 'error':
       return '✕'
-    case 'warning':
+    case 'warn':
       return '⚠'
     case 'info':
       return 'ℹ'

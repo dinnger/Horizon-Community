@@ -61,6 +61,9 @@
           <div v-if="canvasExecuteStore.workerInfo" class="badge badge-warning badge-xs ml-2">
             {{ canvasExecuteStore.workerInfo.version }}
           </div>
+          <div v-else class="badge badge-error badge-xs ml-2">
+            Sin ejecución
+          </div>
         </div>
       </button>
     </div>
@@ -80,12 +83,12 @@
 
     <div v-if="activeTab === 'execution'"
       class="bg-base-100/70 p-2 right-0 absolute z-10 m-[15px]  backdrop-blur-md rounded-lg join">
-      <template v-if="canvasExecuteStore.workerInfo || !isReloading">
+      <template v-if="canvasExecuteStore.workerInfo || isReloading">
         <!-- Selector de versiones -->
-        <button class="btn btn-sm join-item" v-if="canvasExecuteStore.workerInfo" disabled>
+        <button v-if="canvasExecuteStore.workerInfo" class="btn btn-sm join-item" disabled>
           V.{{ canvasExecuteStore.workerInfo?.version }}
         </button>
-        <button class="btn btn-sm join-item" @click="handleVersionSelection">
+        <button v-if="canvasExecuteStore.workerInfo" class="btn btn-sm join-item" @click="handleVersionSelection">
           <span class="mdi mdi-format-list-numbered mr-2"></span>
           Ejecutar versión
         </button>
@@ -93,7 +96,7 @@
         <!-- Información de versión actual -->
 
         <!-- Detener worker -->
-        <button v-if="canvasExecuteStore.workerInfo" class="btn btn-error btn-sm join-item" @click="handleStopWorker">
+        <button v-if="canvasExecuteStore.workerInfo" class="btn btn-sm join-item" @click="handleStopWorker">
           <span class="mdi mdi-stop mr-2"></span>
           Detener
         </button>
@@ -164,6 +167,7 @@ const handleSave = async () => {
 const handlePublish = async () => {
   try {
     await canvasStore.publish(router.currentRoute.value.params.id as string)
+
     toast.success('Workflow publicado correctamente')
   } catch (error) {
     toast.error('Error al publicar el workflow')
@@ -183,9 +187,11 @@ const handleReload = async () => {
 }
 
 const handleStopWorker = async () => {
+  if (!canvasExecuteStore.workerInfo) return
   try {
-    const result = await canvasExecuteStore.stopWorker()
+    const result = await canvasExecuteStore.stopWorker({ workerId: canvasExecuteStore.workerInfo?.id })
     if (result.success) {
+      emit('update:activeTab', 'design')
       toast.success('Worker detenido correctamente')
     } else {
       toast.error(`Error al detener worker: ${result.message}`)
@@ -200,7 +206,7 @@ const handleVersionSelection = async () => {
   canvasExecuteStore.showSelectedVersion = true
 }
 
-watch(() => canvasStore.workerInfo, () => {
+watch(() => canvasExecuteStore.workerInfo, () => {
   isReloading.value = false
 })
 

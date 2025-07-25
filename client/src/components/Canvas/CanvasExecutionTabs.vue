@@ -112,7 +112,6 @@ const startResize = (event: MouseEvent) => {
 }
 
 const handleResize = (event: MouseEvent) => {
-  console.log(event.x)
   if (!isResizing.value) return
 
   const deltaY = startY.value - event.clientY // Invertido porque el panel crece hacia arriba

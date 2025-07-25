@@ -18,7 +18,8 @@ import VersionSelectorModal from './VersionSelectorModal.vue';
 
 const canvasExecuteStore = useCanvas('execution')
 
-defineProps<{
+const props = defineProps<{
+  workflowId: string
   version?: string
 }>()
 
@@ -31,38 +32,15 @@ interface ExecutionLog {
   nodeId?: string
 }
 
-const list: ExecutionLog[] = [
-  {
-    id: '1',
-    timestamp: new Date(),
-    type: 'info',
-    message: 'Iniciando ejecución del workflow...',
-    nodeId: 'node_1'
-  },
-  {
-    id: '2',
-    timestamp: new Date(Date.now() + 1000),
-    type: 'info',
-    message: 'Procesando datos de entrada',
-    nodeId: 'node_2'
-  },
-  {
-    id: '3',
-    timestamp: new Date(Date.now() + 2000),
-    type: 'warning',
-    message: 'Advertencia: Algunos datos pueden estar incompletos',
-    nodeId: 'node_3'
-  }
-]
 
 const canvasReady = () => {
-  canvasExecuteStore.initSubscriptionsExecution()
+  canvasExecuteStore.closeSubscriptionsExecution({ workflowId: props.workflowId })
+  canvasExecuteStore.initSubscriptionsExecution({ workflowId: props.workflowId })
 
 }
 
 const clearLogs = () => {
   // Limpiar logs de ejecución
-  list.length = 0
 }
 
 const clearTrace = () => {
@@ -71,7 +49,7 @@ const clearTrace = () => {
 }
 
 onUnmounted(() => {
-  canvasExecuteStore.closeSubscriptionsExecution()
+  canvasExecuteStore.closeSubscriptionsExecution({ workflowId: props.workflowId })
 })
 
 </script>
