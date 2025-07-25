@@ -271,8 +271,8 @@ export class NewNode {
 
 	render({ ctx }: { ctx: CanvasRenderingContext2D }) {
 		render_node({
+			el: this.el.el,
 			ctx,
-			theme: 'dark',
 			node: this,
 			selected: this.isSelected,
 			infoTrace: this.infoTrace

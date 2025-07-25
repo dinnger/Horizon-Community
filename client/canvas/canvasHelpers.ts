@@ -3,6 +3,7 @@ import type { Point } from './canvasConnector'
 import type { NewNode } from './canvasNode'
 import { OrthogonalConnector } from './canvasConnector'
 import { v4 as uuidv4 } from 'uuid'
+import type { Canvas } from './canvas.js'
 interface Canvas_Interface {
 	x1: number
 	y1: number
@@ -89,20 +90,20 @@ export function getTempConnection(): Interface_Node_Add_Connection | null {
  * @param {boolean} params.selected - Indicates whether the node is selected.
  */
 export function render_node({
+	el,
 	ctx,
 	node,
-	theme,
 	selected,
 	infoTrace
 }: {
+	el: Canvas
 	ctx: CanvasRenderingContext2D
-	theme: string
 	node: INodeCanvas
 	selected: boolean
 	infoTrace: Map<string, number>
 }) {
-	const background = theme === 'dark' ? '#333' : '#ECF0F1'
-	const invert_background = theme === 'dark' ? '#ECF0F1' : '#ECF0F1'
+	const background = el.theme === 'dark' ? '#333' : '#ECF0F1'
+	const invert_background = el.theme === 'dark' ? '#ECF0F1' : '#ECF0F1'
 	// console.log(node)
 	// selected = true
 	ctx.beginPath()
@@ -114,7 +115,7 @@ export function render_node({
 		ctx.shadowOffsetY = 0
 	}
 	ctx.lineWidth = 0
-	ctx.roundRect(node.design.x, node.design.y, node.design.width!, node.design.height!, 16)
+	ctx.roundRect(node.design.x, node.design.y, node.design.width || 0, node.design.height || 0, 16)
 	ctx.fill()
 	ctx.shadowColor = 'transparent' // Reset shadow
 	ctx.closePath()
@@ -139,7 +140,7 @@ export function render_node({
 	ctx.textAlign = 'left'
 	ctx.closePath()
 
-	renderConnectors({ selected, node, ctx, infoTrace, theme })
+	renderConnectors({ selected, node, ctx, infoTrace, theme: el.theme })
 
 	// render_inputs({ selected, node, ctx, theme })
 	// render_outputs({ selected, node, ctx, theme })

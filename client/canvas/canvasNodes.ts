@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NewNode } from './canvasNode'
 import { ref } from 'vue'
 import { getPositionConnection } from './canvasHelpers.js'
+import type { Canvas } from './canvas.js'
 
 /**
  * Gestiona la colección de nodos en el canvas y sus operaciones.
@@ -11,22 +12,24 @@ import { getPositionConnection } from './canvasHelpers.js'
 export class Nodes {
 	public canvasGrid = 20
 	name: string
+	theme: string
+	el: Canvas
 	canvasTranslate: { x: number; y: number }
 	nodes: { [key: string]: NewNode } = {}
 	ctx: CanvasRenderingContext2D | null = null
 
 	constructor({
 		name,
-		canvasTranslate,
-		ctx
+		el
 	}: {
 		name: string
-		canvasTranslate: { x: number; y: number }
-		ctx: CanvasRenderingContext2D
+		el: Canvas
 	}) {
+		this.el = el
 		this.name = name
-		this.canvasTranslate = canvasTranslate
-		this.ctx = ctx
+		this.theme = this.el.theme
+		this.canvasTranslate = this.el.canvasTranslate
+		this.ctx = this.el.ctx
 	}
 
 	/**

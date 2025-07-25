@@ -1,5 +1,6 @@
 <template>
   <div>
+    <CanvasExecutionHeader :activeTab="'execution'" />
     <CanvasArea v-if="canvasExecuteStore.workerInfo" name="execution" :is-locked="true" :version="version"
       @canvas-ready="canvasReady" />
     <CanvasExecutionTabs :is-visible="true" :panel-console="canvasExecuteStore.panelConsole"
@@ -15,6 +16,7 @@ import CanvasExecutionTabs from './CanvasExecutionTabs.vue';
 import { useCanvas } from '@/stores';
 import { onUnmounted } from 'vue';
 import VersionSelectorModal from './VersionSelectorModal.vue';
+import CanvasExecutionHeader from './CanvasExecutionHeader.vue';
 
 const canvasExecuteStore = useCanvas('execution')
 

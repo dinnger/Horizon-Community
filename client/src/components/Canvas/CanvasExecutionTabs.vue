@@ -18,7 +18,7 @@
     <div
       class="bg-base-100/70 backdrop-blur-md text-white rounded-lg shadow-2xl border border-gray-700 h-full flex flex-col">
       <!-- Header con Tabs -->
-      <CanvasExecutionHeader :activeTab="activeTab" :autoScroll="autoScroll" @updateActiveTab="updateActiveTab"
+      <CanvasExecutionTabsHeader :activeTab="activeTab" :autoScroll="autoScroll" @updateActiveTab="updateActiveTab"
         @clearCurrentTab="clearCurrentTab" @toggleAutoScroll="toggleAutoScroll" />
 
       <!-- Contenido de Logs -->
@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import CanvasExecutionHeader from './CanvasExecutionHeader.vue'
+import CanvasExecutionTabsHeader from './CanvasExecutionTabsHeader.vue'
 import CanvasExecutionLogsTab from './CanvasExecutionLogsTab.vue'
 import CanvasExecutionTraceTab from './CanvasExecutionTraceTab.vue'
 

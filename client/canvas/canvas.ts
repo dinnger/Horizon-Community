@@ -115,14 +115,14 @@ export class Canvas {
 		this.context = canvas.getContext('2d') as CanvasRenderingContext2D
 		this.ctx = this.context
 		this.isLocked = isLocked
-		this.nodes = new Nodes({
-			name,
-			canvasTranslate: this.canvasTranslate,
-			ctx: this.ctx
-		})
+
 		this.notes = new CanvasNotes()
 		this.groups = new CanvasGroups()
 		this.theme = theme
+		this.nodes = new Nodes({
+			name,
+			el: this
+		})
 		this.init()
 	}
 
