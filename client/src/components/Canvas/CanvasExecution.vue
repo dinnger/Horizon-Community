@@ -18,7 +18,7 @@ import { onUnmounted } from 'vue';
 import VersionSelectorModal from './VersionSelectorModal.vue';
 import CanvasExecutionHeader from './CanvasExecutionHeader.vue';
 
-const canvasExecuteStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas()
 
 const props = defineProps<{
   workflowId: string

@@ -11,7 +11,6 @@ import type { Canvas } from './canvas.js'
  */
 export class Nodes {
 	public canvasGrid = 20
-	name: string
 	theme: string
 	el: Canvas
 	canvasTranslate: { x: number; y: number }
@@ -19,14 +18,11 @@ export class Nodes {
 	ctx: CanvasRenderingContext2D | null = null
 
 	constructor({
-		name,
 		el
 	}: {
-		name: string
 		el: Canvas
 	}) {
 		this.el = el
-		this.name = name
 		this.theme = this.el.theme
 		this.canvasTranslate = this.el.canvasTranslate
 		this.ctx = this.el.ctx
@@ -40,8 +36,7 @@ export class Nodes {
 	 */
 	getNode(data: { id: string }) {
 		const node = this.nodes[data.id]
-		console.log('nodes', this.name, this.nodes, data.id)
-		if (!node) throw new Error(`[getNode] ${this.name} No se encontró el nodo ${data.id}`)
+		if (!node) throw new Error(`[getNode]  No se encontró el nodo ${data.id}`)
 		return this.nodes[data.id]
 	}
 

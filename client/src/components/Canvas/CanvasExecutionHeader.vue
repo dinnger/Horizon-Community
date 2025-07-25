@@ -37,7 +37,7 @@ import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
 import { computed, ref, watch } from 'vue'
 
-const canvasExecuteStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas()
 const router = useRouter()
 
 const isReloading = ref(false)

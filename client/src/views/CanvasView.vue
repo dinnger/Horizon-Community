@@ -11,11 +11,11 @@
           <CanvasDesign :workflowId="workflowId" />
         </div>
         <div v-if="activeTab === 'execution'">
-          <CanvasExecution :workflowId="workflowId" :version="version" />
+          <CanvasExecution :workflowId="workflowId" />
         </div>
       </div>
 
-      <!-- Modals Manager - Sistema refactorizado -->
+      <!-- Modals Manager - Propiedades, Manejo de Nodos, Manejo de Conexiones, Manejo de Notas, Manejo de Grupos -->
       <CanvasModalsManager />
 
       <!-- Auto Deployment Toast -->
@@ -31,9 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
-import { useCanvas, useWorkflowsStore } from '@/stores'
-import { useCanvasEvents } from '@/stores/canvasEvents'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useCanvas } from '@/stores'
 import CanvasModalsManager from '@/components/Canvas/CanvasModalsManager.vue'
 import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
 import CanvasErrorState from '@/components/Canvas/CanvasErrorState.vue'
@@ -43,23 +42,20 @@ import CanvasHeader from '@/components/Canvas/CanvasHeader.vue'
 import CanvasDesign from '@/components/Canvas/CanvasDesign.vue'
 
 const router = useRouter()
-const workflowStore = useWorkflowsStore()
 const canvasStore = useCanvas()
-const canvasExecuteStore = useCanvas('execution')
-const canvasEvents = useCanvasEvents()
+const canvasExecuteStore = useCanvas()
 
 // Estado de las pestañas
 const activeTab = ref<'design' | 'execution'>('design')
 
-const version = computed(() => {
-  return canvasExecuteStore.workerInfo?.version && workflowStore.context?.info.version !== canvasExecuteStore.workerInfo?.version ? canvasExecuteStore.workerInfo?.version : undefined
-})
 
 const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
-
+onMounted(() => {
+  canvasExecuteStore.initSubscriptionsCanvas({ workflowId: workflowId.value })
+})
 
 onUnmounted(() => {
-  canvasExecuteStore.closeSubscriptionsCanvas()
+  canvasExecuteStore.closeSubscriptionsCanvas({ workflowId: workflowId.value })
 })
 </script>

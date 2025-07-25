@@ -12,12 +12,9 @@
       <div class="drawer-side">
         <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
         <div class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-          <button class="btn btn-sm btn-primary" @click="canvasStore.clearHistory()">
-            Limpiar Cambios
-          </button>
+
           <div class="divider my-2"></div>
-          <div class="btn btn-ghost mb-2" v-for="workflow in history" :key="workflow.version"
-            @click="canvasStore.selectHistory(workflow.version)">
+          <div class="btn btn-ghost mb-2" v-for="workflow in history" :key="workflow.version" @click="() =>">
             <div class="flex-1 min-w-0">
               <div class="flex items-center space-x-2">
                 <span class="font-medium text-sm truncate">{{ workflow.version }}</span>

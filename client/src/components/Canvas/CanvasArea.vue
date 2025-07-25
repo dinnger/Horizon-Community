@@ -25,7 +25,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const canvasStore = useCanvas(props.name || 'canvas')
+const canvasStore = useCanvas()
 
 const emit = defineEmits<{
   canvasReady: [canvas: HTMLCanvasElement]

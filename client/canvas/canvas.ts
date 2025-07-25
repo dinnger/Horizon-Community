@@ -97,20 +97,16 @@ export class Canvas {
 	}[] = []
 
 	isLocked = false
-	name: string
 
 	constructor({
-		name,
 		canvas,
 		theme,
 		isLocked = false
 	}: {
-		name: string
 		canvas: HTMLCanvasElement
 		theme: string
 		isLocked?: boolean
 	}) {
-		this.name = name
 		this.canvas = canvas
 		this.context = canvas.getContext('2d') as CanvasRenderingContext2D
 		this.ctx = this.context
@@ -120,7 +116,6 @@ export class Canvas {
 		this.groups = new CanvasGroups()
 		this.theme = theme
 		this.nodes = new Nodes({
-			name,
 			el: this
 		})
 		this.init()

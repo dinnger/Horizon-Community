@@ -2,7 +2,8 @@
   <!-- Canvas Tabs Header -->
   <CanvasTabsHeader :project-name="canvasStore.projectName" :is-executing="canvasStore.isExecuting"
     :version="canvasStore.version.value" />
-  <CanvasArea @canvas-ready="canvasReady" :is-context="true" />
+  <CanvasArea :is-context="true" />
+
 </template>
 
 <script setup lang="ts">
@@ -14,10 +15,8 @@ import CanvasTabsHeader from '@/components/Canvas/CanvasTabsHeader.vue'
 const router = useRouter()
 const workflowStore = useWorkflowsStore()
 const canvasStore = useCanvas()
-const canvasExecuteStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas()
 
-const canvasReady = () => {
-  canvasExecuteStore.initSubscriptionsCanvas()
-}
+
 
 </script>

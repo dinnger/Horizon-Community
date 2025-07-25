@@ -63,7 +63,7 @@ interface Props {
 
 const router = useRouter()
 const workflowStore = useWorkflowsStore()
-const canvasExecuteStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas()
 
 const props = defineProps<Props>()
 

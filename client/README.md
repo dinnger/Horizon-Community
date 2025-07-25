@@ -31,3 +31,16 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## 📋 Development Guidelines
+
+### Store Rules
+
+Before working with stores, please read the [Store Rules](./src/stores/STORE_RULES.md) to understand the architectural principles and restrictions for client-side stores.
+
+**Key Points:**
+
+- Stores should only contain UI state and actions that modify UI state
+- No data listings or server data caching in stores
+- Use composables and services for data management
+- Subscriptions should only be used if they change UI state

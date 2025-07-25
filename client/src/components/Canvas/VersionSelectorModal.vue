@@ -43,7 +43,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-const canvasExecuteStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas()
 const router = useRouter()
 
 interface Version {
