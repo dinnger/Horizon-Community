@@ -87,10 +87,6 @@ const newStore = () => {
 	const isExecuting = ref(false)
 	const isLoading = ref(true)
 	const isError = ref(false)
-	// Estados para el selector de versiones
-	const showVersionSelector = ref(false)
-	const availableVersions = ref<any[]>([])
-	const selectedVersion = ref<string | null>(null)
 	// Estados para el selector de despliegue
 	const showDeploymentSelector = ref(false)
 	const selectedDeploymentId = ref<string | null>(null)
@@ -130,6 +126,9 @@ const newStore = () => {
 	// Estado para las trazas de ejecución
 	const panelTrace = ref<PanelTrace[]>([])
 	const panelConsole = ref<PanelConsole[]>([])
+
+	// Estado para la modal de selección de versiones
+	const showSelectedVersion = ref(false)
 
 	// =============================================================================
 	// MÉTODOS DE GRUPOS
@@ -190,17 +189,10 @@ const newStore = () => {
 		} catch (error) {}
 	}
 
-	const execute = async (selectedVersion?: string) => {
-		if (!canvasInstance) return
-
+	const execute = async (data: { workflowId: string; version?: string }) => {
 		try {
-			// First save the current workflow (only if no specific version is selected)
-			if (!selectedVersion) {
-				await save()
-			}
-
 			// Execute the workflow which will also save to file
-			const result = await socketService.executeWorkflow(workflowId.value, 'manual', selectedVersion)
+			const result = await socketService.executeWorkflow(data.workflowId, 'manual', data.version)
 
 			if (result.success) {
 				console.log('Workflow ejecutado exitosamente:', result.executionId)
@@ -222,11 +214,25 @@ const newStore = () => {
 
 	const getVersions = async () => {
 		try {
-			const result = await workflowsStore.getWorkflowVersion(workflowId.value)
-			return result
+			const result = await socketService.getWorkflowVersions({ workflowId: workflowId.value })
+			return { success: true, versions: result.versions }
 		} catch (error) {
 			console.error('Error obteniendo versiones:', error)
-			return { success: false, message: 'Error al obtener versiones' }
+			return { success: false, message: 'Error al obtener versiones', versions: [] }
+		}
+	}
+
+	const stopWorker = async () => {
+		try {
+			const result = await socketService.stopWorker(workflowId.value)
+			if (result.success) {
+				workerInfo.value = null
+				return result
+			}
+			return { success: false, message: result.message || 'Error al detener worker' }
+		} catch (error) {
+			console.error('Error deteniendo worker:', error)
+			return { success: false, message: 'Error al detener worker' }
 		}
 	}
 
@@ -259,11 +265,11 @@ const newStore = () => {
 	}
 
 	// Función para manejar la ejecución del workflow
-	const handleExecuteWorkflow = async (version?: string) => {
+	const handleExecuteWorkflow = async (data: { workflowId: string; version?: string }) => {
 		if (isExecuting.value) return
 		isExecuting.value = true
 		try {
-			const result = await execute(version)
+			const result = await execute(data)
 			console.log('result', result)
 		} catch (error) {
 			alert('Error inesperado ejecutando workflow')
@@ -271,42 +277,6 @@ const newStore = () => {
 			isExecuting.value = false
 		}
 	}
-
-	// Función para mostrar el selector de versiones
-	const handleExecuteWithVersionSelection = async () => {
-		try {
-			const versionsResult = await getVersions()
-
-			if (versionsResult?.success) {
-				availableVersions.value = versionsResult.versions
-				showVersionSelector.value = true
-			} else {
-				alert(`Error obteniendo versiones: ${versionsResult?.message || 'Error desconocido'}`)
-			}
-		} catch (error) {
-			console.error('Error obteniendo versiones:', error)
-			alert('Error obteniendo versiones del workflow')
-		}
-	}
-
-	// Función para cerrar el selector de versiones
-	const closeVersionSelector = () => {
-		showVersionSelector.value = false
-		selectedVersion.value = null
-	}
-
-	// Función para ejecutar la versión seleccionada
-	const executeSelectedVersion = async () => {
-		if (!selectedVersion.value) {
-			alert('Por favor selecciona una versión')
-			return
-		}
-
-		closeVersionSelector()
-		await handleExecuteWorkflow(selectedVersion.value)
-	}
-
-	// Función para manejar el guardado del canvas
 
 	// Función para manejar la publicación del canvas
 	const publish = async (workflowId: string) => {
@@ -557,9 +527,6 @@ const newStore = () => {
 		isLoading,
 		isError,
 		// Estados del selector de versiones
-		showVersionSelector,
-		availableVersions,
-		selectedVersion,
 		noteDialogPosition,
 		showNotesManager,
 		allNotes,
@@ -577,6 +544,8 @@ const newStore = () => {
 		autoDeploymentInfo,
 		// Estados del worker
 		workerInfo,
+		// Estado para la modal de selección de versiones
+		showSelectedVersion,
 
 		save,
 		publish,
@@ -586,18 +555,16 @@ const newStore = () => {
 		clearHistory,
 		clearPanelTrace,
 		addPanelTrace,
-
+		stopWorker,
 		handleExecuteWorkflow,
-		handleExecuteWithVersionSelection,
-		closeVersionSelector,
-		executeSelectedVersion,
 		initializeCanvas,
 		setCanvasLocked,
 		isCanvasLocked,
 		initSubscriptionsCanvas,
 		initSubscriptionsExecution,
 		closeSubscriptionsCanvas,
-		closeSubscriptionsExecution
+		closeSubscriptionsExecution,
+		getVersions
 	}
 }
 

@@ -60,11 +60,11 @@ export class initProperties {
 			const value = this.executeData.get(key)
 			if (!value) continue
 			if (value.meta)
-				this.currentObject[this.nodes[key].name] = {
+				this.currentObject[this.nodes[key].info.name] = {
 					data: value.data,
 					meta: value.meta
 				}
-			else this.currentObject[this.nodes[key].name] = { data: value.data }
+			else this.currentObject[this.nodes[key].info.name] = { data: value.data }
 		}
 	}
 

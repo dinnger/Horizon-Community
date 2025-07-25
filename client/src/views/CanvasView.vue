@@ -20,11 +20,6 @@
       <!-- Modals Manager - Sistema refactorizado -->
       <CanvasModalsManager />
 
-      <!-- Version Selector Modal -->
-      <VersionSelectorModal :is-visible="canvasStore.showVersionSelector"
-        :available-versions="canvasStore.availableVersions" :selected-version="canvasStore.selectedVersion"
-        @execute-selected-version="canvasStore.executeSelectedVersion" @close="canvasStore.closeVersionSelector" />
-
       <!-- Auto Deployment Toast -->
       <AutoDeploymentToast :show="canvasStore.showAutoDeploymentToast"
         :workflow-name="canvasStore.autoDeploymentInfo?.workflowName || ''"
@@ -44,20 +39,20 @@ import { useCanvasEvents } from '@/stores/canvasEvents'
 import CanvasTabsHeader from '@/components/Canvas/CanvasTabsHeader.vue'
 import CanvasArea from '@/components/Canvas/CanvasArea.vue'
 import CanvasModalsManager from '@/components/Canvas/CanvasModalsManager.vue'
-import VersionSelectorModal from '@/components/Canvas/VersionSelectorModal.vue'
 import AutoDeploymentToast from '@/components/AutoDeploymentToast.vue'
 import CanvasErrorState from '@/components/Canvas/CanvasErrorState.vue'
 import CanvasAreaExecute from '@/components/Canvas/CanvasAreaExecute.vue'
 
 const workflowStore = useWorkflowsStore()
 const canvasStore = useCanvas()
+const canvasExecuteStore = useCanvas('execution')
 const canvasEvents = useCanvasEvents()
 
 // Estado de las pestañas
 const activeTab = ref<'design' | 'execution'>('design')
 
 const version = computed(() => {
-  return canvasStore.workerInfo?.version && workflowStore.context?.info.version !== canvasStore.workerInfo?.version ? canvasStore.workerInfo?.version : undefined
+  return canvasExecuteStore.workerInfo?.version && workflowStore.context?.info.version !== canvasExecuteStore.workerInfo?.version ? canvasExecuteStore.workerInfo?.version : undefined
 })
 
 const showNotesManager = () => {
@@ -65,10 +60,10 @@ const showNotesManager = () => {
 }
 
 const canvasReady = () => {
-  canvasStore.initSubscriptionsCanvas()
+  canvasExecuteStore.initSubscriptionsCanvas()
 }
 
 onUnmounted(() => {
-  canvasStore.closeSubscriptionsCanvas()
+  canvasExecuteStore.closeSubscriptionsCanvas()
 })
 </script>

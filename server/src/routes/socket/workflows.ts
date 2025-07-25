@@ -259,7 +259,7 @@ export const setupWorkflowRoutes = {
 				}
 
 				workflowInfo = workflow
-				workflowData = historyEntry.newData
+				workflowData = historyEntry.newData?.workflowData
 				workflowVersion = historyEntry.version
 			} else {
 				// Si no se especifica versión, usar la versión actual (última)
@@ -309,7 +309,7 @@ export const setupWorkflowRoutes = {
 			try {
 				const exist = await workerManager.getWorkersByWorkflow(workflowId)
 				if (exist.length > 0) {
-					eventRouter('workers:restart', { workerId: exist[0].id }, (data: any) => {
+					eventRouter('workers:restart', { workerId: exist[0].id, version: workflowVersion }, (data: any) => {
 						callback(data)
 					})
 					return

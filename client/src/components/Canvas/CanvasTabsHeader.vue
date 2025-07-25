@@ -50,17 +50,16 @@
       <button class="btn btn-sm join-item h-12 w-30"
         :class="{ 'btn-primary': activeTab === 'execution', 'btn-soft': activeTab !== 'execution' }"
         @click="handleExecute">
-
         <div>
           <div class="flex">
-            <span v-if="!canvasStore.workerInfo" class="mdi mdi-play mr-2"></span>
+            <span v-if="!canvasExecuteStore.workerInfo" class="mdi mdi-play mr-2"></span>
             <div v-else class="w-2 h-2 rounded-full top-[5px] -left-[5px] bg-red-400 relative">
               <span class="absolute inset-0 w-2 h-2 rounded-full bg-red-400 animate-ping opacity-75"></span>
             </div>
-            {{ isExecuting ? "Ejecutando..." : !canvasStore.workerInfo ? 'Ejecutar' : 'En ejecución' }}
+            {{ isExecuting ? "Ejecutando..." : !canvasExecuteStore.workerInfo ? 'Ejecutar' : 'En ejecución' }}
           </div>
-          <div v-if="canvasStore.workerInfo" class="badge badge-warning badge-xs ml-2">
-            {{ canvasStore.workerInfo.version }}
+          <div v-if="canvasExecuteStore.workerInfo" class="badge badge-warning badge-xs ml-2">
+            {{ canvasExecuteStore.workerInfo.version }}
           </div>
         </div>
       </button>
@@ -81,14 +80,29 @@
 
     <div v-if="activeTab === 'execution'"
       class="bg-base-100/70 p-2 right-0 absolute z-10 m-[15px]  backdrop-blur-md rounded-lg join">
-      <template v-if="canvasStore.workerInfo || !isReloading">
-        <button class="btn btn-sm join-item" v-if="canvasStore.workerInfo" disabled>
-          V.{{ canvasStore.workerInfo?.version }}
+      <template v-if="canvasExecuteStore.workerInfo || !isReloading">
+        <!-- Selector de versiones -->
+        <button class="btn btn-sm join-item" v-if="canvasExecuteStore.workerInfo" disabled>
+          V.{{ canvasExecuteStore.workerInfo?.version }}
         </button>
-        <button v-if="canvasStore.workerInfo || isReloading" class="btn btn-sm join-item" @click="handleReload"
-          :disabled="!canvasStore.workerInfo">
-          <span class="mdi mdi-reload mr-2" :class="{ 'mdi-spin': !canvasStore.workerInfo }"></span>
-          {{ canvasStore.workerInfo ? 'Reiniciar' : 'Reiniciando...' }}
+        <button class="btn btn-sm join-item" @click="handleVersionSelection">
+          <span class="mdi mdi-format-list-numbered mr-2"></span>
+          Ejecutar versión
+        </button>
+
+        <!-- Información de versión actual -->
+
+        <!-- Detener worker -->
+        <button v-if="canvasExecuteStore.workerInfo" class="btn btn-error btn-sm join-item" @click="handleStopWorker">
+          <span class="mdi mdi-stop mr-2"></span>
+          Detener
+        </button>
+
+        <!-- Reiniciar worker -->
+        <button v-if="canvasExecuteStore.workerInfo || isReloading" class="btn btn-sm join-item" @click="handleReload"
+          :disabled="!canvasExecuteStore.workerInfo">
+          <span class="mdi mdi-reload mr-2" :class="{ 'mdi-spin': !canvasExecuteStore.workerInfo }"></span>
+          {{ canvasExecuteStore.workerInfo ? 'Reiniciar' : 'Reiniciando...' }}
         </button>
       </template>
     </div>
@@ -112,7 +126,7 @@ import { useCanvas, useWorkflowsStore } from '@/stores'
 import VersionControlPanel from '@/components/VersionControlPanel.vue'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Props {
   projectName: string
@@ -124,10 +138,13 @@ interface Props {
 const props = defineProps<Props>()
 
 const canvasStore = useCanvas()
+const canvasExecuteStore = useCanvas('execution')
 const router = useRouter()
 const workflowStore = useWorkflowsStore()
 
 const isReloading = ref(false)
+
+const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const emit = defineEmits<{
   showNotesManager: []
@@ -157,16 +174,33 @@ const handlePublish = async () => {
 const handleExecute = async () => {
   if (props.activeTab === 'execution') return
   emit('update:activeTab', 'execution')
-  if (!canvasStore.workerInfo) canvasStore.handleExecuteWorkflow()
+  if (!canvasExecuteStore.workerInfo) canvasExecuteStore.handleExecuteWorkflow({ workflowId: workflowId.value })
 }
 
 const handleReload = async () => {
   isReloading.value = true
-  canvasStore.handleExecuteWorkflow()
+  canvasExecuteStore.handleExecuteWorkflow({ workflowId: workflowId.value })
+}
+
+const handleStopWorker = async () => {
+  try {
+    const result = await canvasExecuteStore.stopWorker()
+    if (result.success) {
+      toast.success('Worker detenido correctamente')
+    } else {
+      toast.error(`Error al detener worker: ${result.message}`)
+    }
+  } catch (error) {
+    toast.error('Error al detener el worker')
+    console.error('Error stopping worker:', error)
+  }
+}
+
+const handleVersionSelection = async () => {
+  canvasExecuteStore.showSelectedVersion = true
 }
 
 watch(() => canvasStore.workerInfo, () => {
-  console.log('isReloading', isReloading.value)
   isReloading.value = false
 })
 

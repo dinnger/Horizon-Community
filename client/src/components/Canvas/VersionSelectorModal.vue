@@ -1,5 +1,5 @@
   <template>
-    <div v-if="isVisible" class="modal modal-open">
+    <div class="modal modal-open">
       <div class="modal-box">
         <h3 class="font-bold text-lg mb-4">Seleccionar Versión para Ejecutar</h3>
 
@@ -7,12 +7,12 @@
           <label class="label">
             <span class="label-text">Versiones Disponibles:</span>
           </label>
-          <div class="max-h-60 overflow-y-auto">
+          <div class="max-h-60 overflow-y-auto border-2 border-base-300">
             <div v-for="version in availableVersions" :key="version.version"
               class="flex items-center p-2 hover:bg-base-200 rounded cursor-pointer"
-              @click="$emit('selectVersion', version.version)">
-              <input type="radio" :value="version.version" :checked="selectedVersion === version.version"
-                class="radio radio-primary mr-3">
+              :class="{ 'bg-primary border border-primary': selectedVersion === version.version }"
+              @click="selectVersion(version.version)">
+
               <div class="flex-1">
                 <div class="flex items-center gap-2">
                   <span class="font-mono text-sm">{{ version.version }}</span>
@@ -27,17 +27,25 @@
         </div>
 
         <div class="modal-action">
-          <button class="btn btn-primary" @click="$emit('executeSelectedVersion')" :disabled="!selectedVersion">
+          <button class="btn btn-primary" @click="executeSelectedVersion" :disabled="!selectedVersion">
             <span class="mdi mdi-play"></span>
             Ejecutar Versión
           </button>
-          <button class="btn" @click="$emit('close')">Cancelar</button>
+          <button class="btn" @click="canvasExecuteStore.showSelectedVersion = false">Cancelar</button>
         </div>
       </div>
     </div>
   </template>
 
 <script setup lang="ts">
+import { useCanvas } from '@/stores'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
+
+const canvasExecuteStore = useCanvas('execution')
+const router = useRouter()
+
 interface Version {
   version: string
   isCurrent?: boolean
@@ -46,17 +54,31 @@ interface Version {
   createdAt: string
 }
 
-interface Props {
-  isVisible: boolean
-  availableVersions: Version[]
-  selectedVersion: string | null
+
+const availableVersions = ref<Version[]>([])
+const selectedVersion = ref<string | null>(null)
+
+const workflowId = computed(() => router.currentRoute.value.params.id as string)
+
+const selectVersion = (version: string) => {
+  selectedVersion.value = version
 }
 
-defineProps<Props>()
+const executeSelectedVersion = async () => {
+  if (!selectedVersion.value) {
+    toast.error('Por favor selecciona una versión') // TODO: Traducir                 
+    return
+  }
+  canvasExecuteStore.handleExecuteWorkflow({ workflowId: workflowId.value, version: selectedVersion.value })
+  canvasExecuteStore.showSelectedVersion = false
+}
 
-defineEmits<{
-  selectVersion: [version: string]
-  executeSelectedVersion: []
-  close: []
-}>()
+
+onMounted(async () => {
+  const data = await canvasExecuteStore.getVersions()
+  if (data.success) {
+    availableVersions.value = data.versions
+  }
+})
+
 </script>

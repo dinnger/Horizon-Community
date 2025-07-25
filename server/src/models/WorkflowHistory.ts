@@ -32,7 +32,7 @@ export class WorkflowHistory
 	public userId?: string
 	public changeType!: 'created' | 'updated' | 'published' | 'archived' | 'restored' | 'deleted'
 	public changeDescription!: string
-	public newData?: IWorkflowData
+	public newData?: Workflow
 	public version!: string
 	public metadata?: object
 

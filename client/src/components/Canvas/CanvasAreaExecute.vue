@@ -1,8 +1,11 @@
 <template>
   <div>
-    <CanvasArea name="execution" :is-locked="true" :version="version" @canvas-ready="canvasReady" />
-    <CanvasExecutionTabs :is-visible="true" :panel-console="canvasStore.panelConsole"
-      :panel-trace="canvasStore.panelTrace" @clear-logs="clearLogs" @clear-trace="clearTrace" />
+    <CanvasArea v-if="canvasExecuteStore.workerInfo" name="execution" :is-locked="true" :version="version"
+      @canvas-ready="canvasReady" />
+    <CanvasExecutionTabs :is-visible="true" :panel-console="canvasExecuteStore.panelConsole"
+      :panel-trace="canvasExecuteStore.panelTrace" @clear-logs="clearLogs" @clear-trace="clearTrace" />
+    <!-- Version Selector Modal -->
+    <VersionSelectorModal v-if="canvasExecuteStore.showSelectedVersion" />
   </div>
 </template>
 
@@ -11,8 +14,9 @@ import CanvasArea from '@/components/Canvas/CanvasArea.vue';
 import CanvasExecutionTabs from './CanvasExecutionTabs.vue';
 import { useCanvas } from '@/stores';
 import { onUnmounted } from 'vue';
+import VersionSelectorModal from './VersionSelectorModal.vue';
 
-const canvasStore = useCanvas('execution')
+const canvasExecuteStore = useCanvas('execution')
 
 defineProps<{
   version?: string
@@ -52,7 +56,7 @@ const list: ExecutionLog[] = [
 ]
 
 const canvasReady = () => {
-  canvasStore.initSubscriptionsExecution()
+  canvasExecuteStore.initSubscriptionsExecution()
 
 }
 
@@ -63,11 +67,11 @@ const clearLogs = () => {
 
 const clearTrace = () => {
   // Limpiar trazas de ejecución
-  canvasStore.clearPanelTrace()
+  canvasExecuteStore.clearPanelTrace()
 }
 
 onUnmounted(() => {
-  canvasStore.closeSubscriptionsExecution()
+  canvasExecuteStore.closeSubscriptionsExecution()
 })
 
 </script>

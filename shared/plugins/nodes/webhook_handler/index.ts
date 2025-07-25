@@ -106,10 +106,10 @@ export default class implements IClassNode<IProperty> {
 
 				// Preparar datos de la petición
 				const data = {
-					headers: req.headers,
-					params: req.params,
-					query: req.query,
-					body: req.body,
+					headers: { ...req.headers },
+					params: { ...req.params },
+					query: { ...req.query },
+					body: { ...req.body },
 					files: req.files,
 					method: req.method,
 					endpoint: req.path,

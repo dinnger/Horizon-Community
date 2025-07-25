@@ -401,14 +401,14 @@ class SocketService {
 		})
 	}
 
-	getWorkflowVersions(workspaceId: string, workflowId: string): Promise<any> {
+	getWorkflowVersions({ workflowId }: { workflowId: string }): Promise<any> {
 		return new Promise((resolve, reject) => {
 			if (!this.socket) {
 				reject(new Error('Socket not connected'))
 				return
 			}
 
-			this.socket.emit('workflows:getVersions', { workspaceId, workflowId }, (response: any) => {
+			this.socket.emit('workflows:getVersions', { workflowId }, (response: any) => {
 				if (response.success) {
 					resolve(response)
 				} else {
@@ -674,6 +674,23 @@ class SocketService {
 					resolve(response.workers)
 				} else {
 					reject(new Error(response.message || 'Failed to get workers by workflow'))
+				}
+			})
+		})
+	}
+
+	stopWorker(workflowId: string): Promise<{ success: boolean; message?: string }> {
+		return new Promise((resolve, reject) => {
+			if (!this.socket) {
+				reject(new Error('Socket not connected'))
+				return
+			}
+
+			this.socket.emit('workers:stop', { workflowId }, (response: any) => {
+				if (response.success) {
+					resolve(response)
+				} else {
+					reject(new Error(response.message || 'Failed to stop worker'))
 				}
 			})
 		})

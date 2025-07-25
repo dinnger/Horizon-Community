@@ -195,6 +195,14 @@ export const seedDatabase = async () => {
 				status: 'active' as const
 			},
 			{
+				module: 'workflows',
+				action: 'getVersions',
+				scope: 'project' as const,
+				priority: 30,
+				description: 'Obtener un workflow en sus proyectos',
+				status: 'active' as const
+			},
+			{
 				module: 'settings',
 				action: 'list',
 				scope: 'own' as const,
@@ -617,7 +625,9 @@ export const seedDatabase = async () => {
 					'deployment-instances',
 					'deployment-types'
 				].includes(p.module) &&
-				['create', 'list', 'update', 'execute', 'get', 'search', 'groups', 'info', 'stats', 'dashboard', 'message'].includes(p.action)
+				['create', 'list', 'update', 'execute', 'get', 'getVersions', 'search', 'groups', 'info', 'stats', 'dashboard', 'message'].includes(
+					p.action
+				)
 		)
 
 		for (const permission of managerPermissions) {
@@ -649,7 +659,8 @@ export const seedDatabase = async () => {
 					'deployments',
 					'deployment-instances',
 					'deployment-types'
-				].includes(p.module) && ['list', 'execute', 'get', 'search', 'groups', 'info', 'stats', 'dashboard'].includes(p.action)
+				].includes(p.module) &&
+				['list', 'execute', 'get', 'getVersions', 'search', 'groups', 'info', 'stats', 'dashboard'].includes(p.action)
 		)
 
 		for (const permission of userPermissions) {
@@ -671,7 +682,7 @@ export const seedDatabase = async () => {
 			(p) =>
 				p.action === 'list' ||
 				p.action === 'dashboard' ||
-				(p.module === 'nodes' && ['get', 'search', 'groups', 'info', 'stats'].includes(p.action))
+				(p.module === 'nodes' && ['get', 'getVersions', 'search', 'groups', 'info', 'stats'].includes(p.action))
 		)
 
 		for (const permission of viewerPermissions) {
