@@ -1,16 +1,15 @@
 import socketService from '@/services/socket'
 
-export function useWorkflowComposable() {
-	const getVersions = async ({ workflowId }: { workflowId: string }) => {
+export function useWorkflowComposable({ workflowId }: { workflowId: string }) {
+	const saveWorkflow = async ({ updates }: { updates: any }) => {
 		try {
-			const result = await socketService.getWorkflowVersions({ workflowId })
-			return { success: true, versions: result.versions }
-		} catch (error) {
-			console.error('Error obteniendo versiones:', error)
-			return { success: false, message: 'Error al obtener versiones', versions: [] }
+			return await socketService.workflow().updateWorkflow({ workflowId, updates })
+		} catch (error: any) {
+			throw new Error(error)
 		}
 	}
+
 	return {
-		getVersions
+		saveWorkflow
 	}
 }

@@ -52,12 +52,12 @@ interface ExecutionLog {
 
 const canvasStore = useCanvas()
 const workerStore = useWorkerStore()
-const canvasComposable = useCanvasComposable()
+const canvasComposable = useCanvasComposable({ workflowId: props.workflowId })
 const workerComposable = useWorkerComposable()
 
 const canvasReady = () => {
-  canvasComposable.closeSubscriptionsExecution({ workflowId: props.workflowId })
-  canvasComposable.initSubscriptionsExecution({ workflowId: props.workflowId })
+  canvasComposable.closeSubscriptionsExecution()
+  canvasComposable.initSubscriptionsExecution()
 
 }
 
@@ -78,7 +78,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  canvasComposable.closeSubscriptionsExecution({ workflowId: props.workflowId })
+  canvasComposable.closeSubscriptionsExecution()
 })
 
 </script>

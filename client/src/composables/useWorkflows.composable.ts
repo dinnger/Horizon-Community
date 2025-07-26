@@ -1,10 +1,5 @@
-import type { INodeCanvas, INodeConnections } from '@canvas/interfaz/node.interface'
-import type { IWorkflowExecutionContextInterface } from '@shared/interfaces'
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
-import { useWorkspaceStore } from './workspace'
 import socketService from '@/services/socket'
-
+import { computed, ref } from 'vue'
 export interface Workflow {
 	id: string
 	name: string
@@ -17,57 +12,70 @@ export interface Workflow {
 	updatedAt: Date
 }
 
-export const useWorkflowsStore = defineStore('workflows', () => {
+export function useWorkflowsComposable({ projectId }: { projectId: string }) {
 	const workflows = ref<Workflow[]>([])
 	const loading = ref(false)
-	const projectId = ref<string>('')
 	const error = ref<string | null>(null)
 
-	const workspaceStore = useWorkspaceStore()
+	const validWorkflow = async ({ workflowId }: { workflowId: string }) => {
+		try {
+			const result = await socketService.workflow().getWorkflowsById({ workflowId })
+			return { success: true, workflow: result }
+		} catch (error) {
+			console.error('Error obteniendo workflow:', error)
+			return { success: false, message: 'Error al obtener workflow' }
+		}
+	}
+
+	const getVersions = async ({ workflowId }: { workflowId: string }) => {
+		try {
+			const result = await socketService.workflow().getWorkflowVersions({ workflowId })
+			return { success: true, versions: result.versions }
+		} catch (error) {
+			console.error('Error obteniendo versiones:', error)
+			return { success: false, message: 'Error al obtener versiones', versions: [] }
+		}
+	}
 
 	// Computed properties
 	const getActiveWorkflowsCount = computed(() => {
-		return () => {
-			const projectWorkflows = workflows.value
-			return projectWorkflows.filter((w) => w.status === 'running' || w.status === 'success').length
-		}
+		const projectWorkflows = workflows.value
+		return projectWorkflows.filter((w) => w.status === 'running' || w.status === 'success').length
 	})
 
 	const getWorkflowStats = computed(() => {
-		return () => {
-			const projectWorkflows = workflows.value
+		const projectWorkflows = workflows.value
 
-			if (projectWorkflows.length === 0) {
-				return {
-					executions: 0,
-					successRate: 0,
-					avgDuration: '0m 0s',
-					lastExecution: undefined
-				}
-			}
-
-			const successCount = projectWorkflows.filter((w) => w.status === 'success').length
-			const successRate = (successCount / projectWorkflows.length) * 100 // Calcular duración promedio real
-			const totalSeconds = projectWorkflows.reduce((total, workflow) => {
-				const [minutes, seconds] = workflow.duration.split(/[ms]/).map((s) => Number.parseInt(s.trim()) || 0)
-				return total + minutes * 60 + seconds
-			}, 0)
-			const avgSeconds = Math.round(totalSeconds / projectWorkflows.length)
-			const avgMinutes = Math.floor(avgSeconds / 60)
-			const remainingSeconds = avgSeconds % 60
-			const avgDuration = `${avgMinutes}m ${remainingSeconds}s`
-
-			// Última ejecución
-			const lastExecution = projectWorkflows.reduce((latest, workflow) => {
-				return workflow.lastRun > latest ? workflow.lastRun : latest
-			}, new Date(0))
-
+		if (projectWorkflows.length === 0) {
 			return {
-				executions: projectWorkflows.length,
-				successRate: Math.round(successRate * 10) / 10,
-				avgDuration,
-				lastExecution: lastExecution.getTime() > 0 ? lastExecution : undefined
+				executions: 0,
+				successRate: 0,
+				avgDuration: '0m 0s',
+				lastExecution: undefined
 			}
+		}
+
+		const successCount = projectWorkflows.filter((w) => w.status === 'success').length
+		const successRate = (successCount / projectWorkflows.length) * 100 // Calcular duración promedio real
+		const totalSeconds = projectWorkflows.reduce((total, workflow) => {
+			const [minutes, seconds] = workflow.duration.split(/[ms]/).map((s) => Number.parseInt(s.trim()) || 0)
+			return total + minutes * 60 + seconds
+		}, 0)
+		const avgSeconds = Math.round(totalSeconds / projectWorkflows.length)
+		const avgMinutes = Math.floor(avgSeconds / 60)
+		const remainingSeconds = avgSeconds % 60
+		const avgDuration = `${avgMinutes}m ${remainingSeconds}s`
+
+		// Última ejecución
+		const lastExecution = projectWorkflows.reduce((latest, workflow) => {
+			return workflow.lastRun > latest ? workflow.lastRun : latest
+		}, new Date(0))
+
+		return {
+			executions: projectWorkflows.length,
+			successRate: Math.round(successRate * 10) / 10,
+			avgDuration,
+			lastExecution: lastExecution.getTime() > 0 ? lastExecution : undefined
 		}
 	})
 
@@ -91,15 +99,8 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	})
 
-	// Actions
-	const initializeData = async (project_id: string) => {
-		projectId.value = project_id
-		workflows.value = []
-		loadDefaultWorkflows()
-	}
-
-	const loadDefaultWorkflows = async () => {
-		const parsed: Workflow[] = await socketService.getWorkflows(workspaceStore.currentWorkspaceId, projectId.value)
+	const loadWorkflows = async () => {
+		const parsed: Workflow[] = await socketService.workflow().getWorkflows({ projectId })
 		if (parsed) {
 			try {
 				workflows.value = parsed.map((w) => ({
@@ -114,17 +115,18 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	}
 
-	const createWorkflow = async (workflowData: Omit<Workflow, 'id' | 'createdAt' | 'updatedAt' | 'lastRun'>) => {
+	const createWorkflow = async (workflowData: Omit<Workflow, 'id' | 'projectId' | 'createdAt' | 'updatedAt' | 'lastRun'>) => {
 		const now = new Date()
 		const newWorkflow: Omit<Workflow, 'id'> = {
 			...workflowData,
 			lastRun: now,
 			createdAt: now,
-			updatedAt: now
+			updatedAt: now,
+			projectId
 		}
 		try {
-			await socketService.createWorkflow(newWorkflow)
-			loadDefaultWorkflows()
+			await socketService.workflow().createWorkflow(newWorkflow)
+			loadWorkflows()
 			return newWorkflow
 		} catch (error) {
 			console.error('Error creating workflow:', error)
@@ -134,8 +136,8 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 
 	const deleteWorkflow = async (workflowId: string) => {
 		try {
-			await socketService.deleteWorkflow(workflowId)
-			loadDefaultWorkflows()
+			await socketService.workflow().deleteWorkflow({ workflowId })
+			loadWorkflows()
 			return true
 		} catch (error) {
 			return false
@@ -190,12 +192,15 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		getAllWorkflowStats,
 
 		// Actions
-		initializeData,
 		createWorkflow,
-		deleteWorkflow,
-		deleteWorkflowsByProjectId,
 		runWorkflow,
 		setLoading,
-		setError
+		setError,
+
+		loadWorkflows,
+		deleteWorkflow,
+		deleteWorkflowsByProjectId,
+		validWorkflow,
+		getVersions
 	}
-})
+}

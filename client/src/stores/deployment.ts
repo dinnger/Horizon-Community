@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import type { IDeployment } from '@shared/interfaces/deployment.interface'
 import socketService from '@/services/socket'
 import { ref } from 'vue'
-import { useWorkflowsStore } from './workflows'
 import { useWorkspaceStore } from './workspace'
+import { useWorkflowsComposable } from '@/composables/useWorkflows.composable'
 
 // Tipos para la validación de publicación de workflow
 
@@ -12,15 +12,12 @@ export const useDeploymentStore = defineStore('deployment', () => {
 	const loading = ref(false)
 	const error = ref<string | null>(null)
 
-	const workflowStore = useWorkflowsStore()
-	const workspaceStore = useWorkspaceStore()
-
 	// Cargar deployments desde el servidor
 	const loadDeployments = async () => {
 		try {
 			loading.value = true
 			error.value = null
-			const deploymentData = await socketService.getDeployments()
+			const deploymentData = await socketService.deployments().getDeployments()
 			deployments.value = deploymentData
 		} catch (err: any) {
 			error.value = err.message || 'Error al cargar deployments'

@@ -16,13 +16,15 @@ import CanvasTabsHeader from '@/components/Canvas/CanvasTabsHeader.vue'
 import { useCanvasComposable } from '@/composables/useCanvas.composable'
 import CanvasModalsManager from './CanvasModalsManager.vue'
 
-const canvasStore = useCanvas()
-const canvasComposable = useCanvasComposable()
-
 const props = defineProps<{
   workflowId: string
   version?: string
 }>()
+
+const canvasStore = useCanvas()
+const canvasComposable = useCanvasComposable({ workflowId: props.workflowId })
+
+
 
 defineExpose({
   version: canvasComposable.version,

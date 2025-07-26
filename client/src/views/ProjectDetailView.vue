@@ -205,21 +205,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useWorkflowsComposable, type Workflow } from '@/composables/useWorkflows.composable'
 import { useProjectWorkflows } from '@/composables/useProjectWorkflows'
-import type { Workflow, Project } from '@/stores'
+import type { Project } from '@/types/socket'
+
 
 const route = useRoute()
 const router = useRouter()
-const { projectsStore, workflowsStore, getProjectWithStats } = useProjectWorkflows()
 const showWorkflowModal = ref(false)
 
-const projectId = computed(() => route.params.id as string)
-const projectData = computed(() => projectsStore.getProjectById(projectId.value))
-const workflows = computed(() => workflowsStore.workflows)
-const activeWorkflows = computed(() => workflowsStore.getActiveWorkflowsCount())
-const projectStats = computed(() => workflowsStore.getWorkflowStats())
+const projectComposable = useProjectWorkflows({ projectId: route.params.id as string })
+
+
+const projectData = ref<Project | null>(null)
+const workflows = projectComposable.workflows.workflows
+const activeWorkflows = projectComposable.workflows.getActiveWorkflowsCount
+const projectStats = projectComposable.workflows.getWorkflowStats
 
 const newWorkflow = reactive({
   name: '',
@@ -227,16 +230,18 @@ const newWorkflow = reactive({
 })
 
 onMounted(() => {
-  workflowsStore.initializeData(projectId.value)
+  projectComposable.workflows.loadWorkflows()
+  projectComposable.getProjectById().then((project) => {
+    projectData.value = project
+  })
 })
 
 const createWorkflow = () => {
-  workflowsStore.createWorkflow({
+  projectComposable.workflows.createWorkflow({
     name: newWorkflow.name,
     description: newWorkflow.description,
     status: 'pending',
     duration: '0m 0s',
-    projectId: projectId.value
   })
 
   // Reset form
@@ -246,7 +251,7 @@ const createWorkflow = () => {
 }
 
 const runWorkflow = (workflowId: string) => {
-  workflowsStore.runWorkflow(workflowId)
+  projectComposable.workflows.runWorkflow(workflowId)
 }
 
 const editWorkflow = (workflow: Workflow) => {
@@ -254,11 +259,11 @@ const editWorkflow = (workflow: Workflow) => {
 }
 
 const deleteWorkflow = (workflowId: string) => {
-  workflowsStore.deleteWorkflow(workflowId)
+  projectComposable.workflows.deleteWorkflow(workflowId)
 }
 
 const viewWorkflowDetail = (workflowId: string) => {
-  router.push(`/projects/${projectId.value}/workflows/${workflowId}`)
+  router.push(`/projects/${route.params.id as string}/workflows/${workflowId}`)
 }
 
 const getStatusColor = (status: string) => {

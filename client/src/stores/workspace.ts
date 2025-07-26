@@ -19,7 +19,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 	const initWorkspaces = async () => {
 		if (isInit.value) return
 		isInit.value = true
-		const savedWorkspaces: Workspace[] | null = await socketService.getWorkspaces()
+		const savedWorkspaces: Workspace[] | null = await socketService.workspace().getWorkspaces()
 		console.log('🌱 Iniciando workspaces...', savedWorkspaces)
 
 		const savedCurrentId = localStorage.getItem('horizon-current-workspace')
@@ -71,7 +71,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 			createdAt: new Date(),
 			updatedAt: new Date()
 		}
-		await socketService.createWorkspace(newWorkspace)
+		await socketService.workspace().createWorkspace(newWorkspace)
 		return newWorkspace
 	}
 

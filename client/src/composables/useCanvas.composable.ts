@@ -3,16 +3,17 @@ import type { INodeCanvasAdd } from '@canvas/interfaz/node.interface.migrated'
 import type { IStatsAnimations, IPanelConsole, IPanelTrace, WorkflowData } from '@/types/canvas'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
 import socketService from '@/services/socket'
-import { useSettingsStore, useWorkspaceStore } from '@/stores'
+import { useSettingsStore } from '@/stores'
 import { computed, ref, watch } from 'vue'
 import { Canvas } from '@canvas/canvas'
 import { useCanvasSubscribersComposable } from './useCanvasSubscribers.composable'
 import { useDeploymentComposable } from './useDeployment.composable'
 import { useCanvasActionsComposable, type IUseCanvasActionsType } from './useCanvasActions.composable'
+import { useWorkflowComposable } from './useWorkflow.composable'
 
 export type IUseCanvasType = ReturnType<typeof useCanvasComposable>
 
-export function useCanvasComposable() {
+export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const version = ref<{ value: string; status: 'draft' | 'published' | 'archived' }>({ value: '0.0.1', status: 'draft' })
 	const changes = ref(false)
 	const isExecuting = ref(false)
@@ -37,10 +38,10 @@ export function useCanvasComposable() {
 
 	const canvasInstance = ref<Canvas | undefined>()
 
-	const workspaceStore = useWorkspaceStore()
 	const settingsStore = useSettingsStore()
 	const canvasSubscribersComposable = useCanvasSubscribersComposable()
 	const deployComposable = useDeploymentComposable()
+	const workflowComposable = useWorkflowComposable({ workflowId })
 
 	// Función para inicializar el canvas cuando el elemento esté listo
 	const initializeCanvas = async ({
@@ -67,9 +68,12 @@ export function useCanvasComposable() {
 			if (flow) {
 				canvasInstance.value.loadWorkflowData(flow.workflowData)
 			} else {
-				socketService.getNodeByType('workflow_init').then((node) => {
-					if (canvasInstance.value) canvasInstance.value.actionAddNode({ node: { ...node, design: { x: 60, y: 60 } } })
-				})
+				socketService
+					.nodes()
+					.getNodeByType('workflow_init')
+					.then((node) => {
+						if (canvasInstance.value) canvasInstance.value.actionAddNode({ node: { ...node, design: { x: 60, y: 60 } } })
+					})
 			}
 
 			// Configurar todos los subscribers usando el store dedicado
@@ -112,8 +116,7 @@ export function useCanvasComposable() {
 	 */
 	const load = async (data: { workflowId: string; version?: string }) => {
 		try {
-			const dataFlow = await socketService.getWorkflowsById({
-				workspaceId: workspaceStore.currentWorkspaceId,
+			const dataFlow = await socketService.workflow().getWorkflowsById({
 				workflowId: data.workflowId,
 				version: data.version
 			})
@@ -154,16 +157,19 @@ export function useCanvasComposable() {
 		}
 	}
 
-	const save = async ({ workflowId }: { workflowId: string }) => {
+	const saveCanvas = async ({ workflowId }: { workflowId: string }) => {
 		if (!canvasInstance.value) return
 		try {
-			const saveWorkflow = await socketService.updateWorkflow({ workflowId, updates: canvasInstance.value.getWorkflowData() })
+			const saveWorkflow = await workflowComposable.saveWorkflow({ updates: canvasInstance.value.getWorkflowData() })
 			if (saveWorkflow && context.value) {
 				version.value.value = saveWorkflow.version
 				context.value.info.version = saveWorkflow.version
 			}
 			changes.value = false
-		} catch (error) {}
+			return true
+		} catch (error: any) {
+			throw new Error(error)
+		}
 	}
 
 	// const getHistory = (): WorkflowData[] => {
@@ -189,7 +195,7 @@ export function useCanvasComposable() {
 	const publish = async ({ workflowId }: { workflowId: string }) => {
 		try {
 			// Primero guardamos el workflow
-			await save({ workflowId })
+			await saveCanvas({ workflowId })
 
 			if (!workflowId) return
 
@@ -303,7 +309,7 @@ export function useCanvasComposable() {
 		panelConsole.value = []
 	}
 
-	const initSubscriptionsExecution = ({ workflowId }: { workflowId: string }) => {
+	const initSubscriptionsExecution = () => {
 		console.log('initSubscriptionsExecution', name, workflowId)
 		socketService.onWorkflowAnimations(workflowId || '', (event: IStatsAnimations[]) => {
 			for (const animation of event) {
@@ -332,7 +338,7 @@ export function useCanvasComposable() {
 		})
 	}
 
-	const closeSubscriptionsExecution = ({ workflowId }: { workflowId: string }) => {
+	const closeSubscriptionsExecution = () => {
 		socketService.removeListeners(`/workflow:.*:${workflowId}/`)
 	}
 
@@ -351,7 +357,7 @@ export function useCanvasComposable() {
 		panelConsole,
 		panelTrace,
 
-		save,
+		save: saveCanvas,
 		publish,
 		getNode,
 		initializeCanvas,

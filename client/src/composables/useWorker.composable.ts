@@ -1,5 +1,4 @@
 import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
-import { ref } from 'vue'
 import { useWorkerStore } from '@/stores/worker'
 import socketService from '@/services/socket'
 
@@ -26,7 +25,7 @@ export function useWorkerComposable() {
 
 			if (workerActive) workerActive.status = 'stopped'
 			// Execute the workflow which will also save to file
-			const result = await socketService.executeWorkflow(data.workflowId, 'manual', data.version)
+			const result = await socketService.workflow().executeWorkflow(data.workflowId, 'manual', data.version)
 
 			if (result.success) {
 				console.log('Workflow ejecutado exitosamente:', result.worker.executionId)
@@ -49,7 +48,7 @@ export function useWorkerComposable() {
 
 	const stopWorker = async ({ workerId }: { workerId: string }) => {
 		try {
-			const result = await socketService.stopWorker({ workerId })
+			const result = await socketService.workers().stopWorker({ workerId })
 			if (result.success) {
 				return result
 			}

@@ -155,7 +155,6 @@ export function useWorkflows() {
 // ✅ Composable para lógica combinada
 export function useProjectWorkflows() {
   const projectsStore = useProjectsStore(); // Solo para estado UI
-  const workflowsStore = useWorkflowsStore(); // Solo para estado UI
 
   const getProjectWithStats = computed(() => {
     return (projectId: string) => {

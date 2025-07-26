@@ -194,7 +194,7 @@
                 <span class="flex-1">{{ log.message }}</span>
               </div>
             </div>
-          </div>          <!-- Outputs Tab -->
+          </div> <!-- Outputs Tab -->
           <div v-if="activeTab === 'outputs'" class="space-y-6">
             <h3 class="text-xl font-bold">Outputs de Ejecución</h3>
 
@@ -204,7 +204,8 @@
               <div class="space-y-3">
                 <h4 class="font-semibold text-lg flex items-center">
                   <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                   Entrada Global del Workflow
                 </h4>
@@ -217,7 +218,8 @@
               <div class="space-y-3">
                 <h4 class="font-semibold text-lg flex items-center">
                   <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                   </svg>
                   Salida Global del Workflow
                 </h4>
@@ -231,14 +233,15 @@
             <div class="space-y-4">
               <h4 class="font-semibold text-lg flex items-center">
                 <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 Ejecución por Nodo
               </h4>
-              
+
               <div class="space-y-4">
-                <div v-for="nodeExecution in executionData.nodeExecutions" :key="nodeExecution.nodeId" 
-                     class="card bg-base-200 shadow-lg">
+                <div v-for="nodeExecution in executionData.nodeExecutions" :key="nodeExecution.nodeId"
+                  class="card bg-base-200 shadow-lg">
                   <div class="card-body p-4">
                     <!-- Node Header -->
                     <div class="flex items-center justify-between mb-4">
@@ -260,7 +263,8 @@
                       <div class="space-y-2">
                         <h6 class="font-semibold text-sm flex items-center text-blue-600">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 11l5-5m0 0l5 5m-5-5v12" />
                           </svg>
                           Entrada
                         </h6>
@@ -273,7 +277,8 @@
                       <div class="space-y-2">
                         <h6 class="font-semibold text-sm flex items-center text-green-600">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                           </svg>
                           Salida
                         </h6>
@@ -293,8 +298,10 @@
               <div class="space-y-3">
                 <h4 class="font-semibold text-lg flex items-center">
                   <svg class="w-5 h-5 mr-2 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   Variables de Entorno
                 </h4>
@@ -320,7 +327,8 @@
               <div class="space-y-3">
                 <h4 class="font-semibold text-lg flex items-center">
                   <svg class="w-5 h-5 mr-2 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   Artefactos Generados
                 </h4>
@@ -334,7 +342,8 @@
                       </svg>
                       <div>
                         <div class="font-semibold">{{ artifact.name }}</div>
-                        <div class="text-xs text-base-content/60">{{ formatFileSize(artifact.size) }} • {{ artifact.type }}</div>
+                        <div class="text-xs text-base-content/60">{{ formatFileSize(artifact.size) }} • {{ artifact.type
+                        }}</div>
                       </div>
                     </div>
                     <button class="btn btn-xs btn-primary">Descargar</button>
@@ -394,14 +403,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWorkflowDetailStore } from '@/stores/workflowDetail'
-import { useProjectsStore } from '@/stores/projects'
 import { storeToRefs } from 'pinia'
 import type { Log, ExecutionHistoryItem, NodeExecution } from '@/stores/workflowDetail'
+import { useProjectWorkflows } from '@/composables/useProjectWorkflows'
 
 const route = useRoute()
 const router = useRouter()
 
-const projectsStore = useProjectsStore()
 const workflowDetailStore = useWorkflowDetailStore()
 
 const {
@@ -426,11 +434,13 @@ const logLevel = ref('all')
 const projectId = computed(() => route.params.projectId as string)
 const workflowId = computed(() => route.params.workflowId as string)
 
+const projectComposable = useProjectWorkflows({ projectId: projectId.value })
+
 // Data
-const project = computed(() => projectsStore.getProjectById(projectId.value))
+const project = computed(() => projectComposable.getProjectById())
 
 onMounted(() => {
-  projectsStore.initializeData()
+  projectComposable.workflows.loadWorkflows()
   fetchWorkflowDetails(workflowId.value)
 })
 

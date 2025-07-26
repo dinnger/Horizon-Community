@@ -1,5 +1,6 @@
 import socketService from '@/services/socket'
-import { useDeploymentStore, useProjectsStore, useWorkspaceStore } from '@/stores'
+import { useDeploymentStore, useWorkspaceStore } from '@/stores'
+import { useProjectWorkflows } from './useProjectWorkflows'
 
 interface WorkflowPublicationValidationResult {
 	type: 'automatic' | 'manual'
@@ -17,7 +18,6 @@ interface WorkflowPublicationValidationResult {
 
 export function useDeploymentComposable() {
 	const deploymentStore = useDeploymentStore()
-	const projectStore = useProjectsStore()
 	const workspaceStore = useWorkspaceStore()
 
 	// Validar y preparar publicación de workflow
@@ -27,7 +27,7 @@ export function useDeploymentComposable() {
 			deploymentStore.error = null
 
 			// Obtener información del workflow
-			const workflow = await socketService.getWorkflowsById({ workspaceId: workspaceStore.currentWorkspaceId, workflowId })
+			const workflow = await socketService.workflow().getWorkflowsById({ workflowId })
 			if (!workflow) {
 				throw new Error('No se pudo obtener el workflow')
 			}
@@ -44,7 +44,8 @@ export function useDeploymentComposable() {
 
 				try {
 					// Obtener el proyecto para verificar si tiene un despliegue asignado
-					const project = await projectStore.getProjectById(workflow.projectId)
+					const projectComposable = useProjectWorkflows({ projectId: workflow.projectId })
+					const project = await projectComposable.getProjectById()
 
 					if (project?.deploymentId) {
 						// Obtener información del despliegue
@@ -127,7 +128,7 @@ export function useDeploymentComposable() {
 		scheduledAt?: Date
 	}) => {
 		try {
-			return await socketService.createDeploymentQueueItem({ ...queueItem, workspaceId: workspaceStore.currentWorkspaceId })
+			return await socketService.deployments().createDeploymentQueueItem({ ...queueItem, workspaceId: workspaceStore.currentWorkspaceId })
 		} catch (err: any) {
 			deploymentStore.error = err.message || 'Error al reintentar elemento de la cola'
 			throw err

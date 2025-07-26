@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="h-screen bg-base-100 overflow-hidden flex flex-col">
+    <div v-if="!isLoading && !isError" class="h-screen bg-base-100 overflow-hidden flex flex-col">
       <CanvasHeader :project-name="canvasStore.projectName" :active-tab="canvasStore.activeTab"
         @update:active-tab="updateTab" :version="canvasDesign?.version.value" />
 
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Error State -->
-    <CanvasErrorState v-if="canvasStore.isError" />
+    <CanvasErrorState v-if="isError" />
 
   </div>
 </template>
@@ -39,15 +39,22 @@ import CanvasHeader from '@/components/Canvas/CanvasHeader.vue'
 import CanvasDesign from '@/components/Canvas/CanvasDesign.vue'
 import { useWorkerComposable } from '@/composables/useWorker.composable'
 import { useWorkerStore } from '@/stores/worker'
+import { useWorkflowsComposable } from '@/composables/useWorkflows.composable'
 
 const router = useRouter()
 const canvasStore = useCanvas()
 const workerStore = useWorkerStore()
+
+const projectId = computed(() => router.currentRoute.value.params.projectId as string)
+const workflowId = computed(() => router.currentRoute.value.params.id as string)
+
+const workflowComposable = useWorkflowsComposable({ projectId: projectId.value })
 const workerComposable = useWorkerComposable()
 
+const isLoading = ref(true)
+const isError = ref(false)
 const canvasDesign = ref<InstanceType<typeof CanvasDesign> | null>(null)
 
-const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const updateTab = (tab: 'design' | 'execution') => {
   canvasStore.activeTab = tab
@@ -56,7 +63,17 @@ const updateTab = (tab: 'design' | 'execution') => {
 onMounted(() => {
   canvasStore.activeTab = 'design'
   workerStore.workerInfo = null
-  workerComposable.initSubscriptionsWorker({ workflowId: workflowId.value })
+  workflowComposable.validWorkflow({ workflowId: workflowId.value }).then((result) => {
+    if (result.success && result.workflow != null) {
+      console.log('result', result)
+      isLoading.value = false
+      isError.value = false
+      workerComposable.initSubscriptionsWorker({ workflowId: workflowId.value })
+    } else {
+      isLoading.value = false
+      isError.value = true
+    }
+  })
 })
 
 onUnmounted(() => {

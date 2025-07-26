@@ -7,13 +7,52 @@ import { workerManager } from '../../services/workerManager.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { setupWorkersRoutes } from './workers.js'
+import NodeCache from 'node-cache'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const nodeClass = getNodeClass()
 
+const myCache = new NodeCache({ stdTTL: 100, checkperiod: 120 })
+
 export const setupWorkflowRoutes = {
+	'workflows:validate': async ({ socket, data, callback }: SocketData) => {
+		try {
+			const { workspaceId, workflowId } = data
+			const cacheKey = `workflow:${workspaceId}:${workflowId}`
+			const cached = myCache.get(cacheKey)
+			if (cached) {
+				callback({ success: true, workflow: cached })
+				return
+			}
+			const exist = await Workflow.findOne({
+				attributes: ['id', 'name'],
+				include: [
+					{
+						attributes: ['id', 'name', 'description'],
+						model: Project,
+						as: 'project',
+						required: true,
+						where: {
+							workspaceId
+						}
+					}
+				],
+				where: {
+					id: workflowId,
+					status: {
+						[Op.ne]: 'archived'
+					}
+				}
+			})
+			myCache.set(cacheKey, exist)
+			if (!exist) return callback({ success: false, message: 'Workflow no encontrado' })
+			return callback({ success: true, workflow: exist })
+		} catch (error) {
+			console.error('Error validando workflow:', error)
+			callback({ success: false, message: 'Error al validar workflow' })
+		}
+	},
 	// List workflows - requires read permission
 	'workflows:list': async ({ socket, data, callback }: SocketData) => {
 		try {
@@ -60,6 +99,7 @@ export const setupWorkflowRoutes = {
 							attributes: ['id', 'name', 'description', 'transportType'],
 							model: Project,
 							as: 'project',
+							required: true,
 							where: {
 								workspaceId
 							}
@@ -79,6 +119,7 @@ export const setupWorkflowRoutes = {
 							attributes: ['id', 'name', 'description', 'transportType'],
 							model: Project,
 							as: 'project',
+							required: true,
 							where: {
 								workspaceId
 							}
@@ -141,10 +182,15 @@ export const setupWorkflowRoutes = {
 
 	// Create workflow - requires authentication and project access
 	// Create workflow - requires create permission
-	'workflows:create': async ({ socket, data, callback }: SocketData) => {
+	'workflows:create': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const workflow = await Workflow.create(data)
-			callback({ success: true, workflow })
+			const { workspaceId, ...workflowData } = data
+			// Validando que el workspaceId sea válido
+			eventRouter('workflows:validate', { workspaceId, workflowId: workflowData.id }, async (data) => {
+				if (!data.success) return callback(data)
+				const workflow = await Workflow.create(workflowData)
+				callback({ success: true, workflow })
+			})
 		} catch (error) {
 			console.error('Error creando workflow:', error)
 			callback({ success: false, message: 'Error al crear workflow' })
@@ -153,64 +199,67 @@ export const setupWorkflowRoutes = {
 
 	// Update workflow - requires authentication and project access
 	// Update workflow - requires update permission
-	'workflows:update': async ({ socket, data, callback }: SocketData) => {
+	'workflows:update': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const { id, connections, nodes, notes, groups } = data
+			const { workspaceId, id, connections, nodes, notes, groups } = data
 
-			const updates = {
-				workflowData: {
-					nodes,
-					connections,
-					notes,
-					groups
-				},
-				updatedAt: new Date()
-			}
+			eventRouter('workflows:validate', { workspaceId, workflowId: id }, async (data) => {
+				if (!data.success) return callback(data)
+				const updates = {
+					workflowData: {
+						nodes,
+						connections,
+						notes,
+						groups
+					},
+					updatedAt: new Date()
+				}
 
-			// Validar si existen cambios en el workflow
-			const originalWorkflow = await Workflow.findByPk(id)
-			if (!originalWorkflow) {
-				callback({ success: false, message: 'Workflow no encontrado' })
-				return
-			}
-
-			if (originalWorkflow.workflowData) {
-				// Verificar si los nodos y conexiones han cambiado
-				const originalNodes = originalWorkflow.workflowData.nodes
-				const originalConnections = originalWorkflow.workflowData.connections
-				const originalNotes = originalWorkflow.workflowData.notes
-				const originalGroups = originalWorkflow.workflowData.groups
-				const newNodes = nodes
-				const newConnections = connections
-				const newNotes = notes
-				const newGroups = groups
-
-				if (
-					JSON.stringify(originalNodes) === JSON.stringify(newNodes) &&
-					JSON.stringify(originalConnections) === JSON.stringify(newConnections) &&
-					JSON.stringify(originalNotes) === JSON.stringify(newNotes) &&
-					JSON.stringify(originalGroups) === JSON.stringify(newGroups)
-				) {
-					callback({ success: false, message: 'No se han realizado cambios en el workflow' })
+				// Validar si existen cambios en el workflow
+				const originalWorkflow = await Workflow.findByPk(id)
+				if (!originalWorkflow) {
+					callback({ success: false, message: 'Workflow no encontrado' })
 					return
 				}
-			}
 
-			const [updatedRows] = await Workflow.update(updates, { where: { id }, individualHooks: true })
-			if (updatedRows > 0) {
-				const updatedWorkflow = await Workflow.findByPk(id, {
-					include: [
-						{
-							attributes: ['id', 'name', 'description', 'transportType'],
-							model: Project,
-							as: 'project'
-						}
-					]
-				})
-				callback({ success: true, workflow: updatedWorkflow })
-			} else {
-				callback({ success: false, message: 'Error al actualizar workflow' })
-			}
+				if (originalWorkflow.workflowData) {
+					// Verificar si los nodos y conexiones han cambiado
+					const originalNodes = originalWorkflow.workflowData.nodes
+					const originalConnections = originalWorkflow.workflowData.connections
+					const originalNotes = originalWorkflow.workflowData.notes
+					const originalGroups = originalWorkflow.workflowData.groups
+					const newNodes = nodes
+					const newConnections = connections
+					const newNotes = notes
+					const newGroups = groups
+
+					if (
+						JSON.stringify(originalNodes) === JSON.stringify(newNodes) &&
+						JSON.stringify(originalConnections) === JSON.stringify(newConnections) &&
+						JSON.stringify(originalNotes) === JSON.stringify(newNotes) &&
+						JSON.stringify(originalGroups) === JSON.stringify(newGroups)
+					) {
+						callback({ success: false, message: 'No se han realizado cambios en el workflow' })
+						return
+					}
+				}
+
+				const [updatedRows] = await Workflow.update(updates, { where: { id }, individualHooks: true })
+				if (updatedRows > 0) {
+					const updatedWorkflow = await Workflow.findByPk(id, {
+						include: [
+							{
+								attributes: ['id', 'name', 'description', 'transportType'],
+								model: Project,
+								as: 'project'
+							}
+						]
+					})
+					callback({ success: true, workflow: updatedWorkflow })
+				} else {
+					callback({ success: false, message: 'Error al actualizar workflow' })
+				}
+			})
 		} catch (error) {
 			console.error('Error actualizando workflow:', error)
 			callback({ success: false, message: 'Error al actualizar workflow' })
@@ -219,11 +268,14 @@ export const setupWorkflowRoutes = {
 
 	// Delete workflow - requires authentication and project access
 	// Delete workflow - requires delete permission
-	'workflows:delete': async ({ socket, data, callback }: SocketData) => {
+	'workflows:delete': async ({ data, callback, eventRouter }: SocketData) => {
 		try {
-			const { id } = data
-			await Workflow.update({ status: 'archived' }, { where: { id }, individualHooks: true })
-			callback({ success: true })
+			const { workspaceId, workflowId } = data
+			eventRouter('workflows:validate', { workspaceId, workflowId }, async (data) => {
+				if (!data.success) return callback(data)
+				await Workflow.update({ status: 'archived' }, { where: { id: workflowId }, individualHooks: true })
+				callback({ success: true })
+			})
 		} catch (error) {
 			console.error('Error eliminando workflow:', error)
 			callback({ success: false, message: 'Error al eliminar workflow' })
@@ -234,118 +286,122 @@ export const setupWorkflowRoutes = {
 	// Execute workflow - requires execute permission
 	'workflows:execute': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workflowId, trigger = 'manual', version } = data
+			const { workspaceId, workflowId, trigger = 'manual', version } = data
 
-			let workflowData: any
-			let workflowVersion: string
-			let workflowInfo: Workflow
+			eventRouter('workflows:validate', { workspaceId, workflowId }, async (data) => {
+				if (!data.success) return callback(data)
 
-			if (version) {
-				// Si se especifica una versión, buscar en el historial
-				const historyEntry = await WorkflowHistory.findOne({
-					where: {
-						workflowId,
-						version
-					},
-					order: [['createdAt', 'DESC']] // En caso de múltiples entradas con la misma versión
-				})
+				let workflowData: any
+				let workflowVersion: string
+				let workflowInfo: Workflow
 
-				if (!historyEntry) {
-					callback({ success: false, message: `Versión ${version} no encontrada para el workflow` })
-					return
-				}
-
-				const workflow = await Workflow.findByPk(workflowId)
-				if (!workflow) {
-					callback({ success: false, message: 'Workflow no encontrado' })
-					return
-				}
-
-				workflowInfo = workflow
-				workflowData = historyEntry.newData?.workflowData
-				workflowVersion = historyEntry.version
-			} else {
-				// Si no se especifica versión, usar la versión actual (última)
-				const workflow = await Workflow.findByPk(workflowId)
-				if (!workflow) {
-					callback({ success: false, message: 'Workflow no encontrado' })
-					return
-				}
-
-				workflowInfo = workflow
-				workflowData = workflow.workflowData
-				workflowVersion = workflow.version
-			}
-
-			// Save workflow to file before execution with version info
-			try {
-				const dataDir = path.join(process.cwd(), 'data', 'workflows', workflowId)
-
-				// Create directory if it doesn't exist
-				if (!fs.existsSync(dataDir)) {
-					fs.mkdirSync(dataDir, { recursive: true })
-				}
-
-				// Save flow.json with version info
-				const flowData: IWorkflowFull = {
-					info: {
-						name: workflowInfo.name,
-						description: workflowInfo.description,
-						uid: workflowInfo.id
-					},
-					properties: workflowInfo.properties,
-					version: workflowVersion,
-					...workflowData
-				}
-
-				// Also save as latest flow.json
-				const latestFlowPath = path.join(dataDir, 'flow.json')
-				fs.writeFileSync(latestFlowPath, JSON.stringify(flowData, null, 2), 'utf8')
-
-				console.log(`Flujo v${workflowVersion} guardado en: ${latestFlowPath}`)
-			} catch (fileError) {
-				console.error('Error guardando flujo en archivo:', fileError)
-				// Continue with execution even if file save fails
-			}
-
-			// Create and start worker for workflow execution
-			try {
-				const exist = await workerManager.getWorkersByWorkflow(workflowId)
-				if (exist.length > 0) {
-					eventRouter('workers:restart', { workerId: exist[0].id, version: workflowVersion }, (data: any) => {
-						callback(data)
+				if (version) {
+					// Si se especifica una versión, buscar en el historial
+					const historyEntry = await WorkflowHistory.findOne({
+						where: {
+							workflowId,
+							version
+						},
+						order: [['createdAt', 'DESC']] // En caso de múltiples entradas con la misma versión
 					})
-					return
+
+					if (!historyEntry) {
+						callback({ success: false, message: `Versión ${version} no encontrada para el workflow` })
+						return
+					}
+
+					const workflow = await Workflow.findByPk(workflowId)
+					if (!workflow) {
+						callback({ success: false, message: 'Workflow no encontrado' })
+						return
+					}
+
+					workflowInfo = workflow
+					workflowData = historyEntry.newData?.workflowData
+					workflowVersion = historyEntry.version
+				} else {
+					// Si no se especifica versión, usar la versión actual (última)
+					const workflow = await Workflow.findByPk(workflowId)
+					if (!workflow) {
+						callback({ success: false, message: 'Workflow no encontrado' })
+						return
+					}
+
+					workflowInfo = workflow
+					workflowData = workflow.workflowData
+					workflowVersion = workflow.version
 				}
 
-				const worker = await workerManager.createWorker({
-					workflowId,
-					version: workflowVersion
-				})
+				// Save workflow to file before execution with version info
+				try {
+					const dataDir = path.join(process.cwd(), 'data', 'workflows', workflowId)
 
-				callback({
-					success: true,
-					executionId: worker.executionId,
-					workerId: worker.id,
-					port: worker.port,
-					version: workflowVersion,
-					message: version
-						? `Ejecutando versión específica: ${workflowVersion} en worker ${worker.id}`
-						: `Ejecutando última versión: ${workflowVersion} en worker ${worker.id}`
-				})
-			} catch (workerError) {
-				console.error('Error creando worker:', workerError)
+					// Create directory if it doesn't exist
+					if (!fs.existsSync(dataDir)) {
+						fs.mkdirSync(dataDir, { recursive: true })
+					}
 
-				// Update workflow status if executing latest version
-				if (!version) {
-					await Workflow.update({ status: 'failed' }, { where: { id: workflowId } })
+					// Save flow.json with version info
+					const flowData: IWorkflowFull = {
+						info: {
+							name: workflowInfo.name,
+							description: workflowInfo.description,
+							uid: workflowInfo.id
+						},
+						properties: workflowInfo.properties,
+						version: workflowVersion,
+						...workflowData
+					}
+
+					// Also save as latest flow.json
+					const latestFlowPath = path.join(dataDir, 'flow.json')
+					fs.writeFileSync(latestFlowPath, JSON.stringify(flowData, null, 2), 'utf8')
+
+					console.log(`Flujo v${workflowVersion} guardado en: ${latestFlowPath}`)
+				} catch (fileError) {
+					console.error('Error guardando flujo en archivo:', fileError)
+					// Continue with execution even if file save fails
 				}
 
-				callback({
-					success: false,
-					message: `Error creando worker: ${workerError instanceof Error ? workerError.message : 'Unknown error'}`
-				})
-			}
+				// Create and start worker for workflow execution
+				try {
+					const exist = await workerManager.getWorkersByWorkflow(workflowId)
+					if (exist.length > 0) {
+						eventRouter('workers:restart', { workerId: exist[0].id, version: workflowVersion }, (data: any) => {
+							callback(data)
+						})
+						return
+					}
+
+					const worker = await workerManager.createWorker({
+						workflowId,
+						version: workflowVersion
+					})
+
+					callback({
+						success: true,
+						executionId: worker.executionId,
+						workerId: worker.id,
+						port: worker.port,
+						version: workflowVersion,
+						message: version
+							? `Ejecutando versión específica: ${workflowVersion} en worker ${worker.id}`
+							: `Ejecutando última versión: ${workflowVersion} en worker ${worker.id}`
+					})
+				} catch (workerError) {
+					console.error('Error creando worker:', workerError)
+
+					// Update workflow status if executing latest version
+					if (!version) {
+						await Workflow.update({ status: 'failed' }, { where: { id: workflowId } })
+					}
+
+					callback({
+						success: false,
+						message: `Error creando worker: ${workerError instanceof Error ? workerError.message : 'Unknown error'}`
+					})
+				}
+			})
 		} catch (error) {
 			console.error('Error ejecutando workflow:', error)
 			callback({ success: false, message: 'Error al ejecutar workflow' })

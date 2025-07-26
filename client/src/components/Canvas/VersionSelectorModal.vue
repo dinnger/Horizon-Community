@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { useWorkerComposable } from '@/composables/useWorker.composable'
-import { useWorkflowComposable } from '@/composables/useWorkflow.composable'
+import { useWorkflowsComposable } from '@/composables/useWorkflows.composable'
 import { useCanvas } from '@/stores'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -61,7 +61,7 @@ const props = defineProps<{
 }>()
 
 const workerComposable = useWorkerComposable()
-const workflowComposable = useWorkflowComposable()
+const workflowComposable = useWorkflowsComposable()
 
 const availableVersions = ref<Version[]>([])
 const selectedVersion = ref<string | null>(null)

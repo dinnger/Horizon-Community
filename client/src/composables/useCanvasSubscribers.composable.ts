@@ -7,7 +7,6 @@ import type { INodeGroupCanvas } from '@canvas/interfaz/group.interface'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
 import type { Canvas } from '@canvas/canvas'
 import { useCanvasEvents } from '@/stores/canvasEvents'
-import { useWorkflowsStore } from '@/stores/workflows'
 import { useNodesLibraryStore } from '@/stores'
 import type { INodeCanvasAdd } from '@shared/interfaces/standardized'
 

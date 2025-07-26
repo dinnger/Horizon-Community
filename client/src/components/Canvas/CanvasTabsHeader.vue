@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import { useWorkflowsStore } from '@/stores'
 // import VersionControlPanel from '@/components/VersionControlPanel.vue'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
@@ -28,11 +27,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-const router = useRouter()
-const workflowStore = useWorkflowsStore()
-
-const isReloading = ref(false)
 
 
 const emit = defineEmits<{

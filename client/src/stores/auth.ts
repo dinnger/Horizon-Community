@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
 			socketService.connect()
 
 			// Intentar login
-			const response = await socketService.login(email, password)
+			const response = await socketService.auth().login(email, password)
 
 			if (response.success && response.user) {
 				user.value = response.user
@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 				// Verificar que el usuario sigue siendo válido
 				try {
-					const currentUser = await socketService.getCurrentUser()
+					const currentUser = await socketService.auth().getCurrentUser()
 					user.value = currentUser
 					localStorage.setItem('horizon-user', JSON.stringify(currentUser))
 				} catch (error) {

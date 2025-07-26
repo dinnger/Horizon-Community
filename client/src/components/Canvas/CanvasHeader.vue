@@ -52,7 +52,6 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvas, useWorkflowsStore } from '@/stores';
 import { useWorkerStore } from '@/stores/worker';
 import type { IWorkerInfo } from '@shared/interfaces/worker.interface';
 import { computed, ref } from 'vue';
@@ -66,7 +65,6 @@ interface Props {
 }
 
 const router = useRouter()
-const workflowStore = useWorkflowsStore()
 const workerStore = useWorkerStore()
 
 const props = defineProps<Props>()

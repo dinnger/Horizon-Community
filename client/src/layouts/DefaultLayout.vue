@@ -172,7 +172,7 @@ const setTheme = (theme: string) => {
   settingsStore.setTheme(theme)
 }
 
-const isConnected = computed(() => socketService.isConnected.value)
+const isConnected = computed(() => socketService.isConnected)
 
 const handleLogout = () => {
   authStore.logout()
