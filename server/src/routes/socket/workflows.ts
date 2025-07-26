@@ -18,33 +18,46 @@ const myCache = new NodeCache({ stdTTL: 100, checkperiod: 120 })
 export const setupWorkflowRoutes = {
 	'workflows:validate': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const { workspaceId, workflowId } = data
-			const cacheKey = `workflow:${workspaceId}:${workflowId}`
+			const { workspaceId, projectId, workflowId } = data
+			const cacheKey = `workflow:${workspaceId}:${projectId}:${workflowId}`
 			const cached = myCache.get(cacheKey)
 			if (cached) {
 				callback({ success: true, workflow: cached })
 				return
 			}
-			const exist = await Workflow.findOne({
-				attributes: ['id', 'name'],
-				include: [
-					{
-						attributes: ['id', 'name', 'description'],
-						model: Project,
-						as: 'project',
-						required: true,
-						where: {
-							workspaceId
+
+			let exist = null
+			if (projectId) {
+				exist = await Project.findOne({
+					attributes: ['id', 'name', 'description'],
+					where: {
+						workspaceId,
+						id: projectId
+					}
+				})
+			}
+			if (workflowId) {
+				exist = await Workflow.findOne({
+					attributes: ['id', 'name'],
+					include: [
+						{
+							attributes: ['id', 'name', 'description'],
+							model: Project,
+							as: 'project',
+							required: true,
+							where: {
+								workspaceId
+							}
+						}
+					],
+					where: {
+						id: workflowId,
+						status: {
+							[Op.ne]: 'archived'
 						}
 					}
-				],
-				where: {
-					id: workflowId,
-					status: {
-						[Op.ne]: 'archived'
-					}
-				}
-			})
+				})
+			}
 			myCache.set(cacheKey, exist)
 			if (!exist) return callback({ success: false, message: 'Workflow no encontrado' })
 			return callback({ success: true, workflow: exist })
@@ -186,7 +199,7 @@ export const setupWorkflowRoutes = {
 		try {
 			const { workspaceId, ...workflowData } = data
 			// Validando que el workspaceId sea válido
-			eventRouter('workflows:validate', { workspaceId, workflowId: workflowData.id }, async (data) => {
+			eventRouter('workflows:validate', { workspaceId, projectId: workflowData.projectId }, async (data) => {
 				if (!data.success) return callback(data)
 				const workflow = await Workflow.create(workflowData)
 				callback({ success: true, workflow })
@@ -380,13 +393,15 @@ export const setupWorkflowRoutes = {
 
 					callback({
 						success: true,
-						executionId: worker.executionId,
-						workerId: worker.id,
-						port: worker.port,
-						version: workflowVersion,
-						message: version
-							? `Ejecutando versión específica: ${workflowVersion} en worker ${worker.id}`
-							: `Ejecutando última versión: ${workflowVersion} en worker ${worker.id}`
+						worker: {
+							executionId: worker.executionId,
+							workerId: worker.id,
+							port: worker.port,
+							version: workflowVersion,
+							message: version
+								? `Ejecutando versión específica: ${workflowVersion} en worker ${worker.id}`
+								: `Ejecutando última versión: ${workflowVersion} en worker ${worker.id}`
+						}
 					})
 				} catch (workerError) {
 					console.error('Error creando worker:', workerError)

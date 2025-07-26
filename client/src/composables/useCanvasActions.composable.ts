@@ -29,16 +29,19 @@ export function useCanvasActionsComposable({
 		const nodeToAdd: INodeCanvas = {
 			...JSON.parse(JSON.stringify(node)),
 			design: {
-				x: currentMousePosition.x || 100,
-				y: currentMousePosition.y || 100
+				x: currentMousePosition.value.x || 100,
+				y: currentMousePosition.value.y || 100
 			}
 		}
+		console.log('nodeToAdd', nodeToAdd)
 
 		// Añadir el nodo
-		const connectorOriginName = typeof nodeOrigin?.connection === 'string' ? nodeOrigin.connection : nodeOrigin?.connection.name || ''
+		const connectorOriginName =
+			typeof nodeOrigin.value?.connection === 'string' ? nodeOrigin.value.connection : nodeOrigin?.value.connection.name || ''
+		console.log('connectorOriginName', connectorOriginName)
 		const nodeId = canvasInstance.actionAddNode({
 			origin: {
-				idNode: nodeOrigin?.node.id as string,
+				idNode: nodeOrigin?.value.node.id as string,
 				connectorOriginName
 			},
 			node: nodeToAdd

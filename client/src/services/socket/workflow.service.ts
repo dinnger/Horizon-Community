@@ -35,7 +35,7 @@ export function socketWorkflow(socket: Socket | null) {
 		createWorkflow(workflowData: any): Promise<any> {
 			return new Promise((resolve, reject) => {
 				if (!socket) return reject(new Error('Socket not connected'))
-				socket.emit('workflows:create', { workspaceId, ...workflowData }, (response: any) => {
+				socket.emit('workflows:create', { ...workflowData, workspaceId }, (response: any) => {
 					if (response.success) {
 						resolve(response.workflow)
 					} else {

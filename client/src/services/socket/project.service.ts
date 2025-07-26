@@ -32,7 +32,6 @@ export function socketProject(socket: Socket | null) {
 				}
 
 				socket.emit('projects:get', { workspaceId, projectId }, (response: any) => {
-					console.log('response', response)
 					if (response.success && response.project) {
 						resolve(response.project)
 					} else {
@@ -49,7 +48,7 @@ export function socketProject(socket: Socket | null) {
 					return
 				}
 
-				socket.emit('projects:create', projectData, (response: any) => {
+				socket.emit('projects:create', { workspaceId, ...projectData }, (response: any) => {
 					if (response.success) {
 						resolve(response.project)
 					} else {

@@ -57,14 +57,15 @@ export function useProjectComposable() {
 		}
 	}
 
-	const createProject = (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+	const createProject = async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
 		const now = new Date()
 		const newProject: Omit<Project, 'id'> = {
 			...projectData,
 			createdAt: now,
 			updatedAt: now
 		}
-		socketService.project().createProject(newProject)
+		await socketService.project().createProject(newProject)
+		await loadProjects()
 		return newProject
 	}
 
@@ -74,15 +75,15 @@ export function useProjectComposable() {
 			...updates,
 			updatedAt: now
 		}
-		socketService.project().updateProject(projectId, updatedProject)
-
+		await socketService.project().updateProject(projectId, updatedProject)
+		await loadProjects()
 		return updatedProject
 	}
 
 	const deleteProject = async (projectId: string) => {
 		try {
 			await socketService.project().deleteProject(projectId)
-
+			await loadProjects()
 			return true
 		} catch (error) {
 			return false

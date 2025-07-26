@@ -58,6 +58,7 @@ interface Version {
 
 const props = defineProps<{
   workflowId: string
+  version?: string
 }>()
 
 const emit = defineEmits<{
@@ -86,9 +87,10 @@ const executeSelectedVersion = async () => {
 
 
 onMounted(async () => {
+  if (props.version) selectedVersion.value = props.version
   const data = await workflowComposable.getVersions()
   if (data.success) {
-    availableVersions.value = data.versions
+    availableVersions.value = data.versions.filter((f: any) => f.version !== '0.0.1')
   }
 })
 

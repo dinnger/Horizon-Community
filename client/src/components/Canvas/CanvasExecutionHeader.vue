@@ -29,7 +29,8 @@
 
     <!-- Version Selector Modal -->
   </div>
-  <VersionSelectorModal v-if="showSelectedVersion" :workflow-id="workflowId" @close="showSelectedVersion = false" />
+  <VersionSelectorModal v-if="showSelectedVersion" :version="workerStore.workerInfo?.version" :workflow-id="workflowId"
+    @close="showSelectedVersion = false" />
 
 
 </template>

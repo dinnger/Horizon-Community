@@ -13,6 +13,7 @@ export function useWorkerComposable() {
 			const worker = await execute(data)
 			return { success: true, worker }
 		} catch (error: any) {
+			console.log('worker', error)
 			return { success: false, message: 'Error al ejecutar workflow' }
 		} finally {
 			workerStore.isExecuting = false
