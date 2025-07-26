@@ -31,19 +31,21 @@
             <span class="mdi mdi-play"></span>
             Ejecutar Versión
           </button>
-          <button class="btn" @click="canvasExecuteStore.showSelectedVersion = false">Cancelar</button>
+          <button class="btn" @click="canvasStore.showSelectedVersion = false">Cancelar</button>
         </div>
       </div>
     </div>
   </template>
 
 <script setup lang="ts">
+import { useWorkerComposable } from '@/composables/useWorker.composable'
+import { useWorkflowComposable } from '@/composables/useWorkflow.composable'
 import { useCanvas } from '@/stores'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-const canvasExecuteStore = useCanvas()
+const canvasStore = useCanvas()
 const router = useRouter()
 
 interface Version {
@@ -54,6 +56,8 @@ interface Version {
   createdAt: string
 }
 
+const workerComposable = useWorkerComposable()
+const workflowComposable = useWorkflowComposable()
 
 const availableVersions = ref<Version[]>([])
 const selectedVersion = ref<string | null>(null)
@@ -69,13 +73,13 @@ const executeSelectedVersion = async () => {
     toast.error('Por favor selecciona una versión') // TODO: Traducir                 
     return
   }
-  canvasExecuteStore.handleExecuteWorkflow({ workflowId: workflowId.value, version: selectedVersion.value })
-  canvasExecuteStore.showSelectedVersion = false
+  workerComposable.executeWorkflow({ workflowId: workflowId.value, version: selectedVersion.value })
+  canvasStore.showSelectedVersion = false
 }
 
 
 onMounted(async () => {
-  const data = await canvasExecuteStore.getVersions()
+  const data = await workflowComposable.getVersions({ workflowId: workflowId.value })
   if (data.success) {
     availableVersions.value = data.versions
   }

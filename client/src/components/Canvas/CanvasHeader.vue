@@ -34,15 +34,16 @@
         @click="handleExecute">
         <div>
           <div class="flex">
-            <div v-if="!canvasExecuteStore.workerInfo" class="mdi mdi-play mr-2"></div>
+            <div v-if="!workerStore.workerInfo && !isExecuting" class="mdi mdi-play mr-2"></div>
+            <div v-else-if="isExecuting" class="mdi mdi-loading mr-2 mdi-spin"></div>
             <div v-else class="w-2 h-2 rounded-full top-[5px] -left-[5px] bg-green-400 relative">
               <span class="absolute inset-0 w-2 h-2 rounded-full bg-white animate-ping opacity-75"></span>
             </div>
-            {{ isExecuting ? "Ejecutando..." : !canvasExecuteStore.workerInfo ? 'Ejecutar' : 'En ejecución' }}
+            {{ isExecuting ? "Ejecutando..." : !workerStore.workerInfo ? 'Ejecutar' : 'En ejecución' }}
           </div>
-          <div v-if="canvasExecuteStore.workerInfo"
+          <div v-if="workerStore.workerInfo"
             class="absolute top-0 right-0 text-[9px] bg-warning text-warning-content pl-1 pr-1 rounded-bl-box">
-            {{ canvasExecuteStore.workerInfo.version }}
+            {{ workerStore.workerInfo.version }}
           </div>
         </div>
       </button>
@@ -52,6 +53,8 @@
 
 <script setup lang="ts">
 import { useCanvas, useWorkflowsStore } from '@/stores';
+import { useWorkerStore } from '@/stores/worker';
+import type { IWorkerInfo } from '@shared/interfaces/worker.interface';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -63,22 +66,23 @@ interface Props {
 
 const router = useRouter()
 const workflowStore = useWorkflowsStore()
-const canvasExecuteStore = useCanvas()
+const workerStore = useWorkerStore()
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'update:activeTab': [tab: 'design' | 'execution']
+  'update:activeTab': [tab: 'design' | 'execution'],
+  'execute': []
 }>()
 
 
-const isExecuting = ref(false)
+const isExecuting = computed(() => workerStore.isExecuting)
 
 const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const handleExecute = async () => {
   if (props.activeTab === 'execution') return
   emit('update:activeTab', 'execution')
-  if (!canvasExecuteStore.workerInfo) canvasExecuteStore.handleExecuteWorkflow({ workflowId: workflowId.value })
+  emit('execute')
 }
 </script>

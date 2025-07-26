@@ -51,7 +51,7 @@ export const setupWorkflowRoutes = {
 		try {
 			const { workspaceId, workflowId, version, hidratation = true } = data
 
-			let workflow: Workflow | WorkflowHistory | null
+			let workflow: Workflow | WorkflowHistory | null = null
 
 			if (!version) {
 				workflow = await Workflow.findOne({
@@ -73,7 +73,7 @@ export const setupWorkflowRoutes = {
 					}
 				})
 			} else {
-				workflow = await WorkflowHistory.findOne({
+				const history = await WorkflowHistory.findOne({
 					include: [
 						{
 							attributes: ['id', 'name', 'description', 'transportType'],
@@ -89,8 +89,11 @@ export const setupWorkflowRoutes = {
 						version
 					}
 				})
-				if (workflow) {
-					workflow = (workflow as any)?.newData
+				if (history) {
+					workflow = {
+						...history.newData,
+						project: history.project
+					} as any
 				}
 			}
 

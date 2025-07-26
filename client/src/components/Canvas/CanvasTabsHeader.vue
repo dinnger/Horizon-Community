@@ -6,7 +6,7 @@
       Publicar
     </button>
     <div class="border-l border-base-300 ml-1 mr-1 h-8 relative"></div>
-    <button class="btn btn-primary btn-sm" @click="handleSave" :disabled="!canvasStore.changes">
+    <button class="btn btn-primary btn-sm" @click="handleSave" :disabled="!canvasComposable.changes.value">
       <span class="mdi mdi-content-save"></span>
       Guardar
     </button>
@@ -15,21 +15,20 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvas, useWorkflowsStore } from '@/stores'
-import VersionControlPanel from '@/components/VersionControlPanel.vue'
+import { useWorkflowsStore } from '@/stores'
+// import VersionControlPanel from '@/components/VersionControlPanel.vue'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
 import { computed, ref, watch } from 'vue'
+import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
 interface Props {
-  isExecuting: boolean
+  canvasComposable: IUseCanvasType
   version: string
 }
 
 const props = defineProps<Props>()
 
-const canvasStore = useCanvas()
-const canvasExecuteStore = useCanvas()
 const router = useRouter()
 const workflowStore = useWorkflowsStore()
 
@@ -43,7 +42,7 @@ const emit = defineEmits<{
 
 const handleSave = async () => {
   try {
-    await canvasStore.save()
+    await props.canvasComposable.save({ workflowId: workflowId.value })
     toast.success('Workflow guardado correctamente')
   } catch (error) {
     toast.error('Error al guardar el workflow')
@@ -53,7 +52,7 @@ const handleSave = async () => {
 
 const handlePublish = async () => {
   try {
-    await canvasStore.publish(router.currentRoute.value.params.id as string)
+    await props.canvasComposable.publish({ workflowId: workflowId.value })
 
     toast.success('Workflow publicado correctamente')
   } catch (error) {

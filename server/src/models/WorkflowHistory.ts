@@ -35,6 +35,7 @@ export class WorkflowHistory
 	public newData?: Workflow
 	public version!: string
 	public metadata?: object
+	public project?: Project
 
 	// timestamps!
 	public readonly createdAt!: Date

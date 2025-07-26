@@ -159,6 +159,7 @@ interface PanelTrace {
 }
 
 interface Props {
+  getNode: (data: { id: string }) => any
   panelTrace: PanelTrace[]
   autoScroll: boolean
 }
@@ -202,7 +203,7 @@ const groupedTraces = computed(() => {
   for (const trace of props.panelTrace) {
     if (!groups[trace.nodeId]) {
       groups[trace.nodeId] = {
-        name: canvasStore.getCanvasInstance.nodes.getNode({ id: trace.nodeId }).info.name,
+        name: props.getNode({ id: trace.nodeId }).info.name,
         totalExecutions: 0,
         avgTime: 0,
         totalData: 0,

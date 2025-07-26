@@ -50,7 +50,6 @@ export class Nodes {
 		node.id = node.id || uuidv4()
 		this.nodes[node.id] = new NewNode(node, this)
 		const newNode = this.nodes[node.id]
-		console.log('newNode', node.id)
 		return this.nodes[node.id]
 	}
 

@@ -2,18 +2,24 @@
  * Store para las acciones del canvas
  * Maneja las operaciones sobre nodos, conexiones, notas y grupos
  */
-import { defineStore } from 'pinia'
-import { useCanvas } from './canvas'
-import { useCanvasEvents } from './canvasEvents'
-import { useCanvasModals } from './canvasModals'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 import type { INodeGroupCanvas } from '@canvas/interfaz/group.interface'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
+import { useCanvas, useCanvasEvents, useCanvasModals } from '@/stores'
+import type { Canvas } from '@canvas/canvas'
 
-export const useCanvasActions = defineStore('canvasActions', () => {
+export type IUseCanvasActionsType = ReturnType<typeof useCanvasActionsComposable>
+
+export function useCanvasActionsComposable({
+	canvasInstance,
+	currentMousePosition,
+	nodeOrigin
+}: { canvasInstance: Canvas | null; currentMousePosition: any; nodeOrigin: any }) {
 	const canvasStore = useCanvas()
 	const canvasEvents = useCanvasEvents()
 	const canvasModals = useCanvasModals()
+
+	if (!canvasInstance) return
 
 	// =============================================================================
 	// ACCIONES DE NODOS
@@ -23,19 +29,16 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 		const nodeToAdd: INodeCanvas = {
 			...JSON.parse(JSON.stringify(node)),
 			design: {
-				x: canvasStore.currentMousePosition.x || canvasStore.nextNodePosition.x,
-				y: canvasStore.currentMousePosition.y || canvasStore.nextNodePosition.y
+				x: currentMousePosition.x || 100,
+				y: currentMousePosition.y || 100
 			}
 		}
 
 		// Añadir el nodo
-		const connectorOriginName =
-			typeof canvasStore.nodeOrigin?.connection === 'string'
-				? canvasStore.nodeOrigin.connection
-				: canvasStore.nodeOrigin?.connection.name || ''
-		const nodeId = canvasStore.getCanvasInstance.actionAddNode({
+		const connectorOriginName = typeof nodeOrigin?.connection === 'string' ? nodeOrigin.connection : nodeOrigin?.connection.name || ''
+		const nodeId = canvasInstance.actionAddNode({
 			origin: {
-				idNode: canvasStore.nodeOrigin?.node.id as string,
+				idNode: nodeOrigin?.node.id as string,
 				connectorOriginName
 			},
 			node: nodeToAdd
@@ -44,8 +47,8 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 
 	const handleNodePropertiesSave = (updatedNode: INodeCanvas) => {
 		// Actualizar el nodo en el canvas
-		if (canvasStore.getCanvasInstance && updatedNode.id) {
-			canvasStore.getCanvasInstance.actionUpdateNodeProperties({
+		if (updatedNode.id) {
+			canvasInstance.actionUpdateNodeProperties({
 				id: updatedNode.id,
 				properties: updatedNode.properties
 			})
@@ -55,8 +58,6 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	}
 
 	const handleNodeDelete = (nodes: INodeCanvas[]) => {
-		if (!canvasStore.getCanvasInstance) return
-
 		const confirmMessage =
 			nodes.length === 1
 				? '¿Estás seguro de que quieres eliminar este nodo?'
@@ -64,24 +65,23 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 
 		if (confirm(confirmMessage)) {
 			const nodeIds = nodes.map((node) => node.id).filter((id): id is string => Boolean(id))
-			canvasStore.getCanvasInstance.actionDeleteNodes({ ids: nodeIds })
+			canvasInstance.actionDeleteNodes({ ids: nodeIds })
 			canvasStore.changes = true
 		}
 		canvasEvents.emit('node:context:close', undefined)
 	}
 
 	const handleNodeDuplicate = (node: INodeCanvas) => {
-		if (!canvasStore.getCanvasInstance || !node.id) return
+		if (!node.id) return
 
-		if (!canvasStore.getCanvasInstance || !node?.id) return
-		canvasStore.getCanvasInstance.nodes.duplicateNode({ id: node.id })
+		canvasInstance.nodes.duplicateNode({ id: node.id })
 		canvasEvents.emit('node:context:close', undefined)
 	}
 
 	const handleNodeRename = (node: INodeCanvas, newName: string) => {
-		if (!canvasStore.getCanvasInstance || !node.id) return
+		if (!node.id) return
 
-		canvasStore.getCanvasInstance.actionUpdateNodeName({
+		canvasInstance.actionUpdateNodeName({
 			id: node.id,
 			newName
 		})
@@ -93,9 +93,7 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	// ACCIONES DE CONEXIONES
 	// =============================================================================
 	const handleConnectionDelete = (connectionId: string) => {
-		if (!canvasStore.getCanvasInstance) return
-
-		canvasStore.getCanvasInstance.actionDeleteConnectionById({ id: connectionId })
+		canvasInstance.actionDeleteConnectionById({ id: connectionId })
 		canvasStore.changes = true
 		canvasEvents.emit('connection:context:close', undefined)
 	}
@@ -110,11 +108,9 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 		size: { width: number; height: number }
 		position?: { x: number; y: number }
 	}) => {
-		if (!canvasStore.getCanvasInstance) return
-
 		if (noteData.id) {
 			// Actualizar nota existente
-			canvasStore.getCanvasInstance.actionUpdateNote(noteData.id, {
+			canvasInstance.actionUpdateNote(noteData.id, {
 				content: noteData.content,
 				color: noteData.color,
 				size: noteData.size
@@ -122,7 +118,7 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 		} else {
 			// Crear nueva nota
 			const position = noteData.position || canvasModals.notePropertiesDialog.position
-			canvasStore.getCanvasInstance.actionAddNote({
+			canvasInstance.actionAddNote({
 				position,
 				content: noteData.content,
 				color: noteData.color,
@@ -135,9 +131,7 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	}
 
 	const handleNoteDelete = (noteId: string) => {
-		if (!canvasStore.getCanvasInstance) return
-
-		canvasStore.getCanvasInstance.actionDeleteNote(noteId)
+		canvasInstance.actionDeleteNote(noteId)
 		canvasStore.changes = true
 		canvasEvents.emit('note:context:close', undefined)
 	}
@@ -172,17 +166,15 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 		nodeIds?: string[]
 		groupId?: string
 	}) => {
-		if (!canvasStore.getCanvasInstance) return
-
 		if (data.groupId) {
 			// Actualizar grupo existente
-			canvasStore.getCanvasInstance.actionUpdateGroup(data.groupId, {
+			canvasInstance.actionUpdateGroup(data.groupId, {
 				label: data.label,
 				color: data.color
 			})
 		} else if (data.nodeIds) {
 			// Crear nuevo grupo
-			canvasStore.getCanvasInstance.actionCreateGroup({
+			canvasInstance.actionCreateGroup({
 				nodeIds: data.nodeIds,
 				label: data.label,
 				color: data.color
@@ -198,22 +190,22 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	}
 
 	const handleGroupUngroup = (group: INodeGroupCanvas) => {
-		if (!canvasStore.getCanvasInstance || !group.id) return
+		if (!group.id) return
 
 		const confirmMessage = '¿Estás seguro de que quieres desagrupar estos nodos?'
 		if (confirm(confirmMessage)) {
-			canvasStore.getCanvasInstance.actionUngroup(group.id)
+			canvasInstance.actionUngroup(group.id)
 			canvasStore.changes = true
 		}
 		canvasEvents.emit('group:context:close', undefined)
 	}
 
 	const handleGroupDelete = (group: INodeGroupCanvas) => {
-		if (!canvasStore.getCanvasInstance || !group.id) return
+		if (!group.id) return
 
 		const confirmMessage = '¿Estás seguro de que quieres eliminar este grupo?'
 		if (confirm(confirmMessage)) {
-			canvasStore.getCanvasInstance.actionDeleteGroup(group.id)
+			canvasInstance.actionDeleteGroup(group.id)
 			canvasStore.changes = true
 		}
 		canvasEvents.emit('group:context:close', undefined)
@@ -223,8 +215,6 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	// ACCIONES DEL ADMINISTRADOR DE NOTAS
 	// =============================================================================
 	const handleNotesManagerSelectNote = (note: INoteCanvas) => {
-		if (!canvasStore.getCanvasInstance) return
-
 		// TODO: Implementar función para centrar vista en la nota
 		console.log('Focusing note:', note.id)
 		canvasEvents.emit('note:manager:close', undefined)
@@ -239,9 +229,7 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 	}
 
 	const handleNotesManagerDeleteNote = (noteId: string) => {
-		if (!canvasStore.getCanvasInstance) return
-
-		canvasStore.getCanvasInstance.actionDeleteNote(noteId)
+		canvasInstance.actionDeleteNote(noteId)
 		canvasStore.changes = true
 
 		// Actualizar la lista de notas en el administrador
@@ -278,4 +266,4 @@ export const useCanvasActions = defineStore('canvasActions', () => {
 		handleNotesManagerEditNote,
 		handleNotesManagerDeleteNote
 	}
-})
+}

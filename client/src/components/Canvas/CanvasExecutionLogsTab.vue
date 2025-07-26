@@ -50,17 +50,12 @@
 </template>
 
 <script setup lang="ts">
+import type { IPanelConsole } from '@/types/canvas';
 import { ref, watch, nextTick, computed } from 'vue'
 
-interface PanelConsole {
-  id: string
-  date: Date
-  level: string
-  message: string
-}
 
 interface Props {
-  panelConsole: PanelConsole[]
+  panelConsole: IPanelConsole[]
   autoScroll: boolean
 }
 

@@ -35,6 +35,7 @@ export class Workflow extends Model<WorkflowAttributes, WorkflowCreationAttribut
 	public properties!: IWorkflowProperties
 	public version!: string
 	public isPublished!: boolean
+	public project?: Project
 
 	// timestamps!
 	public readonly createdAt!: Date

@@ -22,12 +22,12 @@
         @clearCurrentTab="clearCurrentTab" @toggleAutoScroll="toggleAutoScroll" />
 
       <!-- Contenido de Logs -->
-      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef" :panelConsole="panelConsole"
-        :autoScroll="autoScroll" />
+      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef"
+        :panelConsole="canvasComposable.panelConsole.value" :autoScroll="autoScroll" />
 
       <!-- Contenido de Traza de Ejecución -->
-      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef" :panelTrace="panelTrace"
-        :autoScroll="autoScroll" />
+      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef"
+        :panelTrace="canvasComposable.panelTrace.value" :autoScroll="autoScroll" :getNode="canvasComposable.getNode" />
 
     </div>
   </div>
@@ -38,26 +38,13 @@ import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import CanvasExecutionTabsHeader from './CanvasExecutionTabsHeader.vue'
 import CanvasExecutionLogsTab from './CanvasExecutionLogsTab.vue'
 import CanvasExecutionTraceTab from './CanvasExecutionTraceTab.vue'
+import type { IPanelConsole, IPanelTrace } from '@/types/canvas'
+import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
-interface PanelConsole {
-  id: string
-  date: Date
-  level: string
-  message: string
-}
 
-interface PanelTrace {
-  id: string
-  timestamp: Date
-  nodeId: string
-  connectionName: string
-  executeTime: number
-  length?: number
-}
 
 interface Props {
-  panelConsole: PanelConsole[]
-  panelTrace: PanelTrace[]
+  canvasComposable: IUseCanvasType
   isVisible: boolean
 }
 
@@ -98,6 +85,7 @@ const clearCurrentTab = () => {
 const toggleAutoScroll = () => {
   autoScroll.value = !autoScroll.value
 }
+
 
 // Funciones de redimensionado
 const startResize = (event: MouseEvent) => {

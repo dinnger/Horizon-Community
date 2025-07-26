@@ -2,21 +2,18 @@
  * Store para manejo centralizado de subscribers del canvas
  * Se encarga de configurar y gestionar todos los event listeners del canvas
  */
-import { defineStore } from 'pinia'
-import { useCanvasEvents } from '@/stores/canvasEvents'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 import type { INodeGroupCanvas } from '@canvas/interfaz/group.interface'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
-import type { INodeCanvasAdd } from '@canvas/interfaz/node.interface'
 import type { Canvas } from '@canvas/canvas'
-import socketService from '@/services/socket'
-import { useNodesLibraryStore } from './nodesLibrary'
+import { useCanvasEvents } from '@/stores/canvasEvents'
 import { useWorkflowsStore } from '@/stores/workflows'
+import { useNodesLibraryStore } from '@/stores'
+import type { INodeCanvasAdd } from '@shared/interfaces/standardized'
 
-export const useCanvasSubscribers = defineStore('canvasSubscribers', () => {
+export function useCanvasSubscribersComposable() {
 	const canvasEvents = useCanvasEvents()
 	const nodesStore = useNodesLibraryStore()
-	const workflowStore = useWorkflowsStore()
 
 	/**
 	 * Configura todos los event listeners del canvas
@@ -162,4 +159,4 @@ export const useCanvasSubscribers = defineStore('canvasSubscribers', () => {
 	return {
 		setupCanvasSubscribers
 	}
-})
+}

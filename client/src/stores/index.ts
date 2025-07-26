@@ -5,7 +5,6 @@ export { useNodesLibraryStore } from './nodesLibrary'
 export { useCanvas } from './canvas'
 export { useCanvasEvents } from './canvasEvents'
 export { useCanvasModals } from './canvasModals'
-export { useCanvasActions } from './canvasActions'
 export { useDeploymentStore } from './deployment'
 export { useRoleStore } from './role'
 

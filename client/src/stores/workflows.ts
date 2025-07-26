@@ -115,27 +115,8 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	}
 
-	const getWorkflowById = async ({ workflowId, version }: { workflowId: string; version?: string }) => {
-		return await socketService.getWorkflowsById({ workspaceId: workspaceStore.currentWorkspaceId, workflowId, version })
-	}
-
 	const getWorkflowVersion = async (id: string) => {
 		return await socketService.getWorkflowVersions(workspaceStore.currentWorkspaceId, id)
-	}
-
-	const setWorkflowContext = (data: any) => {
-		console.log('setWorkflowContext', data)
-		context.value = {
-			project: {
-				type: data.project.transportType
-			},
-			info: {
-				name: data.name,
-				uid: data.id,
-				version: data.version
-			},
-			properties: data.properties
-		}
 	}
 
 	const getWorkflowContext = () => {
@@ -158,20 +139,6 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 			console.error('Error creating workflow:', error)
 			return null
 		}
-	}
-
-	const updateWorkflow = async ({
-		workflowId,
-		data,
-		isContext = false
-	}: {
-		workflowId: string
-		data: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[]; notes?: any[]; groups?: any[] }
-		isContext?: boolean
-	}) => {
-		const update = await socketService.updateWorkflow(workflowId, data)
-		if (isContext) setWorkflowContext(update)
-		return null
 	}
 
 	const deleteWorkflow = async (workflowId: string) => {
@@ -228,18 +195,15 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		error,
 
 		// Getters
-		getWorkflowById,
 		getWorkflowVersion,
 		getActiveWorkflowsCount,
 		getWorkflowStats,
 		getAllWorkflowStats,
-		setWorkflowContext,
 		getWorkflowContext,
 
 		// Actions
 		initializeData,
 		createWorkflow,
-		updateWorkflow,
 		deleteWorkflow,
 		deleteWorkflowsByProjectId,
 		runWorkflow,

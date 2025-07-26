@@ -342,7 +342,7 @@ class SocketService {
 		})
 	}
 
-	updateWorkflow(workflowId: string, updates: any): Promise<Workflow> {
+	updateWorkflow({ workflowId, updates }: { workflowId: string; updates: any }): Promise<Workflow> {
 		return new Promise((resolve, reject) => {
 			if (!this.socket) {
 				reject(new Error('Socket not connected'))

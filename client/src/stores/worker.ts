@@ -3,7 +3,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useWorkerStore = defineStore('worker', () => {
-	const activeWorkers = ref<IWorkerInfo[]>([])
+	// Estados del worker
+	const workerInfo = ref<IWorkerInfo | null>(null)
+	const isExecuting = ref(false)
 
-	return {}
+	return { workerInfo, isExecuting }
 })
