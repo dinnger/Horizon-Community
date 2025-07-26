@@ -27,16 +27,6 @@ export function useWorkflowsComposable({ projectId }: { projectId: string }) {
 		}
 	}
 
-	const getVersions = async ({ workflowId }: { workflowId: string }) => {
-		try {
-			const result = await socketService.workflow().getWorkflowVersions({ workflowId })
-			return { success: true, versions: result.versions }
-		} catch (error) {
-			console.error('Error obteniendo versiones:', error)
-			return { success: false, message: 'Error al obtener versiones', versions: [] }
-		}
-	}
-
 	// Computed properties
 	const getActiveWorkflowsCount = computed(() => {
 		const projectWorkflows = workflows.value
@@ -200,7 +190,6 @@ export function useWorkflowsComposable({ projectId }: { projectId: string }) {
 		loadWorkflows,
 		deleteWorkflow,
 		deleteWorkflowsByProjectId,
-		validWorkflow,
-		getVersions
+		validWorkflow
 	}
 }

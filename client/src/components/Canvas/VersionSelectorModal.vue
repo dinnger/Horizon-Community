@@ -31,7 +31,7 @@
             <span class="mdi mdi-play"></span>
             Ejecutar Versión
           </button>
-          <button class="btn" @click="canvasStore.showSelectedVersion = false">Cancelar</button>
+          <button class="btn" @click="emit('close')">Cancelar</button>
         </div>
       </div>
     </div>
@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { useWorkerComposable } from '@/composables/useWorker.composable'
-import { useWorkflowsComposable } from '@/composables/useWorkflows.composable'
+import { useWorkflowComposable } from '@/composables/useWorkflow.composable'
 import { useCanvas } from '@/stores'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -60,8 +60,12 @@ const props = defineProps<{
   workflowId: string
 }>()
 
+const emit = defineEmits<{
+  'close': []
+}>()
+
 const workerComposable = useWorkerComposable()
-const workflowComposable = useWorkflowsComposable()
+const workflowComposable = useWorkflowComposable({ workflowId: props.workflowId })
 
 const availableVersions = ref<Version[]>([])
 const selectedVersion = ref<string | null>(null)
@@ -77,12 +81,12 @@ const executeSelectedVersion = async () => {
     return
   }
   workerComposable.executeWorkflow({ workflowId: props.workflowId, version: selectedVersion.value })
-  canvasStore.showSelectedVersion = false
+  emit('close')
 }
 
 
 onMounted(async () => {
-  const data = await workflowComposable.getVersions({ workflowId: props.workflowId })
+  const data = await workflowComposable.getVersions()
   if (data.success) {
     availableVersions.value = data.versions
   }

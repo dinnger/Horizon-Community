@@ -6,8 +6,7 @@
         :version="version" :canvas-composable="canvasComposable" @canvas-ready="canvasReady" />
       <CanvasExecutionTabs v-if="workerStore.workerInfo" :is-visible="true" :workflow-id="workflowId"
         :canvas-composable="canvasComposable" @clear-logs="clearLogs" @clear-trace="clearTrace" />
-      <!-- Version Selector Modal -->
-      <VersionSelectorModal v-if="canvasStore.showSelectedVersion" :workflow-id="workflowId" />
+
       <!-- Modals Manager - Propiedades, Manejo de Nodos, Manejo de Conexiones, Manejo de Notas, Manejo de Grupos -->
       <CanvasModalsManager v-if="canvasComposable.actions" :canvas-composable="canvasComposable" />
     </div>
@@ -28,11 +27,11 @@ import { onMounted, onUnmounted } from 'vue';
 import { useCanvasComposable } from '@/composables/useCanvas.composable';
 import CanvasArea from '@/components/Canvas/CanvasArea.vue';
 import CanvasExecutionTabs from './CanvasExecutionTabs.vue';
-import VersionSelectorModal from './VersionSelectorModal.vue';
 import CanvasExecutionHeader from './CanvasExecutionHeader.vue';
 import { useWorkerComposable } from '@/composables/useWorker.composable';
 import { useWorkerStore } from '@/stores/worker';
 import CanvasModalsManager from './CanvasModalsManager.vue';
+import { toast } from 'vue-sonner';
 
 
 const props = defineProps<{
@@ -74,6 +73,9 @@ onMounted(() => {
   // Iniciar la ejecución del workflow
   if (!props.version) {
     workerComposable.executeWorkflow({ workflowId: props.workflowId })
+      .then((result) => {
+        if (!result?.success) toast.error(result?.message || '')
+      })
   }
 })
 

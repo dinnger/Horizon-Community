@@ -10,10 +10,10 @@ export function useWorkerComposable() {
 		if (workerStore.isExecuting) return
 		workerStore.isExecuting = true
 		try {
-			const result = await execute(data)
-			console.log('result', result)
-		} catch (error) {
-			alert('Error inesperado ejecutando workflow')
+			const worker = await execute(data)
+			return { success: true, worker }
+		} catch (error: any) {
+			return { success: false, message: 'Error al ejecutar workflow' }
 		} finally {
 			workerStore.isExecuting = false
 		}
@@ -40,9 +40,8 @@ export function useWorkerComposable() {
 
 			console.error('Error ejecutando workflow:', result.message)
 			return { success: false, message: result.message }
-		} catch (error) {
-			console.error('Error en ejecución:', error)
-			return { success: false, message: 'Error al ejecutar workflow' }
+		} catch (error: any) {
+			throw new Error(`Error en ejecución: ${error.message}`)
 		}
 	}
 

@@ -26,7 +26,10 @@
         {{ workerStore.workerInfo ? 'Reiniciar' : 'Reiniciando...' }}
       </button>
     </template>
+
+    <!-- Version Selector Modal -->
   </div>
+  <VersionSelectorModal v-if="showSelectedVersion" :workflow-id="workflowId" @close="showSelectedVersion = false" />
 
 
 </template>
@@ -37,6 +40,10 @@ import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
 import { useWorkerComposable } from '@/composables/useWorker.composable'
 import { useWorkerStore } from '@/stores/worker'
+import { ref } from 'vue'
+import VersionSelectorModal from './VersionSelectorModal.vue'
+
+const showSelectedVersion = ref(false)
 
 const canvasExecuteStore = useCanvas()
 const router = useRouter()
@@ -70,7 +77,7 @@ const handleStopWorker = async () => {
 }
 
 const handleVersionSelection = async () => {
-  canvasExecuteStore.showSelectedVersion = true
+  showSelectedVersion.value = true
 }
 
 

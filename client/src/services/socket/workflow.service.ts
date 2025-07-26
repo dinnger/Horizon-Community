@@ -82,7 +82,7 @@ export function socketWorkflow(socket: Socket | null) {
 		executeWorkflow(workflowId: string, trigger = 'manual', version?: string): Promise<any> {
 			return new Promise((resolve, reject) => {
 				if (!socket) return reject(new Error('Socket not connected'))
-				const payload = { workflowId, trigger, ...(version && { version }) }
+				const payload = { workspaceId, workflowId, trigger, ...(version && { version }) }
 				socket.emit('workflows:execute', payload, (response: any) => {
 					if (response.success) {
 						resolve(response)
