@@ -9,7 +9,7 @@
         <div v-show="activeTab === 'design'" class="h-full">
           <CanvasDesign :workflowId="workflowId" />
         </div>
-        <div v-if="activeTab === 'execution'">
+        <div v-if="activeTab === 'execution'" class="h-full">
           <CanvasExecution :workflowId="workflowId" :version="workerStore.workerInfo?.version" />
         </div>
       </div>

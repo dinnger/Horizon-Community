@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="h-full">
     <div v-if="!workerStore.isExecuting">
       <CanvasExecutionHeader />
       <CanvasArea v-if="workerStore.workerInfo" name="execution" :is-locked="true" :version="version"
@@ -11,8 +11,13 @@
       <!-- Modals Manager - Propiedades, Manejo de Nodos, Manejo de Conexiones, Manejo de Notas, Manejo de Grupos -->
       <CanvasModalsManager v-if="canvasComposable.actions" :canvas-actions="canvasComposable.actions.value" />
     </div>
-    <div v-else class="flex items-center justify-center h-screen">
-      <div>En ejecución...</div>
+    <div v-else class="flex flex-col items-center justify-center h-full">
+      <span class="mdi mdi-account-hard-hat text-primary/60 text-5xl"></span>
+      <p class="text-md text-base-content/60 font-medium mt-4">Iniciando Workflow</p>
+      <small class="text-base-content/40">
+        <span class="mdi mdi-refresh text-primary mdi-spin"></span>
+        Esperando a que inicie el worker...
+      </small>
     </div>
   </div>
 </template>
