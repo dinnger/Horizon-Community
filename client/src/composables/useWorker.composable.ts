@@ -9,7 +9,6 @@ export function useWorkerComposable() {
 	// Función para manejar la ejecución del workflow
 	const executeWorkflow = async (data: { workflowId: string; version?: string }) => {
 		if (workerStore.isExecuting) return
-		console.log('executeWorkflow', data)
 		workerStore.isExecuting = true
 		try {
 			const result = await execute(data)
@@ -65,7 +64,6 @@ export function useWorkerComposable() {
 	const initSubscriptionsWorker = ({ workflowId }: { workflowId: string }) => {
 		socketService.onWorkerStatus(workflowId || '', (event: { success: boolean; workers: IWorkerInfo[] }) => {
 			if (event.workers?.length > 0) {
-				console.warn('worker=====>', event.workers[0])
 				workerStore.workerInfo = event.workers[0]
 			} else {
 				workerStore.workerInfo = null

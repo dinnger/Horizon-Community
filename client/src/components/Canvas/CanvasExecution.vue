@@ -1,15 +1,15 @@
 <template>
   <div class="h-full">
     <div v-if="!workerStore.isExecuting">
-      <CanvasExecutionHeader />
-      <CanvasArea v-if="workerStore.workerInfo" name="execution" :is-locked="true" :version="version"
-        :canvas-composable="canvasComposable" @canvas-ready="canvasReady" />
-      <CanvasExecutionTabs v-if="workerStore.workerInfo" :is-visible="true" :canvas-composable="canvasComposable"
-        @clear-logs="clearLogs" @clear-trace="clearTrace" />
+      <CanvasExecutionHeader :workflow-id="workflowId" />
+      <CanvasArea v-if="workerStore.workerInfo" :workflow-id="workflowId" name="execution" :is-locked="true"
+        :version="version" :canvas-composable="canvasComposable" @canvas-ready="canvasReady" />
+      <CanvasExecutionTabs v-if="workerStore.workerInfo" :is-visible="true" :workflow-id="workflowId"
+        :canvas-composable="canvasComposable" @clear-logs="clearLogs" @clear-trace="clearTrace" />
       <!-- Version Selector Modal -->
-      <VersionSelectorModal v-if="canvasStore.showSelectedVersion" />
+      <VersionSelectorModal v-if="canvasStore.showSelectedVersion" :workflow-id="workflowId" />
       <!-- Modals Manager - Propiedades, Manejo de Nodos, Manejo de Conexiones, Manejo de Notas, Manejo de Grupos -->
-      <CanvasModalsManager v-if="canvasComposable.actions" :canvas-actions="canvasComposable.actions.value" />
+      <CanvasModalsManager v-if="canvasComposable.actions" :canvas-composable="canvasComposable" />
     </div>
     <div v-else class="flex flex-col items-center justify-center h-full">
       <span class="mdi mdi-account-hard-hat text-primary/60 text-5xl"></span>
@@ -43,6 +43,7 @@ const props = defineProps<{
 
 interface ExecutionLog {
   id: string
+  workflowId: string
   timestamp: Date
   type: 'info' | 'warning' | 'error' | 'debug'
   message: string

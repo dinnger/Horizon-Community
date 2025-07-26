@@ -22,7 +22,6 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 	const loading = ref(false)
 	const projectId = ref<string>('')
 	const error = ref<string | null>(null)
-	const context = ref<Omit<IWorkflowExecutionContextInterface, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
 
 	const workspaceStore = useWorkspaceStore()
 
@@ -115,14 +114,6 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 		}
 	}
 
-	const getWorkflowVersion = async (id: string) => {
-		return await socketService.getWorkflowVersions(workspaceStore.currentWorkspaceId, id)
-	}
-
-	const getWorkflowContext = () => {
-		return context.value
-	}
-
 	const createWorkflow = async (workflowData: Omit<Workflow, 'id' | 'createdAt' | 'updatedAt' | 'lastRun'>) => {
 		const now = new Date()
 		const newWorkflow: Omit<Workflow, 'id'> = {
@@ -190,16 +181,13 @@ export const useWorkflowsStore = defineStore('workflows', () => {
 	return {
 		// State
 		workflows,
-		context,
 		loading,
 		error,
 
 		// Getters
-		getWorkflowVersion,
 		getActiveWorkflowsCount,
 		getWorkflowStats,
 		getAllWorkflowStats,
-		getWorkflowContext,
 
 		// Actions
 		initializeData,

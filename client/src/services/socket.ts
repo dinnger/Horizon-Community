@@ -316,7 +316,6 @@ class SocketService {
 
 			this.socket.emit('workflows:get', data, (response: any) => {
 				if (response.success) {
-					console.log('workflows:get', response.workflow)
 					resolve(response.workflow)
 				} else {
 					reject(new Error(response.message || 'Failed to get workflow'))

@@ -74,7 +74,7 @@ const getLogClass = (type: string) => {
     case 'debug':
       return 'text-gray-400'
     default:
-      return 'text-white'
+      return 'text-base-content'
   }
 }
 

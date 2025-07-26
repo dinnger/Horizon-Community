@@ -10,12 +10,14 @@
  * - worker:exit - A worker has exited
  * - worker:ready - A worker has finished initializing
  */
+import type { Express } from 'express'
 import type { Server } from 'socket.io'
 import type { IWorkerInfo, IWorkerMessage } from '@shared/interfaces/worker.interface.js'
-import { serverRouter, type ServerRouterEvents } from '../routes/socket/index.js'
+import type { ServerRouterEvents } from '../routes/socket/index.js'
 import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 import path from 'node:path'
 import WorkflowExecution from '../models/WorkflowExecution.js'
 
@@ -30,15 +32,17 @@ class WorkerManager extends EventEmitter {
 	> = new Map()
 
 	private portRange = { start: 3100, end: 5000 }
-	private usedPorts: Set<number> = new Set()
+	private usedPorts: Map<string, { port: number; workerId: string }> = new Map()
 	private io: Server | null = null
+	private app: Express | null = null
 
 	constructor() {
 		super()
 		this.setupCleanup()
 	}
 
-	setIo(io: Server) {
+	initWorkerManager({ app, io }: { app: Express; io: Server }) {
+		this.app = app
 		this.io = io
 	}
 
@@ -50,10 +54,22 @@ class WorkerManager extends EventEmitter {
 		version?: string
 	}): Promise<IWorkerInfo> {
 		const workerId = uuidv4()
-		const port = this.getAvailablePort()
+		const port = this.getAvailablePort({ workflowId: options.workflowId })
 
 		if (!port) {
 			throw new Error('No hay puertos disponibles para el worker')
+		}
+
+		// Proxy para el flujo de trabajo
+		if (!port.exist) {
+			this.app?.use(
+				createProxyMiddleware({
+					secure: false,
+					target: `http://127.0.0.1:${port.value}`,
+					changeOrigin: true,
+					pathFilter: `/f_${options.workflowId}/api`
+				})
+			)
 		}
 
 		// Create execution record
@@ -69,7 +85,7 @@ class WorkerManager extends EventEmitter {
 			id: workerId,
 			workflowId: options.workflowId,
 			processId: 0, // Will be set when process starts
-			port,
+			port: port.value,
 			status: 'starting',
 			startTime: new Date(),
 			lastActivity: new Date(),
@@ -78,7 +94,7 @@ class WorkerManager extends EventEmitter {
 		}
 
 		try {
-			const workerProcess = await this.spawnWorkerProcess(workerId, options.workflowId, port)
+			const workerProcess = await this.spawnWorkerProcess(workerId, options.workflowId, port.value)
 
 			// Workers in worker_threads don't have a pid property like child_process
 			// We'll use the worker threadId if available, or just use a placeholder
@@ -91,12 +107,12 @@ class WorkerManager extends EventEmitter {
 				pendingRequests: new Map()
 			})
 
-			this.usedPorts.add(port)
+			this.usedPorts.set(options.workflowId, { port: port.value, workerId })
 			this.emit('worker:created', workerInfo)
 
 			return { ...workerInfo, executionId: execution.id }
 		} catch (error) {
-			this.usedPorts.delete(port)
+			this.usedPorts.delete(options.workflowId)
 			workerInfo.status = 'error'
 			throw error
 		}
@@ -419,7 +435,6 @@ class WorkerManager extends EventEmitter {
 	private cleanupWorker(workerId: string): void {
 		const worker = this.workers.get(workerId)
 		if (worker) {
-			this.usedPorts.delete(worker.info.port)
 			worker.info.status = 'stopped'
 
 			// Reject any pending requests
@@ -432,10 +447,14 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private getAvailablePort(): number | null {
-		for (let port = this.portRange.start; port <= this.portRange.end; port++) {
-			if (!this.usedPorts.has(port)) {
-				return port
+	private getAvailablePort({ workflowId }: { workflowId: string }): { value: number; exist: boolean } | null {
+		const verify = this.usedPorts.get(workflowId)
+		if (verify) return { value: verify.port, exist: true }
+
+		const usedPorts = Array.from(this.usedPorts.values()).map((p) => p.port)
+		for (let value = this.portRange.start; value <= this.portRange.end; value++) {
+			if (!usedPorts.includes(value)) {
+				return { value, exist: false }
 			}
 		}
 		return null

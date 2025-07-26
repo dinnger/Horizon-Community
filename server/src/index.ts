@@ -33,7 +33,8 @@ io.use(socketAuthMiddleware)
 // Setup all socket routes
 socketRoutes.init(io)
 
-workerManager.setIo(io)
+// Initialize worker manager
+workerManager.initWorkerManager({ app, io })
 
 // Health check endpoint
 app.get('/health', (req, res) => {

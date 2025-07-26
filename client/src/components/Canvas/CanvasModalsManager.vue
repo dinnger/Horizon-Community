@@ -10,7 +10,8 @@ Usa el patrón Observer para comunicación entre componentes
     <!-- Diálogo de propiedades del nodo -->
     <NodePropertiesDialog :is-visible="canvasModals.nodePropertiesDialog.isVisible"
       :node-data="canvasModals.nodePropertiesDialog.node" :is-read-only="canvasModals.nodePropertiesDialog.isReadOnly"
-      @close="canvasModals.closeNodePropertiesDialog" @save="canvasActions.handleNodePropertiesSave" />
+      @close="canvasModals.closeNodePropertiesDialog" @save="canvasActions.handleNodePropertiesSave"
+      :canvas-composable="canvasComposable" />
 
     <!-- Menú contextual del nodo -->
     <NodeContextMenu :is-visible="canvasModals.nodeContextMenu.isVisible"
@@ -87,8 +88,10 @@ const canvasModals = useCanvasModals()
 const eventUnsubscribers: (() => void)[] = []
 
 const props = defineProps<{
-  canvasActions: IUseCanvasActionsType
+  canvasComposable: IUseCanvasType
 }>()
+
+const canvasActions = props.canvasComposable.actions
 
 onMounted(() => {
   // =============================================================================

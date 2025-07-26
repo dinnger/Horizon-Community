@@ -23,8 +23,8 @@ import { computed, ref, watch } from 'vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
 interface Props {
+  workflowId: string
   canvasComposable: IUseCanvasType
-  version: string
 }
 
 const props = defineProps<Props>()
@@ -34,7 +34,6 @@ const workflowStore = useWorkflowsStore()
 
 const isReloading = ref(false)
 
-const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const emit = defineEmits<{
   showNotesManager: []
@@ -42,7 +41,7 @@ const emit = defineEmits<{
 
 const handleSave = async () => {
   try {
-    await props.canvasComposable.save({ workflowId: workflowId.value })
+    await props.canvasComposable.save({ workflowId: props.workflowId })
     toast.success('Workflow guardado correctamente')
   } catch (error) {
     toast.error('Error al guardar el workflow')
@@ -52,7 +51,7 @@ const handleSave = async () => {
 
 const handlePublish = async () => {
   try {
-    await props.canvasComposable.publish({ workflowId: workflowId.value })
+    await props.canvasComposable.publish({ workflowId: props.workflowId })
 
     toast.success('Workflow publicado correctamente')
   } catch (error) {

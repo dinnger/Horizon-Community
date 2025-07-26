@@ -14,7 +14,6 @@ export type IUseCanvasType = ReturnType<typeof useCanvasComposable>
 
 export function useCanvasComposable() {
 	const version = ref<{ value: string; status: 'draft' | 'published' | 'archived' }>({ value: '0.0.1', status: 'draft' })
-	const context = ref<Omit<IWorkflowExecutionContextInterface, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
 	const changes = ref(false)
 	const isExecuting = ref(false)
 	const isLoading = ref(false)
@@ -34,6 +33,7 @@ export function useCanvasComposable() {
 	const showDeploymentSelector = ref(false)
 	const autoDeploymentInfo = ref<{ workflowName: string; deploymentName: string } | null>(null)
 	const actions = ref<IUseCanvasActionsType | undefined>()
+	const context = ref<Omit<IWorkflowExecutionContextInterface, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
 
 	const canvasInstance = ref<Canvas | undefined>()
 
@@ -157,7 +157,11 @@ export function useCanvasComposable() {
 	const save = async ({ workflowId }: { workflowId: string }) => {
 		if (!canvasInstance.value) return
 		try {
-			await socketService.updateWorkflow({ workflowId, updates: canvasInstance.value.getWorkflowData() })
+			const saveWorkflow = await socketService.updateWorkflow({ workflowId, updates: canvasInstance.value.getWorkflowData() })
+			if (saveWorkflow && context.value) {
+				version.value.value = saveWorkflow.version
+				context.value.info.version = saveWorkflow.version
+			}
 			changes.value = false
 		} catch (error) {}
 	}
@@ -332,7 +336,15 @@ export function useCanvasComposable() {
 		socketService.removeListeners(`/workflow:.*:${workflowId}/`)
 	}
 
+	const destroy = () => {
+		if (canvasInstance.value) {
+			canvasInstance.value.destroy()
+		}
+	}
+
 	return {
+		version,
+		context,
 		changes,
 		currentMousePosition,
 		canvasZoom,
@@ -346,6 +358,7 @@ export function useCanvasComposable() {
 		clearPanelTrace,
 		initSubscriptionsExecution,
 		closeSubscriptionsExecution,
+		destroy,
 
 		actions: computed(() => actions.value)
 	}

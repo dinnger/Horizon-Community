@@ -56,13 +56,16 @@ interface Version {
   createdAt: string
 }
 
+const props = defineProps<{
+  workflowId: string
+}>()
+
 const workerComposable = useWorkerComposable()
 const workflowComposable = useWorkflowComposable()
 
 const availableVersions = ref<Version[]>([])
 const selectedVersion = ref<string | null>(null)
 
-const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const selectVersion = (version: string) => {
   selectedVersion.value = version
@@ -73,13 +76,13 @@ const executeSelectedVersion = async () => {
     toast.error('Por favor selecciona una versión') // TODO: Traducir                 
     return
   }
-  workerComposable.executeWorkflow({ workflowId: workflowId.value, version: selectedVersion.value })
+  workerComposable.executeWorkflow({ workflowId: props.workflowId, version: selectedVersion.value })
   canvasStore.showSelectedVersion = false
 }
 
 
 onMounted(async () => {
-  const data = await workflowComposable.getVersions({ workflowId: workflowId.value })
+  const data = await workflowComposable.getVersions({ workflowId: props.workflowId })
   if (data.success) {
     availableVersions.value = data.versions
   }

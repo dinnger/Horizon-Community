@@ -4,15 +4,14 @@
       <div class="flex items-center gap-2">
         <div class="tabs tabs-boxed bg-transparent">
           <button @click="$emit('updateActiveTab', 'logs')" class="tab tab-sm"
-            :class="{ 'tab-active': activeTab === 'logs' }">
+            :class="{ 'tab-active bg-primary': activeTab === 'logs' }">
             Logs de Ejecución
           </button>
           <button @click="$emit('updateActiveTab', 'trace')" class="tab tab-sm"
-            :class="{ 'tab-active': activeTab === 'trace' }">
+            :class="{ 'tab-active bg-primary': activeTab === 'trace' }">
             Traza de Ejecución
           </button>
         </div>
-        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
       </div>
     </div>
 

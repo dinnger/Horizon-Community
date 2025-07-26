@@ -31,7 +31,7 @@ export const useCanvas = defineStore('canvas', () => {
 	const selectedNoteForEdit = ref<INoteCanvas | null>(null)
 
 	// Referencias reactivas del canvas
-
+	const activeTab = ref<'design' | 'execution'>('design')
 	const projectName = ref('Web Application')
 
 	const isExecuting = ref(false)
@@ -75,7 +75,7 @@ export const useCanvas = defineStore('canvas', () => {
 	return {
 		changes,
 		version,
-
+		activeTab,
 		showNodePropertiesDialog,
 		selectedNodeForEdit,
 		showContextMenu,

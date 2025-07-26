@@ -23,9 +23,9 @@
         <div>
           <span class="mdi mdi-drawing mr-2"></span>
           Diseño
-          <div v-if="workflowStore.context"
+          <div v-if="version"
             class="absolute top-0 right-0 text-[9px] bg-warning text-warning-content pl-1 pr-1 rounded-bl-box">
-            {{ workflowStore.context?.info.version }}
+            {{ version }}
           </div>
         </div>
       </button>
@@ -59,6 +59,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 interface Props {
+  version?: string
   activeTab: 'design' | 'execution'
   projectName: string
 
@@ -77,8 +78,6 @@ const emit = defineEmits<{
 
 
 const isExecuting = computed(() => workerStore.isExecuting)
-
-const workflowId = computed(() => router.currentRoute.value.params.id as string)
 
 const handleExecute = async () => {
   if (props.activeTab === 'execution') return

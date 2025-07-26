@@ -48,8 +48,10 @@ import NodePropertiesSection from './NodeProperties/NodePropertiesSection.vue'
 import NodeCredentialsSection from './NodeProperties/NodeCredentialsSection.vue'
 import NodeMetaSection from './NodeProperties/NodeMetaSection.vue'
 import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
+import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
 interface Props {
+  canvasComposable: IUseCanvasType
   isVisible: boolean
   nodeData: INodeCanvas | null
   isReadOnly?: boolean
@@ -225,22 +227,16 @@ const importNodeOnCreate = async () => {
     }
     // Crear un contexto mock para la función onCreate
     const mockContext = {
-      info: {
-        uid: props.nodeData.id || 'mock-uid'
-      },
-      properties: {
-        basic: {
-          router: '/api'
-        }
-      },
+      ...props.canvasComposable.context.value,
       getEnvironment: (key: string) => {
         const envMap: Record<string, string> = {
-          serverUrl: 'http://localhost:3001',
-          baseUrl: '/webhook'
+          serverUrl: import.meta.env.VITE_SERVER_URL || '',
+          baseUrl: '/'
         }
         return envMap[key] || ''
       }
     }
+    console.log('mockContext', mockContext)
     const module = await import(scriptUrl)
     const onCreateFunction = module.default
 

@@ -32,30 +32,25 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvas, useWorkflowsStore } from '@/stores'
+import { useCanvas } from '@/stores'
 import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
-import { computed, ref, watch } from 'vue'
 import { useWorkerComposable } from '@/composables/useWorker.composable'
 import { useWorkerStore } from '@/stores/worker'
 
 const canvasExecuteStore = useCanvas()
 const router = useRouter()
+const canvasStore = useCanvas()
 const workerStore = useWorkerStore()
 const workerComposable = useWorkerComposable()
 
-const workflowId = computed(() => router.currentRoute.value.params.id as string)
-
-const emit = defineEmits<{
-  showNotesManager: []
-  'update:activeTab': [tab: 'design' | 'execution']
+const props = defineProps<{
+  workflowId: string
 }>()
 
 
-
-
 const handleReload = async () => {
-  workerComposable.executeWorkflow({ workflowId: workflowId.value })
+  workerComposable.executeWorkflow({ workflowId: props.workflowId })
 }
 
 const handleStopWorker = async () => {
@@ -63,7 +58,7 @@ const handleStopWorker = async () => {
   try {
     const result = await workerComposable.stopWorker({ workerId: workerStore.workerInfo?.id })
     if (result.success) {
-      emit('update:activeTab', 'design')
+      canvasStore.activeTab = 'design'
       toast.success('Worker detenido correctamente')
     } else {
       toast.error(`Error al detener worker: ${result.message}`)

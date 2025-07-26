@@ -13,11 +13,12 @@
 
 <script setup lang="ts">
 import type { IUseCanvasType } from '@/composables/useCanvas.composable';
-import { ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 
 
 const props = defineProps<{
+  workflowId: string
   name?: 'canvas' | 'execution'
   version?: string
   isLocked?: boolean
@@ -35,15 +36,18 @@ const canvasElement = ref<HTMLCanvasElement>()
 
 watch(() => canvasElement.value, async (canvas) => {
   if (canvas) {
-    console.warn('version', props.version)
     await props.canvasComposable.initializeCanvas({
-      workflowId: router.currentRoute.value.params.id as string,
+      workflowId: props.workflowId,
       version: props.version,
       canvas,
       isLocked: props.isLocked
     })
     emit('canvasReady', canvas)
   }
+})
+
+onUnmounted(() => {
+  props.canvasComposable.destroy()
 })
 
 </script>

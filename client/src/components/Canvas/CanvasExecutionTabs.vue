@@ -5,7 +5,6 @@
     <div v-if="isResizing" class="fixed top-0 bottom-0 left-0 right-0  z-20 ">
     </div>
 
-
     <div
       class="absolute -top-1 left-0 right-0 h-2 z-30 cursor-row-resize bg-transparent hover:bg-blue-500/30 transition-colors duration-200  group"
       @mousedown="startResize">
@@ -16,7 +15,7 @@
     </div>
 
     <div
-      class="bg-base-100/70 backdrop-blur-md text-white rounded-lg shadow-2xl border border-gray-700 h-full flex flex-col">
+      class="bg-base-100/70 backdrop-blur-md text-base-content rounded-lg shadow-2xl border border-gray-700 h-full flex flex-col">
       <!-- Header con Tabs -->
       <CanvasExecutionTabsHeader :activeTab="activeTab" :autoScroll="autoScroll" @updateActiveTab="updateActiveTab"
         @clearCurrentTab="clearCurrentTab" @toggleAutoScroll="toggleAutoScroll" />
@@ -44,6 +43,7 @@ import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
 
 interface Props {
+  workflowId: string
   canvasComposable: IUseCanvasType
   isVisible: boolean
 }
