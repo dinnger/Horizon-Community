@@ -2,7 +2,7 @@
   <div class="flex h-screen w-full bg-base-100" :data-theme="settingsStore.currentTheme">
     <!-- Sidebar -->
     <div :class="[
-      'transition-all duration-300 flex flex-col bg-base-200 shadow-xl backdrop-blur-lg border-r border-base-300',
+      'transition-all duration-300 flex flex-col bg-base-200  border-r border-base-300',
       isExpanded ? 'w-64' : 'w-16'
     ]">
       <!-- Header -->
