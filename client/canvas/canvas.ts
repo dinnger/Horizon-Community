@@ -67,7 +67,7 @@ export class Canvas {
 
 	// setInterval
 	backgroundUpdateInterval: ReturnType<typeof setInterval> | null = null
-	canvasFps: number = 1000 / 40
+	canvasFps: number
 	indexTime = 0
 	theme: string
 
@@ -114,10 +114,10 @@ export class Canvas {
 
 		this.notes = new CanvasNotes()
 		this.groups = new CanvasGroups()
+		this.nodes = new Nodes({ el: this })
+
 		this.theme = theme
-		this.nodes = new Nodes({
-			el: this
-		})
+		this.canvasFps = 25
 		this.init()
 	}
 
@@ -154,11 +154,13 @@ export class Canvas {
 		})
 	}
 
-	changeTheme(theme: string) {
-		this.theme = theme
-		this.addImageProcess(this.theme === 'light' ? pattern_light : pattern_dark).then((img) => {
-			this.canvasPattern = this.ctx.createPattern(img, 'repeat') as CanvasPattern
-		})
+	updateProperty({ property, value }: { property: 'theme' | 'canvasFps'; value: any }) {
+		;(this as any)[property] = value
+		if (property === 'theme') {
+			this.addImageProcess(this.theme === 'light' ? pattern_light : pattern_dark).then((img) => {
+				this.canvasPattern = this.ctx.createPattern(img, 'repeat') as CanvasPattern
+			})
+		}
 	}
 
 	/**

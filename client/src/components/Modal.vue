@@ -7,7 +7,7 @@
 
     <!-- Panel de command palette centrado -->
     <div
-      class="relative w-full max-w-2xl mx-4 bg-base-100/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+      class="relative w-full max-w-2xl mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-base-300/50">
         <div class="flex items-center gap-3">

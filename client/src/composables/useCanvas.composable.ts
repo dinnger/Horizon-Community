@@ -63,6 +63,9 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 			// Inicializar el canvas con los datos cargados
 			if (!canvasInstance.value) return
 
+			// Valors de configuración de usuario
+			canvasInstance.value.updateProperty({ property: 'canvasFps', value: settingsStore.canvasRefreshRate })
+
 			actions.value = useCanvasActionsComposable({ canvasInstance: canvasInstance.value, currentMousePosition, nodeOrigin })
 
 			if (flow) {
@@ -80,8 +83,9 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 			watch(
 				() => settingsStore.currentTheme,
 				() => {
-					if (!canvasInstance.value) return
-					canvasInstance.value.changeTheme(settingsStore.currentTheme)
+					if (canvasInstance.value) {
+						canvasInstance.value.updateProperty({ property: 'theme', value: settingsStore.currentTheme })
+					}
 				}
 			)
 

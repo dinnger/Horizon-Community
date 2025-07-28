@@ -3,9 +3,9 @@
 
     <div class=" w-full justify-start text-left hover:bg-base-300 p-4 cursor-pointer border-l-7 "
       :style="{ borderLeftColor: currentWorkspace?.color || '#3b82f6' }" @click="isVisible = true">
-      <div class="flex items-center space-x-3 w-full relative ">
-        <div class="absolute opacity-5 top-0  right-3">
-          <span class="mdi mdi-folder-multiple text-4xl"></span>
+      <div class="flex items-center space-x-3 w-full relative" v-if="isExpanded">
+        <div class="absolute opacity-2 top-0  right-3">
+          <span class="mdi mdi-folder-multiple text-5xl"></span>
         </div>
         <div :class="['flex-1 min-w-0', !isExpanded && 'hidden']">
           <p class="font-medium text-sm truncate">
@@ -19,6 +19,9 @@
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
+      </div>
+      <div v-else>
+        {{ currentWorkspace?.name.substring(0, 3) }}
       </div>
     </div>
 
