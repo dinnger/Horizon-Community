@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import Logo from '@/components/icons/logo.vue'
@@ -179,6 +179,6 @@ const handleLogin = async () => {
 }
 
 const loginWithGoogle = () => {
-  window.location.href = `${VITE_SERVER_URL}/auth/google`
+  window.location.href = '/api/auth/google'
 }
 </script>

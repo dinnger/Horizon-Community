@@ -13,16 +13,16 @@ export default class {
 		this.passport.use(
 			new LocalStrategy(
 				{
-					usernameField: 'username',
+					usernameField: 'email',
 					passwordField: 'password',
 					passReqToCallback: true
 				},
 				async (req: any, username: string, password: string, done: any) => {
-					setupAuthRoutes['auth:login']({
+					await setupAuthRoutes['auth:login']({
 						data: { email: username, password },
-						callback: ({ success, message }: any) => {
+						callback: ({ success, message, user }: any) => {
 							if (!success) return done(null, false, { message })
-							return done(null, true)
+							return done(null, user)
 						}
 					} as any)
 				}
@@ -30,5 +30,11 @@ export default class {
 		)
 	}
 
-	middleware = () => this.passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' })
+	middleware = () => this.passport.authenticate('local')
+
+	response = ({ req, res }: { req: any; res: any }) => {
+		const user = req.user as any
+		if (!user) return res.status(401).json({ success: false, message: 'No se encontró el usuario' })
+		res.status(200).json({ success: true, user: user })
+	}
 }

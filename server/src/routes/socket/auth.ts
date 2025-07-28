@@ -42,11 +42,9 @@ export const setupAuthRoutes = {
 
 				const userResponse = {
 					id: user.id,
-					email: user.email,
 					name: user.name,
 					avatar: user.avatar,
 					role: userWithRole.role,
-					permissions: userWithRole.role?.permissions || [],
 					settings: userWithRole.settings
 				}
 

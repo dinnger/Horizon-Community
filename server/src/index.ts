@@ -15,13 +15,12 @@ import auth from './routes/api/auth.js'
 import http from 'node:http'
 import https from 'node:https'
 import fs from 'node:fs'
-import passport from 'passport'
 
 const app = express()
 let PORT = envs.PORT || 3001
 
 let server: http.Server | https.Server
-if (process.env.SSL_MODE === 'true') {
+if (envs.SERVER_SSL_MODE) {
 	PORT = 443
 	const options = {
 		key: fs.readFileSync('/etc/letsencrypt/live/dinnger.com/privkey.pem'),
@@ -59,7 +58,7 @@ app.get('/health', (req, res) => {
 })
 
 // Google Auth endpoint
-app.use('/auth', auth({ app, server }))
+app.use('/api/auth', auth({ app, server }))
 
 // Node REST routes
 app.use('/api/nodes', nodeRestRoutes)

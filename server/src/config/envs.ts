@@ -10,6 +10,7 @@ interface Envs {
 	DB_PATH: string
 	PORT: number
 	SERVER_URL: string
+	SERVER_SSL_MODE: boolean
 
 	CLIENT_URL: string
 
@@ -31,6 +32,7 @@ const {
 	PORT,
 	NODE_ENV,
 	SERVER_URL,
+	SERVER_SSL_MODE,
 	CLIENT_URL,
 	SEED_DATABASE,
 	TRACKING_EXECUTE,
@@ -46,6 +48,7 @@ if (!DB_PATH) throw new Error('No se encontró la variable de entorno DB_PATH')
 if (!PORT) throw new Error('No se encontró la variable de entorno PORT')
 if (!NODE_ENV) throw new Error('No se encontró la variable de entorno NODE_ENV')
 if (!SERVER_URL) throw new Error('No se encontró la variable de entorno SERVER_URL')
+if (!SERVER_SSL_MODE) throw new Error('No se encontró la variable de entorno SERVER_SSL_MODE')
 if (!CLIENT_URL) throw new Error('No se encontró la variable de entorno CLIENT_URL')
 if (!SEED_DATABASE) throw new Error('No se encontró la variable de entorno SEED_DATABASE')
 if (!VITE_SERVER_URL) throw new Error('No se encontró la variable de entorno VITE_SERVER_URL')
@@ -62,6 +65,7 @@ export const envs: Envs = {
 	PORT: Number.parseInt(PORT),
 	NODE_ENV: NODE_ENV as 'development' | 'production',
 	SERVER_URL,
+	SERVER_SSL_MODE: SERVER_SSL_MODE?.toString().toLowerCase() === 'true',
 	CLIENT_URL,
 	SEED_DATABASE: SEED_DATABASE?.toString().toLowerCase() === 'true',
 	TRACKING_EXECUTE: TRACKING_EXECUTE?.toString().toLowerCase() === 'true',

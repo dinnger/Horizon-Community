@@ -61,7 +61,7 @@ export default function ({ app, server }: { app: any; server: any }) {
 	const arr = getAuthList()
 	for (const dir in arr) {
 		const auth = new arr[dir]({ passport })
-		console.log('------>', auth.type, dir)
+		console.log('-->', auth.type, dir)
 		const route = []
 		if (auth.beforeAuth) auth.beforeAuth({ app, server, passport })
 		if (auth.middleware) route.push(auth.middleware())
@@ -74,19 +74,9 @@ export default function ({ app, server }: { app: any; server: any }) {
 	// router.use('/google', routerGoogle({ app, appInstance, generateToken }))
 
 	router.post('/validate', async (req: any, res: any) => {
-		if (!validToken(req)) return res.status(403).json('Datos inválidos')
-		const token = await getToken(req.body.token)
-		if (!token || !token.alias) return res.status(403).json('Datos inválidos')
-		const data = {
-			id: token.id,
-			alias: token.alias
-		}
+		if (!req.user) return res.status(403).json('Datos inválidos')
 
-		res.status(200).json({
-			id: token.id,
-			alias: token.alias,
-			token: generateToken(data)
-		})
+		res.status(200).json(req.user)
 	})
 	return router
 }
