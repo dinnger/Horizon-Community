@@ -1,6 +1,6 @@
 // import type { MessagePort } from 'node:worker_threads'
 import type { Worker } from '../../worker.js'
-import dayjs from 'dayjs'
+
 // import { getMemoryUsage } from '../../shared/functions/utils.js'
 // import { MessageChannel } from 'node:worker_threads'
 // import winston from 'winston'
@@ -21,8 +21,6 @@ export class CommunicationModule {
 		this.server = new ServerCommunication(el)
 		this.shared = new SharedCommunication(el)
 
-		this.initConsole()
-
 		if (this.el.isDev) {
 			this.intiClientInfo()
 		}
@@ -34,27 +32,6 @@ export class CommunicationModule {
 		// 	this.initTrace()
 		// 	this.initInfo()
 		// }
-	}
-
-	initConsole() {
-		const cl = console.log
-		console.log = (...args) => {
-			// console.warn('console.log', args)
-			if (args.length > 1) {
-				args[0] = `\x1b[42m Execute \x1b[0m \x1B[34m${args[0]} \x1B[0m`
-				args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			}
-			if (args.length === 1) args.unshift(`\x1B[43m Worker ${this.el.index && this.el.index > 0 ? this.el.index : ''} \x1B[0m`)
-			cl.apply(console, args)
-		}
-		console.debug = (...args) => {
-			this.el.coreModule.stats.console({
-				date: dayjs().format('DD/MM/YYYY HH:mm:ss.SSS'),
-				level: 'info',
-				message: JSON.stringify(args)
-			})
-			cl.apply(console, args)
-		}
 	}
 
 	/**

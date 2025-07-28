@@ -5,7 +5,6 @@
     <div v-if="isResizing" class="fixed top-0 bottom-0 left-0 right-0  z-20 ">
     </div>
 
-
     <div
       class="absolute -top-1 left-0 right-0 h-2 z-30 cursor-row-resize bg-transparent hover:bg-blue-500/30 transition-colors duration-200  group"
       @mousedown="startResize">
@@ -16,18 +15,18 @@
     </div>
 
     <div
-      class="bg-base-100/70 backdrop-blur-md text-white rounded-lg shadow-2xl border border-gray-700 h-full flex flex-col">
+      class="bg-base-100/70 backdrop-blur-md text-base-content rounded-lg shadow-2xl border border-gray-700 h-full flex flex-col">
       <!-- Header con Tabs -->
-      <CanvasExecutionHeader :activeTab="activeTab" :autoScroll="autoScroll" @updateActiveTab="updateActiveTab"
+      <CanvasExecutionTabsHeader :activeTab="activeTab" :autoScroll="autoScroll" @updateActiveTab="updateActiveTab"
         @clearCurrentTab="clearCurrentTab" @toggleAutoScroll="toggleAutoScroll" />
 
       <!-- Contenido de Logs -->
-      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef" :executionLogs="executionLogs"
-        :autoScroll="autoScroll" />
+      <CanvasExecutionLogsTab v-show="activeTab === 'logs'" ref="logsTabRef"
+        :panelConsole="canvasComposable.panelConsole.value" :autoScroll="autoScroll" />
 
       <!-- Contenido de Traza de Ejecución -->
-      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef" :executionTrace="executionTrace"
-        :autoScroll="autoScroll" />
+      <CanvasExecutionTraceTab v-show="activeTab === 'trace'" ref="traceTabRef"
+        :panelTrace="canvasComposable.panelTrace.value" :autoScroll="autoScroll" :getNode="canvasComposable.getNode" />
 
     </div>
   </div>
@@ -35,30 +34,17 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import CanvasExecutionHeader from './CanvasExecutionHeader.vue'
+import CanvasExecutionTabsHeader from './CanvasExecutionTabsHeader.vue'
 import CanvasExecutionLogsTab from './CanvasExecutionLogsTab.vue'
 import CanvasExecutionTraceTab from './CanvasExecutionTraceTab.vue'
+import type { IPanelConsole, IPanelTrace } from '@/types/canvas'
+import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 
-interface ExecutionLog {
-  id: string
-  timestamp: Date
-  type: 'info' | 'warning' | 'error' | 'debug'
-  message: string
-  nodeId?: string
-}
 
-interface ExecutionTrace {
-  id: string
-  timestamp: Date
-  nodeId: string
-  connectionName: string
-  executeTime: number
-  length?: number
-}
 
 interface Props {
-  executionLogs: ExecutionLog[]
-  executionTrace: ExecutionTrace[]
+  workflowId: string
+  canvasComposable: IUseCanvasType
   isVisible: boolean
 }
 
@@ -100,6 +86,7 @@ const toggleAutoScroll = () => {
   autoScroll.value = !autoScroll.value
 }
 
+
 // Funciones de redimensionado
 const startResize = (event: MouseEvent) => {
   isResizing.value = true
@@ -113,7 +100,6 @@ const startResize = (event: MouseEvent) => {
 }
 
 const handleResize = (event: MouseEvent) => {
-  console.log(event.x)
   if (!isResizing.value) return
 
   const deltaY = startY.value - event.clientY // Invertido porque el panel crece hacia arriba

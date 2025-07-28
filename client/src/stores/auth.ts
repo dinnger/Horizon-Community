@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import socketService from '../services/socket'
 
 export interface User {
 	id: string
@@ -48,19 +47,20 @@ export const useAuthStore = defineStore('auth', () => {
 		isLoading.value = true
 
 		try {
-			// Conectar socket sin autenticación para login
-			socketService.connect()
+			// fetch user
+			const response = await fetch('/api/auth/local', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email, password })
+			}).then((response) => response.json())
 
-			// Intentar login
-			const response = await socketService.login(email, password)
+			console.log('response', response)
 
 			if (response.success && response.user) {
 				user.value = response.user
 				localStorage.setItem('horizon-user', JSON.stringify(user.value))
-
-				// Reconectar con autenticación
-				socketService.disconnect()
-				socketService.connect(user.value.id)
 
 				return true
 			}
@@ -74,10 +74,32 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
+	// Login con Socket.IO
+	const validate = async (): Promise<boolean> => {
+		isLoading.value = true
+
+		try {
+			// fetch user
+			const response = await fetch('/api/auth/validate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}).then((response) => response.json())
+
+			user.value = response
+			return true
+		} catch (error) {
+			console.error('Login error:', error)
+			return false
+		} finally {
+			isLoading.value = false
+		}
+	}
+
 	const logout = () => {
 		user.value = null
 		localStorage.removeItem('horizon-user')
-		socketService.disconnect()
 	}
 
 	const initAuth = async () => {
@@ -87,18 +109,13 @@ export const useAuthStore = defineStore('auth', () => {
 				const parsedUser = JSON.parse(savedUser)
 				user.value = parsedUser
 
-				// Reconectar socket con autenticación
-				socketService.connect(parsedUser.id, parsedUser.socketId)
-
 				// Verificar que el usuario sigue siendo válido
-				try {
-					const currentUser = await socketService.getCurrentUser()
-					user.value = currentUser
-					localStorage.setItem('horizon-user', JSON.stringify(currentUser))
-				} catch (error) {
-					console.warn('Usuario guardado no es válido, limpiando:', error)
-					logout()
-				}
+				// try {
+				// 	localStorage.setItem('horizon-user', JSON.stringify(currentUser))
+				// } catch (error) {
+				// 	console.warn('Usuario guardado no es válido, limpiando:', error)
+				// 	logout()
+				// }
 			} catch (error) {
 				console.error('Error parsing saved user:', error)
 				localStorage.removeItem('horizon-user')
@@ -139,6 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
 		isAdmin,
 		isSuperAdmin,
 		login,
+		validate,
 		logout,
 		initAuth,
 		updateProfile,

@@ -31,7 +31,7 @@
     <!-- Footer opcional -->
     <footer class="absolute bottom-0 left-0 right-0 p-6">
       <div class="text-center text-sm text-base-content/60">
-        © 2025 Horizon Project Management. Todos los derechos reservados.
+        © 2025 Dinnger. Todos los derechos reservados.
       </div>
     </footer>
   </div>
@@ -45,16 +45,11 @@ import IconPalette from '../components/icons/IconPalette.vue'
 import { useSettingsStore } from '@/stores'
 
 const settingsStore = useSettingsStore()
+settingsStore.loadSettings()
 
 const themes = [
-  { value: 'crystal', label: 'Crystal Light', icon: IconSun },
-  { value: 'crystal-dark', label: 'Crystal Dark', icon: IconMoon },
   { value: 'light', label: 'Light', icon: IconSun },
   { value: 'dark', label: 'Dark', icon: IconMoon },
-  { value: 'cyberpunk', label: 'Cyberpunk', icon: IconPalette },
-  { value: 'synthwave', label: 'Synthwave', icon: IconPalette },
-  { value: 'luxury', label: 'Luxury', icon: IconPalette },
-  { value: 'dracula', label: 'Dracula', icon: IconPalette }
 ]
 
 const themeIcon = computed(() => {

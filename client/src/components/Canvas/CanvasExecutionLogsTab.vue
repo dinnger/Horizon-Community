@@ -12,19 +12,19 @@
           Auto-scroll
         </button>
       </div>
-      <div v-for="log in executionLogs" :key="log.id" class="flex items-start gap-2" :class="getLogClass(log.type)">
+      <div v-for="log in panelConsole" :key="log.id" class="flex items-start gap-2" :class="getLogClass(log.level)">
         <span class="text-gray-500 flex-shrink-0 w-20">
-          {{ formatLogTime(log.timestamp) }}
+          {{ formatLogTime(log.date) }}
         </span>
-        <span class="flex-shrink-0 w-4 text-center" :class="getLogIconClass(log.type)">
-          {{ getLogIcon(log.type) }}
+        <span class="flex-shrink-0 w-4 text-center" :class="getLogIconClass(log.level)">
+          {{ getLogIcon(log.level) }}
         </span>
         <span class="flex-1 break-words">{{ log.message }}</span>
 
       </div>
 
       <!-- Placeholder cuando no hay logs -->
-      <div v-if="executionLogs.length === 0" class="text-gray-500 text-center py-8">
+      <div v-if="panelConsole.length === 0" class="text-gray-500 text-center py-8">
         <span class="mdi mdi-information-outline text-2xl block mb-2"></span>
         <p>No hay logs de ejecución disponibles</p>
         <p class="text-xs mt-1">Los logs aparecerán aquí durante la ejecución del workflow</p>
@@ -32,14 +32,14 @@
 
     </div>
     <div class="border-t border-gray-700 p-2 flex items-center justify-between text-xs text-gray-400">
-      <span>Total: {{ executionLogs.length }} mensajes</span>
+      <span>Total: {{ panelConsole.length }} mensajes</span>
 
       <div class="flex gap-4">
         <span>
           <span class="text-emerald-400">●</span> Info: {{ logCounts.info }}
         </span>
         <span>
-          <span class="text-yellow-400">●</span> Advertencia: {{ logCounts.warning }}
+          <span class="text-yellow-400">●</span> Advertencia: {{ logCounts.warn }}
         </span>
         <span>
           <span class="text-red-400">●</span> Error: {{ logCounts.error }}
@@ -50,18 +50,12 @@
 </template>
 
 <script setup lang="ts">
+import type { IPanelConsole } from '@/types/canvas';
 import { ref, watch, nextTick, computed } from 'vue'
 
-interface ExecutionLog {
-  id: string
-  timestamp: Date
-  type: 'info' | 'warning' | 'error' | 'debug'
-  message: string
-  nodeId?: string
-}
 
 interface Props {
-  executionLogs: ExecutionLog[]
+  panelConsole: IPanelConsole[]
   autoScroll: boolean
 }
 
@@ -73,14 +67,14 @@ const getLogClass = (type: string) => {
   switch (type) {
     case 'error':
       return 'text-red-400'
-    case 'warning':
+    case 'warn':
       return 'text-yellow-400'
     case 'info':
       return 'text-emerald-400'
     case 'debug':
       return 'text-gray-400'
     default:
-      return 'text-white'
+      return 'text-base-content'
   }
 }
 
@@ -92,7 +86,7 @@ const getLogIcon = (type: string) => {
   switch (type) {
     case 'error':
       return '✕'
-    case 'warning':
+    case 'warn':
       return '⚠'
     case 'info':
       return 'ℹ'
@@ -112,7 +106,7 @@ const formatLogTime = (timestamp: Date) => {
 }
 
 // Auto-scroll cuando se agregan nuevos logs
-watch(() => props.executionLogs.length, () => {
+watch(() => props.panelConsole.length, () => {
   if (props.autoScroll) {
     nextTick(() => {
       if (logsContainer.value) {
@@ -123,8 +117,8 @@ watch(() => props.executionLogs.length, () => {
 })
 
 const logCounts = computed(() => {
-  return props.executionLogs.reduce((acc, log) => {
-    acc[log.type] = (acc[log.type] || 0) + 1
+  return props.panelConsole.reduce((acc, log) => {
+    acc[log.level] = (acc[log.level] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 })

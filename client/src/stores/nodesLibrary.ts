@@ -1,8 +1,7 @@
-import type { INodeCanvas, INodeCanvasAdd } from '@canvas/interfaz/node.interface'
+import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import socketService from '@/services/socket'
-import { useWorkflowsStore } from './workflows'
 
 export interface NodeGroup {
 	name: string
@@ -20,15 +19,13 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 	// Estados de la propiedad
 	const tempProperties = ref<INodeCanvas>()
 
-	const workflowStore = useWorkflowsStore()
-
 	// Cargar nodos desde el servidor
 	const loadNodes = async () => {
 		isLoading.value = true
 		error.value = null
 
 		try {
-			const nodes = await socketService.getNodes()
+			const nodes = await socketService.nodes().getNodes()
 
 			// Convertir los nodos del servidor al formato del cliente
 			availableNodes.value = Object.entries(nodes).map(([type, nodeData]: [string, any]) => ({
@@ -52,7 +49,7 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 	// Cargar grupos de nodos
 	const loadNodeGroups = async () => {
 		try {
-			const groups = await socketService.getNodeGroups()
+			const groups = await socketService.nodes().getNodeGroups()
 			const groupedNodes: Record<string, NodeGroup> = {}
 
 			// Inicializar grupos
@@ -95,7 +92,7 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 	// 		if (!context) return reject(new Error('No workflow context found'))
 
 	// 		// Enviar cambio de propiedad
-	// 		socketService
+	// 		socketService.nodes()
 	// 			.changeNodeProperty(tempProperties.value?.id, context, Object.fromEntries(entries))
 	// 			.then((response: any) => {
 	// 				console.log(response)
@@ -140,7 +137,7 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 	// Obtener información detallada de un nodo
 	const getNodeInfo = async (type: string) => {
 		try {
-			return await socketService.getNodeInfo(type)
+			return await socketService.nodes().getNodeInfo(type)
 		} catch (err) {
 			console.error('Error getting node info:', err)
 			return null
@@ -150,7 +147,7 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 	// Obtener estadísticas de nodos
 	const getNodeStats = async () => {
 		try {
-			return await socketService.getNodeStats()
+			return await socketService.nodes().getNodeStats()
 		} catch (err) {
 			console.error('Error getting node stats:', err)
 			return null

@@ -3,73 +3,46 @@
  *
  * Manages workflow execution workers, their lifecycle, and communication
  * between the main server and worker processes.
+ *
+ * Emits events to subscribers:
+ * - worker:request - A request has been received from a worker
+ * - worker:error - A worker encountered an error
+ * - worker:exit - A worker has exited
+ * - worker:ready - A worker has finished initializing
  */
-
+import type { Express } from 'express'
 import type { Server } from 'socket.io'
+import type { IWorkerInfo, IWorkerMessage } from '@shared/interfaces/worker.interface.js'
+import type { ServerRouterEvents } from '../routes/socket/index.js'
 import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
-import { serverRouter } from '../routes/socket/index.js'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 import path from 'node:path'
-
-export interface WorkerInfo {
-	id: string
-	workflowId: string
-	processId: number
-	port: number
-	status: 'starting' | 'running' | 'stopping' | 'stopped' | 'error'
-	startTime: Date
-	lastActivity: Date
-	executionId?: string
-	version?: string
-	memoryUsage?: {
-		rss: number
-		heapUsed: number
-		heapTotal: number
-		external: number
-	}
-	cpuUsage?: {
-		user: number
-		system: number
-	}
-}
-
-export interface WorkerMessage {
-	type: string
-	data?: any
-	requestId?: string
-	workerId?: string
-	route?: string
-	success?: boolean
-	message?: string
-}
-
-export interface WorkerRequest {
-	route: string
-	data: any
-	callback: (response: any) => void
-}
+import WorkflowExecution from '../models/WorkflowExecution.js'
 
 class WorkerManager extends EventEmitter {
 	private workers: Map<
 		string,
 		{
-			info: WorkerInfo
+			info: IWorkerInfo
 			process: Worker
 			pendingRequests: Map<string, (response: any) => void>
 		}
 	> = new Map()
 
 	private portRange = { start: 3100, end: 5000 }
-	private usedPorts: Set<number> = new Set()
+	private usedPorts: Map<string, { port: number; workerId: string }> = new Map()
 	private io: Server | null = null
+	private app: Express | null = null
 
 	constructor() {
 		super()
 		this.setupCleanup()
 	}
 
-	setIo(io: Server) {
+	initWorkerManager({ app, io }: { app: Express; io: Server }) {
+		this.app = app
 		this.io = io
 	}
 
@@ -78,30 +51,50 @@ class WorkerManager extends EventEmitter {
 	 */
 	async createWorker(options: {
 		workflowId: string
-		executionId?: string
 		version?: string
-	}): Promise<WorkerInfo> {
+	}): Promise<IWorkerInfo> {
 		const workerId = uuidv4()
-		const port = this.getAvailablePort()
+		const port = this.getAvailablePort({ workflowId: options.workflowId })
 
 		if (!port) {
 			throw new Error('No hay puertos disponibles para el worker')
 		}
 
-		const workerInfo: WorkerInfo = {
+		// Proxy para el flujo de trabajo
+		if (!port.exist) {
+			this.app?.use(
+				createProxyMiddleware({
+					secure: false,
+					target: `http://127.0.0.1:${port.value}`,
+					changeOrigin: true,
+					pathFilter: `/f_${options.workflowId}/api`
+				})
+			)
+		}
+
+		// Create execution record
+		const execution = await WorkflowExecution.create({
+			workflowId: options.workflowId,
+			status: 'running',
+			startTime: new Date(),
+			trigger: 'manual',
+			version: options.version // Store the executed version
+		})
+
+		const workerInfo: IWorkerInfo = {
 			id: workerId,
 			workflowId: options.workflowId,
 			processId: 0, // Will be set when process starts
-			port,
+			port: port.value,
 			status: 'starting',
 			startTime: new Date(),
 			lastActivity: new Date(),
-			executionId: options.executionId,
+			executionId: execution.id,
 			version: options.version
 		}
 
 		try {
-			const workerProcess = await this.spawnWorkerProcess(workerId, options.workflowId, port)
+			const workerProcess = await this.spawnWorkerProcess(workerId, options.workflowId, port.value)
 
 			// Workers in worker_threads don't have a pid property like child_process
 			// We'll use the worker threadId if available, or just use a placeholder
@@ -114,12 +107,12 @@ class WorkerManager extends EventEmitter {
 				pendingRequests: new Map()
 			})
 
-			this.usedPorts.add(port)
+			this.usedPorts.set(options.workflowId, { port: port.value, workerId })
 			this.emit('worker:created', workerInfo)
 
-			return workerInfo
+			return { ...workerInfo, executionId: execution.id }
 		} catch (error) {
-			this.usedPorts.delete(port)
+			this.usedPorts.delete(options.workflowId)
 			workerInfo.status = 'error'
 			throw error
 		}
@@ -204,22 +197,17 @@ class WorkerManager extends EventEmitter {
 	/**
 	 * Handle requests from workers to the main server
 	 */
-	async handleWorkerRequest(workerId: string, route: string, data: any, requestId: string): Promise<void> {
+	async handleWorkerRequest(workerId: string, route: ServerRouterEvents, data: any, requestId: string): Promise<void> {
 		const worker = this.workers.get(workerId)
 		if (!worker) {
 			return
 		}
 
 		try {
-			if (!serverRouter[route]) {
-				throw new Error(`Ruta no encontrada: ${route}`)
-			}
-
-			await serverRouter[route]({
-				io: this.io,
-				socket: null,
+			this.emit('worker:request', {
+				route,
 				data,
-				callback: (data: any) => {
+				callback: (data: { success: boolean; message?: string }) => {
 					worker.process.postMessage({
 						type: 'response',
 						requestId,
@@ -229,6 +217,7 @@ class WorkerManager extends EventEmitter {
 					})
 				}
 			})
+
 			worker.info.lastActivity = new Date()
 		} catch (error) {
 			console.error(`Error manejando solicitud de worker ${workerId}:`, error)
@@ -245,21 +234,21 @@ class WorkerManager extends EventEmitter {
 	/**
 	 * Get all active workers
 	 */
-	getActiveWorkers(): WorkerInfo[] {
+	getActiveWorkers(): IWorkerInfo[] {
 		return Array.from(this.workers.values()).map((w) => w.info)
 	}
 
 	/**
 	 * Get worker by ID
 	 */
-	getWorker(workerId: string): WorkerInfo | undefined {
+	getWorker(workerId: string): IWorkerInfo | undefined {
 		return this.workers.get(workerId)?.info
 	}
 
 	/**
 	 * Get workers by workflow ID
 	 */
-	getWorkersByWorkflow(workflowId: string): WorkerInfo[] {
+	getWorkersByWorkflow(workflowId: string): IWorkerInfo[] {
 		return Array.from(this.workers.values())
 			.filter((w) => w.info.workflowId === workflowId)
 			.map((w) => w.info)
@@ -271,8 +260,8 @@ class WorkerManager extends EventEmitter {
 	updateWorkerStats(
 		workerId: string,
 		stats: {
-			memoryUsage?: WorkerInfo['memoryUsage']
-			cpuUsage?: WorkerInfo['cpuUsage']
+			memoryUsage?: IWorkerInfo['memoryUsage']
+			cpuUsage?: IWorkerInfo['cpuUsage']
 		}
 	): void {
 		const worker = this.workers.get(workerId)
@@ -292,7 +281,7 @@ class WorkerManager extends EventEmitter {
 			const workerProcess = await this.trySpawnWorker(workerId, workflowId, port)
 
 			// Handle worker messages
-			workerProcess.on('message', (message: WorkerMessage) => {
+			workerProcess.on('message', (message: IWorkerMessage) => {
 				this.handleWorkerMessage(workerId, message)
 			})
 
@@ -363,7 +352,7 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private handleWorkerMessage(workerId: string, message: WorkerMessage): void {
+	private handleWorkerMessage(workerId: string, message: IWorkerMessage): void {
 		const worker = this.workers.get(workerId)
 		if (!worker) return
 
@@ -395,23 +384,57 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private handleWorkerError(workerId: string, error: Error): void {
+	private async handleWorkerError(workerId: string, error: Error): Promise<void> {
 		const worker = this.workers.get(workerId)
 		if (worker) {
 			worker.info.status = 'error'
-			this.emit('worker:error', { workerId, error: error.message })
+			await WorkflowExecution.update(
+				{
+					status: 'failed',
+					endTime: new Date(),
+					errorMessage: error.message
+				},
+				{
+					where: {
+						id: worker.info.executionId
+					}
+				}
+			)
+			this.emit('worker:error', { workerId, workflowId: worker.info.workflowId, error: error.message })
 		}
 	}
 
-	private handleWorkerExit(workerId: string, code: number | null, signal: NodeJS.Signals | null): void {
+	private async handleWorkerExit(workerId: string, code: number | null, signal: NodeJS.Signals | null): Promise<void> {
+		const worker = this.workers.get(workerId)
 		this.cleanupWorker(workerId)
-		this.emit('worker:exit', { workerId, code, signal })
+		if (!worker) return
+
+		const endTime = new Date()
+		const duration = `${Math.floor((endTime.getTime() - worker.info.startTime.getTime()) / 1000)}s`
+
+		// Determine final status based on exit code
+		const finalStatus = code === 0 ? 'success' : 'failed'
+
+		// Update execution record
+		await WorkflowExecution.update(
+			{
+				status: finalStatus,
+				endTime,
+				duration
+			},
+			{
+				where: {
+					id: worker.info.executionId
+				}
+			}
+		)
+
+		this.emit('worker:exit', { workerId, workflowId: worker.info.workflowId, code, signal })
 	}
 
 	private cleanupWorker(workerId: string): void {
 		const worker = this.workers.get(workerId)
 		if (worker) {
-			this.usedPorts.delete(worker.info.port)
 			worker.info.status = 'stopped'
 
 			// Reject any pending requests
@@ -424,10 +447,14 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	private getAvailablePort(): number | null {
-		for (let port = this.portRange.start; port <= this.portRange.end; port++) {
-			if (!this.usedPorts.has(port)) {
-				return port
+	private getAvailablePort({ workflowId }: { workflowId: string }): { value: number; exist: boolean } | null {
+		const verify = this.usedPorts.get(workflowId)
+		if (verify) return { value: verify.port, exist: true }
+
+		const usedPorts = Array.from(this.usedPorts.values()).map((p) => p.port)
+		for (let value = this.portRange.start; value <= this.portRange.end; value++) {
+			if (!usedPorts.includes(value)) {
+				return { value, exist: false }
 			}
 		}
 		return null

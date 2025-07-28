@@ -8,6 +8,7 @@ import type { IPropertiesType } from '../workflow.properties.interface.js'
 export interface IWorkflowInfo {
 	uid: string
 	name: string
+	version?: string
 	disabled?: boolean
 }
 

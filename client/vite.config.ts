@@ -9,6 +9,15 @@ export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '')
 
 	return {
+		server: {
+			proxy: {
+				'/api': {
+					target: env.VITE_SERVER_URL,
+					changeOrigin: true,
+					secure: env.SERVER_SSL_MODE.toString().toLowerCase() === 'true'
+				}
+			}
+		},
 		plugins: [vue(), tailwindcss()],
 		resolve: {
 			alias: {

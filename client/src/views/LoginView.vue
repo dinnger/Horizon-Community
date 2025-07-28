@@ -5,13 +5,15 @@
       <!-- Logo and Title -->
       <div class="text-center mb-3 mt-3">
         <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          <Logo class="w-7 h-7 fill-white inline" />
+          <Logo class="w-7 h-7  inline"
+            :class="[settingsStore.currentTheme === 'dark' ? 'fill-white' : 'fill-primary']" />
           Horizon
         </h1>
       </div>
 
       <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="space-y-6 p-5">
+
+      <form @submit.prevent="handleLogin" class="space-y-6 p-10 border-t border-base-300 pt-4 mt-4">
         <!-- Email Field -->
         <div class="form-control">
           <label class="label">
@@ -88,35 +90,30 @@
           </span>
           <span v-else>Iniciando sesión...</span>
         </button>
+
+        <!-- Google Login Button -->
+        <div v-if="VITE_GOOGLE_LOGIN" class="border-t border-base-300 pt-4">
+          <button type="button" class="btn btn-outline w-full mt-2 flex items-center justify-center gap-2"
+            @click="loginWithGoogle">
+            <span class="mdi mdi-google"></span>
+            Iniciar sesión con Google
+          </button>
+        </div>
       </form>
-
-      <!-- Demo Credentials -->
-      <div class="divider">Credenciales de prueba</div>
-      <div class="bg-base-300/50 rounded-lg p-4 space-y-2 text-sm">
-        <div class="flex justify-between">
-          <span class="font-medium">Admin:</span>
-          <span class="font-mono">admin@horizon.com / admin123</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="font-medium">Usuario:</span>
-          <span class="font-mono">user@horizon.com / user123</span>
-        </div>
-      </div>
-
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import AuthLayout from '../layouts/AuthLayout.vue'
 import Logo from '@/components/icons/logo.vue'
+import { useSettingsStore } from '@/stores'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 
 const email = ref('')
 const password = ref('')
@@ -128,6 +125,10 @@ const errors = reactive({
   email: '',
   password: ''
 })
+
+const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL
+const VITE_GOOGLE_LOGIN = import.meta.env.VITE_GOOGLE_LOGIN.toLowerCase() === 'true'
+
 
 const validateForm = () => {
   errors.email = ''
@@ -175,5 +176,9 @@ const handleLogin = async () => {
     loginError.value = 'Error al iniciar sesión. Inténtalo de nuevo.'
     console.error('Login error:', error)
   }
+}
+
+const loginWithGoogle = () => {
+  window.location.href = '/api/auth/google'
 }
 </script>

@@ -44,6 +44,7 @@ export class CoreStats {
 	}
 
 	console(data: { date: string; level: string; message: string }) {
+		if (data.level === 'debug') return
 		this.dataStats.console.push(data)
 	}
 

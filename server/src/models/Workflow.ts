@@ -35,6 +35,7 @@ export class Workflow extends Model<WorkflowAttributes, WorkflowCreationAttribut
 	public properties!: IWorkflowProperties
 	public version!: string
 	public isPublished!: boolean
+	public project?: Project
 
 	// timestamps!
 	public readonly createdAt!: Date
@@ -136,6 +137,7 @@ Workflow.init(
 				try {
 					const { recordCreation } = await import('../services/WorkflowHistoryService.js')
 					await recordCreation(
+						workflow.projectId,
 						workflow.id,
 						undefined, // userId se puede obtener del contexto si está disponible
 						workflow.toJSON(),
@@ -177,6 +179,7 @@ Workflow.init(
 					}
 
 					await recordUpdate(
+						workflow.projectId,
 						workflow.id,
 						undefined,
 						workflow.toJSON(),
@@ -198,6 +201,7 @@ Workflow.init(
 				try {
 					const { recordDeletion } = await import('../services/WorkflowHistoryService.js')
 					await recordDeletion(
+						workflow.projectId,
 						workflow.id,
 						undefined, // userId se puede obtener del contexto si está disponible
 						workflow.toJSON(),

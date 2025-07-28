@@ -19,7 +19,7 @@ export const setupWorkerRoutes = {
 	'worker:subscribe': async ({ io, data, callback }: SocketData) => {
 		try {
 			const { event, eventData } = data
-			setupSubscribersRoutes['subscribe:emit']({ io, event, eventData })
+			setupSubscribersRoutes['subscribe:emit']({ io, data: { event, eventData } })
 			callback({ success: true, message: 'Animaciones enviadas' })
 		} catch (error) {
 			console.error('Error enviando animaciones:', error)

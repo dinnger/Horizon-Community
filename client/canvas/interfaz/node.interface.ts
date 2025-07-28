@@ -63,15 +63,3 @@ export interface INodeCanvas extends INode {
 	design: Point & { width?: number; height?: number }
 	connections?: INodeConnections[]
 }
-
-// Información del nodo original al disparar la acción de añadir nodo
-export interface INodeCanvasAdd {
-	design: { x: number; y: number }
-	relativePos: { x: number; y: number }
-	connection: {
-		type: 'input' | 'output' | 'callback'
-		name: string
-		nextNodeTag?: string | string[]
-	}
-	node: INodeCanvas
-}

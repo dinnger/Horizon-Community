@@ -1,19 +1,36 @@
-import express from 'express'
-import { createServer } from 'node:http'
+import { envs } from './config/envs.js'
 import { Server } from 'socket.io'
-import cors from 'cors'
-
 import { initDatabase } from './models/index.js'
 import { seedDatabase } from './seeders/seed.js'
 import { socketAuthMiddleware } from './middleware/socketAuth.js'
 import { socketRoutes } from './routes/socket/index.js'
-import { envs } from './config/envs.js'
 import { nodeRestRoutes } from './routes/nodeRest.js'
 import { workerManager } from './services/workerManager.js'
 import { deploymentQueueService } from './services/deploy.service.js'
+import express from 'express'
+import cors from 'cors'
+import session from 'express-session'
+// import authGoogleRouter from './routes/authGoogle.js'
+import auth from './routes/api/auth.js'
+import http from 'node:http'
+import https from 'node:https'
+import fs from 'node:fs'
 
 const app = express()
-const server = createServer(app)
+let PORT = envs.PORT || 3001
+
+let server: http.Server | https.Server
+if (envs.SERVER_SSL_MODE) {
+	PORT = 443
+	const options = {
+		key: fs.readFileSync('/etc/letsencrypt/live/dinnger.com/privkey.pem'),
+		cert: fs.readFileSync('/etc/letsencrypt/live/dinnger.com/fullchain.pem')
+	}
+	server = https.createServer(options, app)
+} else {
+	server = http.createServer(app)
+}
+
 const io = new Server(server, {
 	cors: {
 		origin: envs.CLIENT_URL || 'http://localhost:5173',
@@ -21,11 +38,10 @@ const io = new Server(server, {
 	}
 })
 
-const PORT = envs.PORT || 3001
-
 // Middleware
 app.use(cors())
 app.use(express.json())
+app.use(session({ secret: envs.SECURITY_TOKEN || Math.random().toString(36).slice(2), resave: false, saveUninitialized: true }))
 
 // Socket.IO authentication middleware
 io.use(socketAuthMiddleware)
@@ -33,12 +49,16 @@ io.use(socketAuthMiddleware)
 // Setup all socket routes
 socketRoutes.init(io)
 
-workerManager.setIo(io)
+// Initialize worker manager
+workerManager.initWorkerManager({ app, io })
 
 // Health check endpoint
 app.get('/health', (req, res) => {
 	res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
+
+// Google Auth endpoint
+app.use('/api/auth', auth({ app, server }))
 
 // Node REST routes
 app.use('/api/nodes', nodeRestRoutes)

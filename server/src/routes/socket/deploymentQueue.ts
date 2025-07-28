@@ -16,7 +16,7 @@ import { setupWorkflowRoutes } from './workflows.js'
 
 export const setupDeploymentQueueRoutes = {
 	// Crear nueva solicitud de despliegue
-	'deployment-queue:create': async ({ io, socket, data, callback }: SocketData) => {
+	'deployment-queue:create': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
 		try {
 			const { workspaceId, deploymentId, workflowId, workflowVersionId, description, meta = {}, scheduledAt } = data
 			const { userId } = socket
@@ -51,12 +51,7 @@ export const setupDeploymentQueueRoutes = {
 			})
 
 			const flowData: IWorkflowFull = await new Promise((resolve) =>
-				setupWorkflowRoutes['workflows:get']({
-					io,
-					socket,
-					data: { workspaceId, id: workflowId, hidratation: false },
-					callback: (data) => resolve(data.workflow)
-				})
+				eventRouter('workers:get', { workspaceId, id: workflowId, hidratation: false }, (data) => resolve(data.workflow))
 			)
 
 			// Si no hay instancias, crear un elemento genérico

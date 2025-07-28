@@ -20,34 +20,6 @@
       <div v-if="activeTab === 'general'" class="space-y-6">
         <h2 class="text-xl font-semibold mb-4">Configuración General</h2>
 
-        <!-- Appearance Section -->
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
-          <div class="card-body">
-            <h3 class="card-title mb-4">
-              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-              </svg>
-              Apariencia
-            </h3>
-
-
-            <!-- Font Size -->
-            <div class="form-control"> <label class="label">
-                <span class="label-text">Tamaño de fuente</span>
-                <span class="label-text-alt">{{ settingsStore.fontSize }}px</span>
-              </label>
-              <input v-model="settingsStore.fontSize" type="range" min="12" max="20" class="range range-primary"
-                @input="settingsStore.setFontSize(settingsStore.fontSize)" />
-              <div class="w-full flex justify-between text-xs px-2">
-                <span>Pequeño</span>
-                <span>Mediano</span>
-                <span>Grande</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Basic Settings -->
         <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
@@ -59,11 +31,10 @@
               </label>
               <select class="select select-bordered w-full max-w-xs">
                 <option value="es">Español</option>
-                <option value="en">English</option>
               </select>
             </div>
-            <div class="form-control">
-              <label class="cursor-pointer label">
+            <div class="form-control ">
+              <label class="cursor-pointer label ">
                 <span class="label-text">Mostrar notificaciones</span>
                 <input v-model="settingsStore.notifications.general" type="checkbox" class="toggle toggle-primary" />
               </label>
@@ -71,11 +42,11 @@
 
             <div class="form-control">
               <label class="cursor-pointer label">
-                <span class="label-text">Autoguardado</span>
+                <div>
+                  <div class="label-text">Autoguardado</div>
+                  <div class="label-text-alt text-[12px]">Guarda automáticamente cada 30 segundos</div>
+                </div>
                 <input v-model="settingsStore.performance.autoSave" type="checkbox" class="toggle toggle-primary" />
-              </label>
-              <label class="label">
-                <span class="label-text-alt">Guarda automáticamente cada 30 segundos</span>
               </label>
             </div>
           </div>
@@ -149,16 +120,14 @@
               <div class="form-control">
                 <label class="label">
                   <span class="label-text">Intervalo de actualización del canvas</span>
-                  <span class="label-text-alt">{{ settingsStore.canvasRefreshRate }}ms</span>
+                  <div>
+                    <input v-model="settingsStore.canvasRefreshRate" type="range" min="25" max="100"
+                      class="range range-accent"
+                      @input="settingsStore.setCanvasRefreshRate(settingsStore.canvasRefreshRate)" />
+                    <div class="label-text-alt text-[12px]">{{ settingsStore.canvasRefreshRate }}ms</div>
+                  </div>
                 </label>
-                <input v-model="settingsStore.canvasRefreshRate" type="range" min="16" max="100"
-                  class="range range-accent"
-                  @input="settingsStore.setCanvasRefreshRate(settingsStore.canvasRefreshRate)" />
-                <div class="w-full flex justify-between text-xs px-2">
-                  <span>Rápido</span>
-                  <span>Balanceado</span>
-                  <span>Lento</span>
-                </div>
+
               </div>
             </div>
           </div>
@@ -525,3 +494,19 @@ onMounted(() => {
 
 })
 </script>
+
+<style scoped>
+.form-control {
+  padding: 10px;
+  transition: ease 0.2s all;
+}
+
+.form-control:hover {
+  background-color: var(--color-base-300);
+}
+
+.form-control>label {
+  display: flex;
+  justify-content: space-between;
+}
+</style>

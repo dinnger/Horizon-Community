@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NewNode } from './canvasNode'
 import { ref } from 'vue'
 import { getPositionConnection } from './canvasHelpers.js'
+import type { Canvas } from './canvas.js'
 
 /**
  * Gestiona la colección de nodos en el canvas y sus operaciones.
@@ -10,19 +11,21 @@ import { getPositionConnection } from './canvasHelpers.js'
  */
 export class Nodes {
 	public canvasGrid = 20
+	theme: string
+	el: Canvas
 	canvasTranslate: { x: number; y: number }
 	nodes: { [key: string]: NewNode } = {}
 	ctx: CanvasRenderingContext2D | null = null
 
 	constructor({
-		canvasTranslate,
-		ctx
+		el
 	}: {
-		canvasTranslate: { x: number; y: number }
-		ctx: CanvasRenderingContext2D
+		el: Canvas
 	}) {
-		this.canvasTranslate = canvasTranslate
-		this.ctx = ctx
+		this.el = el
+		this.theme = this.el.theme
+		this.canvasTranslate = this.el.canvasTranslate
+		this.ctx = this.el.ctx
 	}
 
 	/**
@@ -33,7 +36,7 @@ export class Nodes {
 	 */
 	getNode(data: { id: string }) {
 		const node = this.nodes[data.id]
-		if (!node) throw new Error('No se encontró el nodo')
+		if (!node) throw new Error(`[getNode]  No se encontró el nodo ${data.id}`)
 		return this.nodes[data.id]
 	}
 
@@ -356,24 +359,6 @@ export class Nodes {
 		const dx = x - xx
 		const dy = y - yy
 		return Math.sqrt(dx * dx + dy * dy) <= tolerance
-	}
-
-	/**
-	 * Obtiene la posición visual del conector de entrada de un nodo.
-	 * @param node - Nodo del cual obtener la posición del input
-	 * @param inputName - Nombre del conector de entrada
-	 * @returns Coordenadas del input o null si no existe
-	 */
-	private getNodeInputPosition(node: NewNode, inputName: string): { x: number; y: number } | null {
-		const inputIndex = Object.keys(node.info.connectors.inputs).findIndex(
-			(key) => node.info.connectors.inputs[Number.parseInt(key)] === inputName
-		)
-		if (inputIndex === -1) return null
-
-		return {
-			x: node.design.x,
-			y: node.design.y + 25 + inputIndex * 20 + 10
-		}
 	}
 
 	/**

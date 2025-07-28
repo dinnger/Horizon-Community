@@ -248,7 +248,7 @@ export const setupWorkersRoutes = {
 	// Restart worker - requires admin permission
 	'workers:restart': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const { workerId } = data
+			const { workerId, version } = data
 
 			if (!workerId) {
 				callback({ success: false, message: 'ID de worker requerido' })
@@ -271,8 +271,7 @@ export const setupWorkersRoutes = {
 			// Create a new worker with the same configuration
 			const newWorker = await workerManager.createWorker({
 				workflowId: worker.workflowId,
-				executionId: worker.executionId,
-				version: worker.version
+				version: version || worker.version
 			})
 
 			callback({ success: true, worker: newWorker, message: 'Worker reiniciado exitosamente' })

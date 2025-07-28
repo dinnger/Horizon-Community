@@ -9,13 +9,13 @@
         <ProjectCard v-for="project in projectsWithWorkflows" :key="project.id" :project="project"
           @project-click="goToProject" @edit-project="editProject" @delete-project="deleteProject" />
 
-        <div v-if="projectsWithWorkflows.length === 0 && !projectsStore.showEmptyState"
+        <div v-if="projectsWithWorkflows.length === 0 && !projectComposable.showEmptyState"
           class="flex justify-center col-span-full ">
           <span class="loading loading-spinner mr-2"></span> Cargando proyectos...
         </div>
 
         <!-- Empty State -->
-        <ProjectsEmptyState v-if="projectsWithWorkflows.length === 0 && projectsStore.showEmptyState"
+        <ProjectsEmptyState v-if="projectsWithWorkflows.length === 0 && projectComposable.showEmptyState"
           @create-project="showCreateModal = true" />
       </div>
 
@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProjectWorkflows } from '@/composables/useProjectWorkflows'
+import { useProjectComposable } from '@/composables/useProjects.composable'
 import type { Project, ProjectTransportConfig } from '@/stores'
 
 // Import new components
@@ -44,17 +44,14 @@ import {
 } from '@/components/projects'
 
 const router = useRouter()
-const { projectsStore, workflowsStore, getProjectsWithWorkflows, deleteProjectAndWorkflows } = useProjectWorkflows()
+const projectComposable = useProjectComposable()
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const editingProject = ref<Project | null>(null)
 
 // Obtener proyectos con información de workflows
-const projectsWithWorkflows = getProjectsWithWorkflows
+const projectsWithWorkflows = projectComposable.getProjectsWithWorkflows
 
-onMounted(() => {
-  projectsStore.initializeData()
-})
 
 const goToProject = (projectId: string) => {
   router.push(`/projects/${projectId}`)
@@ -68,7 +65,7 @@ const createProject = (data: {
   deploymentId?: string | null
   deploymentConfiguration?: Record<string, any>
 }) => {
-  projectsStore.createProject({
+  projectComposable.createProject({
     name: data.name,
     description: data.description,
     status: 'active',
@@ -96,7 +93,7 @@ const updateProject = (data: {
 }) => {
   if (!editingProject.value) return
 
-  projectsStore.updateProject(editingProject.value.id, {
+  projectComposable.updateProject(editingProject.value.id, {
     name: data.name,
     description: data.description,
     transportType: data.transportType,
@@ -111,7 +108,11 @@ const updateProject = (data: {
 
 const deleteProject = async (projectId: string) => {
   if (confirm('¿Estás seguro de que quieres eliminar este proyecto y todos sus workflows?')) {
-    await deleteProjectAndWorkflows(projectId)
+    await projectComposable.deleteProject(projectId)
   }
 }
+
+onMounted(() => {
+  projectComposable.loadProjects()
+})
 </script>
