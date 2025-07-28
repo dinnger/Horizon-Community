@@ -15,8 +15,9 @@ coverage
 *.local
 *.sqlite
 
-data/
+private.key
 
+data/
 /cypress/videos/
 /cypress/screenshots/
 
