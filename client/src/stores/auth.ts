@@ -91,12 +91,11 @@ export const useAuthStore = defineStore('auth', () => {
 						user.value = await response.json()
 						return
 					}
+					if (response.status !== 500) localStorage.removeItem('horizon-token')
 					user.value = null
-					localStorage.removeItem('horizon-token')
 				})
 				.catch((error) => {
 					user.value = null
-					localStorage.removeItem('horizon-token')
 					console.error('Login error:', error)
 				})
 		} catch (error) {

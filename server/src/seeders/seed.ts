@@ -189,7 +189,7 @@ export const seedDatabase = async () => {
 			},
 			{
 				module: 'settings',
-				action: 'list',
+				action: 'get',
 				scope: 'own' as const,
 				priority: 10,
 				description: 'Ver sus propias configuraciones',
@@ -712,7 +712,6 @@ export const seedDatabase = async () => {
 
 		// Create user settings for all users
 		const defaultSettings = {
-			theme: 'light',
 			fontSize: 16,
 			canvasRefreshRate: 33,
 			language: 'es',

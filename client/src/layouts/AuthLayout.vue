@@ -45,7 +45,7 @@ import IconPalette from '../components/icons/IconPalette.vue'
 import { useSettingsStore } from '@/stores'
 
 const settingsStore = useSettingsStore()
-settingsStore.loadSettings()
+
 
 const themes = [
   { value: 'light', label: 'Light', icon: IconSun },

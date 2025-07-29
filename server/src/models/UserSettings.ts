@@ -1,29 +1,26 @@
-import { DataTypes, Model, type Optional } from "sequelize";
-import { sequelize } from "../config/database.js";
-import User from "./User.js";
+import { DataTypes, Model, type Optional } from 'sequelize'
+import { sequelize } from '../config/database.js'
+import User from './User.js'
 import type { IUserSettingsServer, IUserSettingsCreate } from '@shared/interfaces/standardized.js'
 
 // Interfaces legacy para compatibilidad
 export interface UserSettingsAttributes extends IUserSettingsServer {}
 export interface UserSettingsCreationAttributes extends IUserSettingsCreate {}
 
-export class UserSettings
-	extends Model<UserSettingsAttributes, UserSettingsCreationAttributes>
-	implements UserSettingsAttributes
-{
-	public id!: string;
-	public userId!: string;
-	public theme!: string;
-	public fontSize!: number;
-	public canvasRefreshRate!: number;
-	public language!: string;
-	public notifications!: object;
-	public performance!: object;
-	public privacy!: object;
+export class UserSettings extends Model<UserSettingsAttributes, UserSettingsCreationAttributes> implements UserSettingsAttributes {
+	public id!: string
+	public userId!: string
+	public theme!: string
+	public fontSize!: number
+	public canvasRefreshRate!: number
+	public language!: string
+	public notifications!: object
+	public performance!: object
+	public privacy!: object
 
 	// timestamps!
-	public readonly createdAt!: Date;
-	public readonly updatedAt!: Date;
+	public readonly createdAt!: Date
+	public readonly updatedAt!: Date
 }
 
 UserSettings.init(
@@ -31,7 +28,7 @@ UserSettings.init(
 		id: {
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
-			primaryKey: true,
+			primaryKey: true
 		},
 		userId: {
 			type: DataTypes.UUID,
@@ -39,30 +36,22 @@ UserSettings.init(
 			unique: true,
 			references: {
 				model: User,
-				key: "id",
+				key: 'id'
 			},
-			onUpdate: "CASCADE",
-			onDelete: "CASCADE",
+			onUpdate: 'CASCADE',
+			onDelete: 'CASCADE'
 		},
-		theme: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			defaultValue: "crystal",
-		},
+
 		fontSize: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 16,
+			defaultValue: 16
 		},
-		canvasRefreshRate: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			defaultValue: 33,
-		},
+
 		language: {
 			type: DataTypes.STRING,
 			allowNull: false,
-			defaultValue: "es",
+			defaultValue: 'es'
 		},
 		notifications: {
 			type: DataTypes.JSON,
@@ -72,8 +61,8 @@ UserSettings.init(
 				workflowExecution: true,
 				errors: true,
 				systemUpdates: false,
-				projectReminders: true,
-			},
+				projectReminders: true
+			}
 		},
 		performance: {
 			type: DataTypes.JSON,
@@ -81,42 +70,43 @@ UserSettings.init(
 			defaultValue: {
 				reducedAnimations: false,
 				autoSave: true,
-			},
+				canvasRefreshRate: 25
+			}
 		},
 		privacy: {
 			type: DataTypes.JSON,
 			allowNull: false,
 			defaultValue: {
 				telemetry: false,
-				localCache: true,
-			},
+				localCache: true
+			}
 		},
 		createdAt: {
 			type: DataTypes.DATE,
 			allowNull: false,
-			defaultValue: DataTypes.NOW,
+			defaultValue: DataTypes.NOW
 		},
 		updatedAt: {
 			type: DataTypes.DATE,
 			allowNull: false,
-			defaultValue: DataTypes.NOW,
-		},
+			defaultValue: DataTypes.NOW
+		}
 	},
 	{
 		sequelize,
-		modelName: "UserSettings",
-		tableName: "user_settings",
+		modelName: 'UserSettings',
+		tableName: 'user_settings',
 		indexes: [
 			{
 				unique: true,
-				fields: ["user_id"],
-			},
-		],
-	},
-);
+				fields: ['user_id']
+			}
+		]
+	}
+)
 
 // Associations
-UserSettings.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasOne(UserSettings, { foreignKey: "userId", as: "settings" });
+UserSettings.belongsTo(User, { foreignKey: 'userId', as: 'user' })
+User.hasOne(UserSettings, { foreignKey: 'userId', as: 'settings' })
 
-export default UserSettings;
+export default UserSettings

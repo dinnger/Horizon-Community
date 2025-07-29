@@ -42,9 +42,7 @@ export interface IUserPrivacySettings {
 export interface IUserSettingsBase {
 	id: string
 	userId: string
-	theme: string
 	fontSize: number
-  canvasRefreshRate: number
 	language: string
 	notifications: IUserNotificationSettings | object
 	performance: IUserPerformanceSettings | object
@@ -60,7 +58,6 @@ export interface IUserSettingsClient extends Omit<IUserSettingsBase, 'id' | 'use
 	notifications: IUserNotificationSettings
 	performance: IUserPerformanceSettings
 	privacy: IUserPrivacySettings
-	canvasRefreshRate: number
 }
 
 /**

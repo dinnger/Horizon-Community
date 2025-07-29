@@ -146,7 +146,7 @@ const roleStore = useRoleStore()
 const { availableMenuItems } = useNavigation()
 
 socketService.connect()
-settingsStore.loadSettings()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -195,6 +195,7 @@ watch(() => workspaceStore.currentWorkspaceId, () => {
 
 // Cargar permisos del usuario cuando se monta el componente
 onMounted(async () => {
+  settingsStore.loadSettings()
   await roleStore.fetchUserPermissions()
 })
 
