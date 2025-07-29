@@ -7,7 +7,6 @@
 
 import { Router } from 'express'
 import { getNodeOnCreate } from '@shared/store/node.store.js'
-import { getAuthenticatedUsers } from '../middleware/socketAuth.js'
 
 const router = Router()
 
@@ -18,27 +17,13 @@ const router = Router()
  * @param {Function} next - Express next function
  */
 const validateSocketAuth = (req: any, res: any, next: any) => {
-	const { socketId } = req.params
-
-	if (!socketId) {
-		return res.status(400).json({
-			success: false,
-			message: 'socketId es requerido'
-		})
-	}
-
-	const authenticatedUsers = getAuthenticatedUsers()
-	const userId = authenticatedUsers.get(socketId)
-
-	if (!userId) {
+	if (!req.session.id) {
 		return res.status(401).json({
 			success: false,
 			message: 'Socket no autenticado o inactivo'
 		})
 	}
 
-	// Attach userId to request for use in route handlers
-	req.userId = userId
 	next()
 }
 
@@ -151,42 +136,6 @@ export default function() {
 	throw new Error('Error interno del servidor al cargar el script onCreate');
 };
 `)
-	}
-})
-
-/**
- * Get general information about available nodes for an authenticated socket
- *
- * @route GET /:socketId/info
- * @param {string} socketId - The socket ID to validate
- * @returns {object} Success response with available node types
- */
-router.get('/:socketId/info', validateSocketAuth, (req: any, res: any) => {
-	try {
-		const { socketId } = req.params
-		const { userId } = req
-
-		// Get available node types (without onCreate scripts)
-		const authenticatedUsers = getAuthenticatedUsers()
-		const availableNodeTypes = ['ejemplo/nodo1', 'ejemplo/nodo2'] // This could be dynamically loaded
-
-		return res.json({
-			success: true,
-			socketId,
-			userId,
-			message: 'Información de nodos disponible',
-			availableEndpoints: {
-				'GET /:socketId/info': 'Obtener información general de nodos disponibles',
-				'GET /:socketId/:nodeType': 'Obtener script onCreate de un tipo de nodo específico'
-			},
-			note: 'Solo los sockets autenticados y activos pueden acceder a estos endpoints'
-		})
-	} catch (error) {
-		console.error('Error getting node info:', error)
-		return res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor'
-		})
 	}
 })
 

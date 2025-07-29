@@ -144,6 +144,8 @@ const settingsStore = useSettingsStore()
 const workspaceStore = useWorkspaceStore()
 const roleStore = useRoleStore()
 const { availableMenuItems } = useNavigation()
+
+socketService.connect()
 settingsStore.loadSettings()
 
 const route = useRoute()
@@ -174,8 +176,8 @@ const setTheme = (theme: string) => {
 
 const isConnected = computed(() => socketService.isConnected)
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   router.push('/auth/login')
 }
 

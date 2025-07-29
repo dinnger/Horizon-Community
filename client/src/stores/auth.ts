@@ -43,7 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const isAuthenticated = computed(() => !!user.value)
 
 	// Login con Socket.IO
-	const login = async (email: string, password: string): Promise<boolean> => {
+	const login = async (email: string, password: string, rememberMe: boolean): Promise<boolean> => {
 		isLoading.value = true
 
 		try {
@@ -53,15 +53,15 @@ export const useAuthStore = defineStore('auth', () => {
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ email, password })
+				body: JSON.stringify({ email, password, rememberMe })
 			}).then((response) => response.json())
 
-			console.log('response', response)
+			if (rememberMe && response.token) {
+				localStorage.setItem('horizon-token', response.token)
+			}
 
 			if (response.success && response.user) {
 				user.value = response.user
-				localStorage.setItem('horizon-user', JSON.stringify(user.value))
-
 				return true
 			}
 
@@ -75,59 +75,76 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	// Login con Socket.IO
-	const validate = async (): Promise<boolean> => {
+	const validate = async (): Promise<void> => {
 		isLoading.value = true
 
 		try {
 			// fetch user
-			const response = await fetch('/api/auth/validate', {
+			await fetch('/api/auth/validate', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				}
-			}).then((response) => response.json())
-
-			user.value = response
-			return true
+			})
+				.then(async (response) => {
+					if (response.status === 200) {
+						user.value = await response.json()
+						return
+					}
+					user.value = null
+					localStorage.removeItem('horizon-token')
+				})
+				.catch((error) => {
+					user.value = null
+					localStorage.removeItem('horizon-token')
+					console.error('Login error:', error)
+				})
 		} catch (error) {
+			user.value = null
 			console.error('Login error:', error)
-			return false
 		} finally {
 			isLoading.value = false
 		}
 	}
 
-	const logout = () => {
-		user.value = null
-		localStorage.removeItem('horizon-user')
-	}
-
-	const initAuth = async () => {
-		const savedUser = localStorage.getItem('horizon-user')
-		if (savedUser) {
+	const rememberMe = async () => {
+		if (!localStorage.getItem('horizon-token')) return { success: true, existToken: false }
+		const token = localStorage.getItem('horizon-token')
+		if (token) {
 			try {
-				const parsedUser = JSON.parse(savedUser)
-				user.value = parsedUser
+				// fetch user
+				const response = await fetch('/api/auth/local/remember', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`
+					}
+				}).then((response) => response.json())
 
-				// Verificar que el usuario sigue siendo válido
-				// try {
-				// 	localStorage.setItem('horizon-user', JSON.stringify(currentUser))
-				// } catch (error) {
-				// 	console.warn('Usuario guardado no es válido, limpiando:', error)
-				// 	logout()
-				// }
+				if (response.success && response.user) {
+					user.value = response.user
+					return { success: true, existToken: true }
+				}
+
+				return { success: false, existToken: false }
 			} catch (error) {
-				console.error('Error parsing saved user:', error)
-				localStorage.removeItem('horizon-user')
+				console.error('Login error:', error)
+				return { success: false, existToken: false }
+			} finally {
+				isLoading.value = false
 			}
 		}
 	}
 
-	const updateProfile = (updates: Partial<User>) => {
-		if (user.value) {
-			user.value = { ...user.value, ...updates }
-			localStorage.setItem('horizon-user', JSON.stringify(user.value))
-		}
+	const logout = async () => {
+		await fetch('/api/auth/logout', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		localStorage.removeItem('horizon-token')
+		user.value = null
 	}
 
 	// Helper para verificar permisos
@@ -141,25 +158,14 @@ export const useAuthStore = defineStore('auth', () => {
 		return user.value?.role?.name === roleName
 	}
 
-	const isAdmin = computed(() => {
-		return hasRole('SuperAdmin') || hasRole('Admin')
-	})
-
-	const isSuperAdmin = computed(() => {
-		return hasRole('SuperAdmin')
-	})
-
 	return {
 		user,
 		isLoading,
 		isAuthenticated,
-		isAdmin,
-		isSuperAdmin,
 		login,
 		validate,
+		rememberMe,
 		logout,
-		initAuth,
-		updateProfile,
 		hasPermission,
 		hasRole
 	}

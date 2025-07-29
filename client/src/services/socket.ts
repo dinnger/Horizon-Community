@@ -25,8 +25,8 @@ function SocketService() {
 			const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
 
 			socket = io(serverUrl, {
-				auth: userId ? { userId, previousSocket } : {},
-				autoConnect: true
+				autoConnect: true,
+				withCredentials: true
 			})
 
 			console.log('socket1', socket)

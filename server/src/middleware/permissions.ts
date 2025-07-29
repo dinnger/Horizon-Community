@@ -1,4 +1,5 @@
-import type { AuthenticatedSocket } from './socketAuth'
+import type { AuthenticatedSocket } from '../routes/socket/index.js'
+
 // Función helper para aplicar middleware de permisos
 export function verifyPermission(socket: Required<AuthenticatedSocket>, event: string, additionalPermissions: (string | RegExp)[] = []) {
 	// Check if the value is directly in the array
@@ -17,12 +18,12 @@ export function verifyPermission(socket: Required<AuthenticatedSocket>, event: s
 		return true
 	}
 
-	if (!socket.user?.role) {
+	if (!socket.user?.roleId) {
 		console.error(`No se encontró el usuario ${socket.userId}`)
 		return false
 	}
 
-	const permissions = (socket.user.role?.permissions || []).map((permission) => `${permission.module}:${permission.action}`)
+	const permissions = (socket.user.permissions || []).map((permission) => `${permission.module}:${permission.action}`)
 	if (permissions.includes(event)) {
 		return true
 	}

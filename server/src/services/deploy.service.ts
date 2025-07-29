@@ -17,8 +17,6 @@ export class DeploymentQueueService {
 	async init() {
 		// Asegurar que existe el directorio base de deploys
 		await this.ensureDeployDirectory()
-
-		console.log('DeploymentQueueService inicializado correctamente')
 	}
 
 	/**

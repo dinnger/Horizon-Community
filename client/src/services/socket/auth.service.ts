@@ -18,20 +18,6 @@ export function socketAuth(socket: Socket | null) {
 			})
 		},
 
-		checkPermission(userId: string, module: string, action: string): Promise<boolean> {
-			return new Promise((resolve, reject) => {
-				if (!socket) return reject(new Error('Socket not connected'))
-
-				socket.emit('auth:check-permission', { userId, module, action }, (response: PermissionCheckResponse) => {
-					if (response.success) {
-						resolve(response.hasPermission)
-					} else {
-						reject(new Error('Permission check failed'))
-					}
-				})
-			})
-		},
-
 		getCurrentUser(): Promise<User & { socketId: string }> {
 			return new Promise((resolve, reject) => {
 				if (!socket) {

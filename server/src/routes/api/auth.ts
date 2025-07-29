@@ -1,50 +1,9 @@
-import Ajv from 'ajv'
-import express from 'express'
-import { envs } from '../../config/envs.js'
-import { getAuthList } from '@shared/store/auth.store.js'
 import passport from 'passport'
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
+import express from 'express'
+import { getAuthList } from '@shared/store/auth.store.js'
+import { setupAuthRoutes } from '../socket/auth.js'
 
 const router = express.Router()
-
-function validToken(req: Request) {
-	const ajv = new Ajv()
-	const schema = {
-		type: 'object',
-		properties: {
-			token: { type: 'string' }
-		},
-		required: ['token']
-	}
-	const valid = ajv.validate(schema, req.body)
-	if (!valid) return false
-	return true
-}
-
-function validPassword(valid: string, origen: string) {
-	const bcrypt = require('bcrypt')
-	return bcrypt.compareSync(valid, origen)
-}
-
-function generateToken(encript: object) {
-	try {
-		const jwt = require('jsonwebtoken')
-		const hash = jwt.sign(encript, envs.SECURITY_TOKEN, { expiresIn: '1d' })
-		return hash
-	} catch {
-		return null
-	}
-}
-
-function getToken(value: string) {
-	try {
-		const jwt = require('jsonwebtoken')
-		const val = jwt.verify(value, envs.SECURITY_TOKEN)
-		return val
-	} catch {
-		return null
-	}
-}
 
 export default function ({ app, server }: { app: any; server: any }) {
 	app.use(passport.initialize())
@@ -59,24 +18,46 @@ export default function ({ app, server }: { app: any; server: any }) {
 
 	// List directory auth
 	const arr = getAuthList()
+	if (Object.keys(arr).length > 0) console.log('🔑 Proveedores de autenticación cargados:')
 	for (const dir in arr) {
 		const auth = new arr[dir]({ passport })
-		console.log('-->', auth.type, dir)
+		console.log('-->', dir)
 		const route = []
 		if (auth.beforeAuth) auth.beforeAuth({ app, server, passport })
 		if (auth.middleware) route.push(auth.middleware())
-		if (auth.response) route.push((req: any, res: any) => auth.response({ app, server, req, res, generateToken }))
+		if (auth.response) route.push((req: any, res: any) => auth.response({ app, server, req, res }))
 
 		const type: 'get' | 'post' | 'put' | 'delete' = auth.type || 'get'
 		router[type](dir, ...route)
 	}
 
-	// router.use('/google', routerGoogle({ app, appInstance, generateToken }))
+	router.post('/logout', async (req: any, res: any, next: any) => {
+		if (!req.user) return res.status(403).json('Datos inválidos')
+		req.logout((err: any) => {
+			if (err) {
+				return next(err)
+			}
+			res.status(200).json('OK')
+		})
+	})
 
 	router.post('/validate', async (req: any, res: any) => {
 		if (!req.user) return res.status(403).json('Datos inválidos')
 
-		res.status(200).json(req.user)
+		// Obtener permisos del usuario
+		setupAuthRoutes['auth:check-permission']({
+			data: { userId: req.user.userId, hash: req.user.hash },
+			callback: ({ success, response }: any) => {
+				if (!success) return res.status(403).json('Datos inválidos, intente iniciar sesión nuevamente')
+				req.user.name = response.name
+				req.user.avatar = response.avatar
+				req.user.roleId = response.roleId
+				req.user.settings = response.settings
+				req.user.permissions = response.permissions
+				const { hash, ...user } = req.user
+				res.status(200).json(user)
+			}
+		} as any)
 	})
 	return router
 }

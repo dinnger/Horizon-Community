@@ -1,5 +1,5 @@
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
-import type { SocketData } from './index.js'
+import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
 import { Project, Workflow, WorkflowExecution, WorkflowHistory } from '../../models/index.js'
 import { getNodeClass } from '@shared/store/node.store.js'
@@ -7,20 +7,17 @@ import { workerManager } from '../../services/workerManager.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import NodeCache from 'node-cache'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const nodeClass = getNodeClass()
-
-const myCache = new NodeCache({ stdTTL: 100, checkperiod: 120 })
 
 export const setupWorkflowRoutes = {
 	'workflows:validate': async ({ socket, data, callback }: SocketData) => {
 		try {
 			const { workspaceId, projectId, workflowId } = data
 			const cacheKey = `workflow:${workspaceId}:${projectId}:${workflowId}`
-			const cached = myCache.get(cacheKey)
+			const cached = cacheRouter.get(cacheKey)
 			if (cached) {
 				callback({ success: true, workflow: cached })
 				return
@@ -58,7 +55,7 @@ export const setupWorkflowRoutes = {
 					}
 				})
 			}
-			myCache.set(cacheKey, exist)
+			cacheRouter.set(cacheKey, exist)
 			if (!exist) return callback({ success: false, message: 'Workflow no encontrado' })
 			return callback({ success: true, workflow: exist })
 		} catch (error) {
