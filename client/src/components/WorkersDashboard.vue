@@ -144,7 +144,6 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Workflow</th>
                 <th>Estado</th>
                 <th>Puerto</th>
                 <th>Tiempo Activo</th>
@@ -156,9 +155,6 @@
               <tr v-for="worker in activeWorkers" :key="worker.id">
                 <td>
                   <code class="text-xs bg-base-300 px-2 py-1 rounded">{{ worker.id.substring(0, 8) }}...</code>
-                </td>
-                <td>
-                  <span class="badge badge-outline">{{ worker.workflowId }}</span>
                 </td>
                 <td>
                   <span class="badge" :class="{
@@ -221,63 +217,8 @@
       </div>
 
       <!-- Workflow Distribution -->
-      <div
-        v-if="(!loading || dashboardData.workflows?.distribution) && Object.keys(dashboardData.workflows?.distribution || {}).length > 0"
-        class="distribution-section">
-        <h3>Distribución por Workflow</h3>
-        <div class="workflow-distribution">
-          <div v-for="(workflow, workflowId) in dashboardData.workflows?.distribution" :key="workflowId"
-            class="workflow-item">
-            <div class="workflow-header">
-              <h4>{{ workflowId }}</h4>
-              <span class="worker-count">{{ workflow.count }} workers</span>
-            </div>
-            <div class="workflow-workers">
-              <div v-for="worker in workflow.workers" :key="worker.id" class="worker-chip" :class="worker.status">
-                <span class="worker-port">:{{ worker.port }}</span>
-                <span class="worker-status">{{ worker.status }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Performance Alerts -->
-      <div v-if="dashboardData.performance?.highMemoryWorkers?.length > 0" class="alerts-section">
-        <h3>Alertas de Rendimiento</h3>
-        <div class="alert alert-warning">
-          <i class="icon-alert"></i>
-          <div>
-            <strong>Alto uso de memoria detectado</strong>
-            <p>{{ dashboardData.performance.highMemoryWorkers.length }} workers están usando más de 100MB de memoria</p>
-            <ul>
-              <li v-for="worker in dashboardData.performance.highMemoryWorkers" :key="worker.id">
-                Worker {{ worker.id.substring(0, 8) }} ({{ formatBytes(worker.memoryUsage) }}) en puerto {{ worker.port
-                }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
 
-      <!-- Recent Activity -->
-      <div
-        v-if="(!loading || dashboardData.recentActivity?.recentWorkers) && dashboardData.recentActivity?.recentWorkers?.length > 0"
-        class="activity-section">
-        <h3>Actividad Reciente</h3>
-        <div class="recent-activity">
-          <div v-for="worker in dashboardData.recentActivity?.recentWorkers" :key="worker.id" class="activity-item">
-            <div class="activity-icon" :class="worker.status">
-              <i class="icon-server"></i>
-            </div>
-            <div class="activity-content">
-              <p><strong>Worker {{ worker.id.substring(0, 8) }}</strong> iniciado para workflow {{ worker.workflowId }}
-              </p>
-              <span class="activity-time">{{ formatTime(worker.startTime) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Send Message Modal -->
       <div v-if="showMessageModal" class="modal-overlay" @click="closeMessageModal">
