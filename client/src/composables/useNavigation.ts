@@ -14,6 +14,7 @@ export function useNavigation() {
 	const allMenuItems: MenuItem[] = [
 		{ path: '/', label: 'Home', icon: 'mdi-home', requiredModule: 'dashboard' },
 		{ path: '/projects', label: 'Projects', icon: 'mdi-file-tree', requiredModule: 'projects' },
+		{ path: '/storage', label: 'Almacenamiento', icon: 'mdi-folder-lock', requiredModule: 'storage' },
 		{ path: '/workers', label: 'Workers', icon: 'mdi-server-network', requiredModule: 'workers' },
 		{ path: '/settings', label: 'Settings', icon: 'mdi-cog', requiredModule: 'settings' }
 	]

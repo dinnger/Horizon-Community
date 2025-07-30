@@ -1,19 +1,9 @@
 <template>
   <!-- Login Card -->
-  <div class="card w-full max-w-md bg-base-200/80 backdrop-blur-lg shadow-2xl border border-base-300">
+  <div class="card w-full max-w-sm bg-base-200 shadow-2xl border border-base-200 ">
     <div class="card-body">
-      <!-- Logo and Title -->
-      <div class="text-center mb-3 mt-3">
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          <Logo class="w-7 h-7  inline"
-            :class="[settingsStore.currentTheme === 'dark' ? 'fill-white' : 'fill-primary']" />
-          Horizon
-        </h1>
-      </div>
 
-      <!-- Login Form -->
-
-      <form @submit.prevent="handleLogin" class="space-y-6 p-10 border-t border-base-300 pt-4 mt-4">
+      <form @submit.prevent="handleLogin" class="space-y-6 p-10 ">
         <!-- Email Field -->
         <div class="form-control">
           <label class="label">
@@ -29,7 +19,7 @@
         </div>
 
         <!-- Password Field -->
-        <div class="form-control">
+        <div class="form-control -mt-3 mb-10">
           <label class="label">
             <span class="label-text font-medium">Contraseña</span>
           </label>
@@ -43,16 +33,6 @@
             Contraseña debe contener al menos 6 caracteres, incluyendo números, letras minúsculas y mayúsculas.
           </p>
         </div>
-
-        <!-- Remember Me -->
-        <div class="form-control">
-          <label class="cursor-pointer label justify-start space-x-3">
-            <input v-model="rememberMe" type="checkbox" class="checkbox checkbox-primary" />
-            <span class="label-text">Recordar mi sesión</span>
-          </label>
-        </div>
-
-
 
         <!-- Login Button -->
         <button type="submit" class="btn btn-primary w-full" :disabled="authStore.isLoading">
@@ -90,7 +70,7 @@ const settingsStore = useSettingsStore()
 
 const email = ref('')
 const password = ref('')
-const rememberMe = ref(false)
+const rememberMe = ref(true)
 const showPassword = ref(false)
 
 const errors = reactive({

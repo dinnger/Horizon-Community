@@ -261,6 +261,39 @@ export const seedDatabase = async () => {
 				description: 'Cambiar propiedades de nodos',
 				status: 'active' as const
 			},
+			// Permisos para storage
+			{
+				module: 'storage',
+				action: 'list',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Ver todos los nodos disponibles',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'create',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Crear nodos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'update',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Modificar nodos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'delete',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Eliminar nodos',
+				status: 'active' as const
+			},
 
 			// Permisos para workers
 			{
@@ -601,6 +634,7 @@ export const seedDatabase = async () => {
 				[
 					'workspaces',
 					'projects',
+					'storage',
 					'workflows',
 					'executions',
 					'dashboard',

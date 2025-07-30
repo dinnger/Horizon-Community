@@ -64,7 +64,7 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 			if (!canvasInstance.value) return
 
 			// Valors de configuración de usuario
-			canvasInstance.value.updateProperty({ property: 'canvasFps', value: settingsStore.canvasRefreshRate })
+			canvasInstance.value.updateProperty({ property: 'canvasFps', value: settingsStore.performance.canvasRefreshRate })
 
 			actions.value = useCanvasActionsComposable({ canvasInstance: canvasInstance.value, currentMousePosition, nodeOrigin })
 

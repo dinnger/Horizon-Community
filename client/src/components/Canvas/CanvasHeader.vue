@@ -31,7 +31,7 @@
       </button>
       <button class="btn btn-sm join-item  w-35 relative"
         :class="{ 'btn-primary': activeTab === 'execution', 'btn-soft': activeTab !== 'execution' }"
-        @click="handleExecute">
+        :disabled="version === '0.0.1'" @click="handleExecute">
         <div>
           <div class="flex">
             <div v-if="!workerStore.workerInfo && !isExecuting" class="mdi mdi-play mr-2"></div>

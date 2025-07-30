@@ -3,7 +3,6 @@ import { useAuthStore } from '../stores/auth'
 
 export const authGuard = async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
 	const authStore = useAuthStore()
-	await authStore.validate()
 
 	// Rutas públicas que no requieren autenticación
 	const publicRoutes = ['/login', '/auth/login', '/error/404', '/error/500']
@@ -18,6 +17,7 @@ export const authGuard = async (to: RouteLocationNormalized, from: RouteLocation
 		return
 	}
 
+	await authStore.validate()
 	// Para todas las demás rutas, verificar autenticación
 	if (!authStore.isAuthenticated) {
 		next('/auth/login')

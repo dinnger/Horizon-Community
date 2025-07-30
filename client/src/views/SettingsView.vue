@@ -15,13 +15,13 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="bg-base-100 rounded-lg shadow-lg p-6">
+    <div class="bg-base-200 rounded-lg shadow-lg p-6">
       <!-- General Settings -->
       <div v-if="activeTab === 'general'" class="space-y-6">
         <h2 class="text-xl font-semibold mb-4">Configuración General</h2>
 
         <!-- Basic Settings -->
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
+        <div class="card bg-base-300 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
             <h3 class="card-title mb-4">Configuración Básica</h3>
 
@@ -53,7 +53,7 @@
         </div>
 
         <!-- Notifications -->
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
+        <div class="card bg-base-300 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
             <h3 class="card-title mb-4">
               <span class="mdi mdi-bell text-secondary"></span>
@@ -95,7 +95,7 @@
         </div>
 
         <!-- Performance -->
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
+        <div class="card bg-base-300 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
             <h3 class="card-title mb-4">
               <span class="mdi mdi-speedometer text-accent"></span>
@@ -129,7 +129,7 @@
 
         <!-- Save Button -->
         <div class="mt-8 flex justify-end">
-          <button @click="settingsStore.saveSettings" class="btn btn-primary ">
+          <button @click="saveSettings" class="btn btn-primary ">
             <span class="mdi mdi-content-save"></span>
             Guardar Configuración
           </button>
@@ -170,7 +170,7 @@
       <div v-if="activeTab === 'privacy'" class="space-y-6">
         <h2 class="text-xl font-semibold mb-4">Datos y Privacidad</h2>
 
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
+        <div class="card bg-base-300 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
             <h3 class="card-title mb-4">
               <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +227,7 @@
       <div v-if="activeTab === 'about'" class="space-y-6">
         <h2 class="text-xl font-semibold mb-4">Acerca de la Aplicación</h2>
 
-        <div class="card bg-base-200 shadow-xl backdrop-blur-sm border border-base-300">
+        <div class="card bg-base-300 shadow-xl backdrop-blur-sm border border-base-300">
           <div class="card-body">
             <h3 class="card-title mb-4">
               <svg class="w-6 h-6 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,6 +286,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSettingsStore } from '../stores/settings'
 import SettingsWorkspaces from '@/components/settings/SettingsWorkspaces.vue'
+import { toast } from 'vue-sonner'
 
 const settingsStore = useSettingsStore()
 const route = useRoute()
@@ -322,6 +323,15 @@ watch(() => route.query.tab, () => {
 
 const changeTab = (tabId: string) => {
   router.replace({ query: { ...route.query, tab: tabId } })
+}
+
+const saveSettings = async () => {
+  const result = await settingsStore.saveSettings()
+  if (!result.success) {
+    toast.error(result.message)
+    return
+  }
+  toast.success('Configuración guardada')
 }
 
 </script>

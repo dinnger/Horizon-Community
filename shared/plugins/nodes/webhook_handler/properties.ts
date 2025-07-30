@@ -1,4 +1,12 @@
-import type { IBoxType, INumberProperty, IOptionsProperty, IPropertiesType, IStringProperty, ISwitchProperty } from '@shared/interfaces'
+import type {
+	IBoxType,
+	ICodeProperty,
+	INumberProperty,
+	IOptionsProperty,
+	IPropertiesType,
+	IStringProperty,
+	ISwitchProperty
+} from '@shared/interfaces'
 
 export interface IProperty extends IPropertiesType {
 	url: IBoxType
@@ -14,6 +22,22 @@ export interface IProperty extends IPropertiesType {
 	advancedOptions: ISwitchProperty
 	// Opciones de redirección
 	enableRedirect: ISwitchProperty
+	redirectUrl: IStringProperty
+	redirectStatusCode: IOptionsProperty
+	// Opciones de proxy
+	enableProxy: ISwitchProperty
+	proxyUrl: IStringProperty
+	proxyPreserveHeaders: ISwitchProperty
+	// Opciones CORS
+	enableCors: ISwitchProperty
+	corsOrigin: IStringProperty
+	corsMethods: IStringProperty
+	corsHeaders: IStringProperty
+	// Respuesta personalizada
+	customResponse: ISwitchProperty
+	responseStatusCode: INumberProperty
+	responseContentType: IOptionsProperty
+	responseBody: ICodeProperty
 }
 
 export const getProperties = (): IProperty => {

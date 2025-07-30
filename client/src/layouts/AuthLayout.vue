@@ -4,7 +4,12 @@
     <!-- Header opcional con logo -->
     <header class="absolute top-0 left-0 right-0 z-10">
       <div class="container mx-auto p-6">
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-between">
+          <router-link to="/" class="flex items-center space-x-2">
+            <Logo class="w-7 h-7  inline"
+              :class="[settingsStore.currentTheme === 'dark' ? 'fill-white' : 'fill-primary']" />
+            <span class="text-xl font-bold text-base-content">Horizon</span>
+          </router-link>
           <!-- Theme Switcher -->
           <div class="dropdown dropdown-end">
             <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
@@ -43,9 +48,9 @@ import IconSun from '../components/icons/IconSun.vue'
 import IconMoon from '../components/icons/IconMoon.vue'
 import IconPalette from '../components/icons/IconPalette.vue'
 import { useSettingsStore } from '@/stores'
+import Logo from '@/components/icons/logo.vue'
 
 const settingsStore = useSettingsStore()
-
 
 const themes = [
   { value: 'light', label: 'Light', icon: IconSun },
@@ -61,6 +66,4 @@ const themeIcon = computed(() => {
 const setTheme = (theme: string) => {
   settingsStore.setTheme(theme)
 }
-
-
 </script>

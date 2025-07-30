@@ -68,7 +68,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		privacy[key] = value
 	}
 
-	const saveSettings = () => {
+	const saveSettings = async () => {
 		const settings: UserSettings = {
 			fontSize: fontSize.value,
 			language: language.value,
@@ -76,7 +76,7 @@ export const useSettingsStore = defineStore('settings', () => {
 			performance: { ...performance },
 			privacy: { ...privacy }
 		}
-		socketService.settings().updateUserSettings(settings)
+		return await socketService.settings().updateUserSettings(settings)
 	}
 
 	const loadSettings = async () => {
