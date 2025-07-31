@@ -1,17 +1,17 @@
-import fs from 'node:fs'
-import { glob } from 'glob'
 import type { newClassInterface } from '../interfaces/class.interface.js'
-import path from 'node:path'
+import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
+import { glob } from 'glob'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import path from 'node:path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const dirPath = path.join(__dirname, '../plugins/nodes/')
 const files = glob.sync('**/index.js', { cwd: dirPath })
-const filesOnCreate = glob.sync('**/onCreate.js', { cwd: dirPath })
 
 const nodesClass: { [key: string]: newClassInterface } = {}
 const nodeOnCreate: { [key: string]: any } = {}
+const nodeOnCredentials: { [key: string]: { credentials: IPropertiesType; class: any } } = {}
 
 for (const file of files) {
 	if (file && file.replace(/\\/g, '/').indexOf('/_') > -1) continue
@@ -27,6 +27,20 @@ for (const file of files) {
 
 	try {
 		const data = new model()
+
+		// Guardar la función onCreate
+		if (data.onCreate) {
+			nodeOnCreate[type] = `export ${data.onCreate.toString().replace('onCreate({', 'function onCreate({')}`
+		}
+
+		// Guardar la función onDeploy
+		if (data.credentials || data.onCredential) {
+			nodeOnCredentials[type] = {
+				credentials: data.credentials,
+				class: data.onCredential
+			}
+		}
+
 		nodesClass[type] = {
 			type,
 			info: data.info,
@@ -34,24 +48,8 @@ for (const file of files) {
 			dependencies: data.dependencies,
 			properties: data.properties,
 			credentials: data.credentials,
-			credentialsActions: data.credentialsActions,
 			class: model
 		}
-	} catch (error) {
-		console.log(`Error al cargar el nodo ${file}`, error)
-	}
-}
-
-for (const file of filesOnCreate) {
-	const type = file
-		.replace(/\\/g, '/')
-		.toString()
-		.replace(`${dirPath.replace(/\\/g, '/')}/`, '')
-		.split('/')
-		.slice(0, -1)
-		.join('/')
-	try {
-		nodeOnCreate[type] = fs.readFileSync(path.resolve(dirPath, file), 'utf8')
 	} catch (error) {
 		console.log(`Error al cargar el nodo ${file}`, error)
 	}
@@ -72,4 +70,16 @@ export function getNodeClassDependencies(node: string): string[] | null {
 
 export function getNodeOnCreate(node: string): string {
 	return nodeOnCreate[node]
+}
+
+export function getNodeCredentials(node?: string): { properties?: IPropertiesType; class?: any } | { keys: () => any } {
+	if (node) {
+		return nodeOnCredentials[node]
+	}
+	return Object.keys(nodeOnCredentials).map((key) => {
+		return {
+			name: key,
+			info: nodesClass[key].info
+		}
+	})
 }

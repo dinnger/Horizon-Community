@@ -201,12 +201,3 @@ export interface IConnection extends INodeConnection {
 	input: string
 	output: string
 }
-
-/**
- * Interfaz legacy para compatibilidad - será depreciada
- * @deprecated Usar INodeWorker en su lugar
- */
-export interface NodeClass extends INodeWorker {
-	typeDescription: string
-	credentialsActions?: any
-}

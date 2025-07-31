@@ -22,30 +22,20 @@
         </button>
       </div>
 
-      <div class="h-[60vh] overflow-auto flex flex-col">
+      <div
+        :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ? 'grid grid-cols-[150px_minmax(100px,_1fr)]' : ''}`">
         <slot />
       </div>
 
       <!-- Footer con atajos de teclado -->
       <div class="p-4 border-t border-base-300/30 bg-base-50/50">
         <div class="flex items-center justify-between text-xs text-base-content/50">
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">↑↓</kbd>
-              <span>navegar</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">↵</kbd>
-              <span>seleccionar</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">Tab</kbd>
-              <span>abrir</span>
-            </div>
-          </div>
           <div class="flex items-center gap-1">
             <kbd class="kbd kbd-xs">ESC</kbd>
             <span>cerrar</span>
+          </div>
+          <div>
+            <slot name="actions"></slot>
           </div>
         </div>
       </div>
@@ -61,7 +51,9 @@ import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 const props = defineProps<{
   title?: string
   description?: string
-  isVisible: boolean
+  isVisible: boolean,
+  twoPanels?: boolean
+  customClass?: string
 }>()
 
 const emit = defineEmits<{

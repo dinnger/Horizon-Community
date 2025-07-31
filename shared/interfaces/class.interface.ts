@@ -128,11 +128,6 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	credentials?: C
 
 	/**
-	 * List of credential actions
-	 */
-	credentialsActions?: { name: string; label: string }[] | string[]
-
-	/**
 	 * Additional metadata for the node
 	 */
 	meta?: INodeMeta

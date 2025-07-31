@@ -544,38 +544,21 @@ export const seedDatabase = async () => {
 				description: 'Ver estadísticas de cola de despliegues en sus workspaces',
 				status: 'active' as const
 			},
-
-			// Permisos de solo lectura para viewers
+			// Permisos de credenciales
 			{
-				module: 'workspaces',
+				module: 'credentials',
 				action: 'list',
 				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los workspaces',
+				priority: 100,
+				description: 'Ver todos los nodos disponibles',
 				status: 'active' as const
 			},
 			{
-				module: 'projects',
-				action: 'list',
+				module: 'credentials',
+				action: 'get',
 				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los proyectos',
-				status: 'active' as const
-			},
-			{
-				module: 'workflows',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los workflows',
-				status: 'active' as const
-			},
-			{
-				module: 'deployments',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los despliegues',
+				priority: 100,
+				description: 'Obtener información de credenciales',
 				status: 'active' as const
 			}
 		]
@@ -642,7 +625,8 @@ export const seedDatabase = async () => {
 					'workers',
 					'deployments',
 					'deployment-instances',
-					'deployment-types'
+					'deployment-types',
+					'credentials'
 				].includes(p.module) &&
 				['create', 'list', 'update', 'execute', 'get', 'getVersions', 'search', 'groups', 'info', 'stats', 'dashboard', 'message'].includes(
 					p.action

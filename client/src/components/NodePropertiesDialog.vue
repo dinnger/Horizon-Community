@@ -236,23 +236,17 @@ const importNodeOnCreate = async () => {
         return envMap[key] || ''
       }
     }
-    console.log('mockContext', mockContext)
     const module = await import(scriptUrl)
-    const onCreateFunction = module.default
+    const onCreateFunction = module.onCreate
 
     // Ejecutar la función con las propiedades actuales y el contexto mock
     if (typeof onCreateFunction === 'function') {
-      console.log('Ejecutando función onCreate con propiedades actuales...')
-
       fnOnCreate = (properties: any) => {
-        onCreateFunction(properties, { context: mockContext })
+        onCreateFunction({ properties, context: mockContext })
       }
-      // Ejecutar la función onCreate
     } else {
       console.warn('El script onCreate no exporta una función default ejecutable')
     }
-
-
 
   } catch (error) {
     console.error('Error de red al importar nodo:', error)

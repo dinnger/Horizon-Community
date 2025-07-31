@@ -12,32 +12,10 @@
  * - nodes:change-property - Change node property
  *
  * All routes require appropriate permissions as defined in the permission middleware.
- *
- * TODO: Replace mock data with actual implementation from @shared/store/node.store
- * once TypeScript path mapping is properly configured in the server.
  */
 
 import type { SocketData } from './index.js'
 import { getNodeClass } from '@shared/store/node.store.js'
-// Mock data structure for nodes - esto debería ser reemplazado por la implementación real
-interface NodeInfo {
-	title: string
-	description?: string
-	group: string | string[]
-	version?: string
-}
-
-interface NodeClass {
-	name: string
-	type: string
-	info: NodeInfo
-	group: string | string[]
-	typeDescription: string
-	dependencies?: string[]
-	properties?: any
-	credentials?: any
-	credentialsActions?: any
-}
 
 export const setupNodeRoutes = {
 	// List all available node classes - requires read permission
@@ -183,8 +161,7 @@ export const setupNodeRoutes = {
 				typeDescription: nodeClass.typeDescription,
 				dependencies: nodeClass.dependencies,
 				properties: nodeClass.properties,
-				credentials: nodeClass.credentials,
-				credentialsActions: nodeClass.credentialsActions
+				credentials: nodeClass.credentials
 			}
 
 			callback({ success: true, node: nodeInfo })
@@ -218,47 +195,4 @@ export const setupNodeRoutes = {
 			callback({ success: false, message: 'Error al obtener estadísticas de nodos' })
 		}
 	}
-
-	// Change node property - requires write permission
-	// 'nodes:change-property': async ({ socket, data, callback }: SocketData) => {
-	// 	try {
-	// 		const { nodeId, context, property } = data
-
-	// 		if (!nodeId) {
-	// 			callback({ success: false, message: 'ID del nodo requerido' })
-	// 			return
-	// 		}
-
-	// 		if (!property) {
-	// 			callback({ success: false, message: 'Propiedad requerida' })
-	// 			return
-	// 		}
-
-	// 		const nodeClasses = getNodeClass()
-	// 		const nodeClass = nodeClasses[nodeId]
-
-	// 		if (!nodeClass) {
-	// 			callback({ success: false, message: 'Tipo de nodo no encontrado' })
-	// 			return
-	// 		}
-
-	// 		if (!nodeClass.onCreate) {
-	// 			callback({ success: false, message: 'Sin función onCreate' })
-	// 			return
-	// 		}
-
-	// 		// Update property value
-	// 		for (const key of Object.keys(property)) {
-	// 			nodeClass.properties[key].value = property[key]
-	// 		}
-
-	// 		// TODO: ANALIZAR COMO OBTENER LOS DATOS PARA EL ONCREATE
-	// 		nodeClass.onCreate({ context })
-
-	// 		callback({ success: true, node: nodeClass })
-	// 	} catch (error) {
-	// 		console.error('Error cambiando propiedad de nodo:', error)
-	// 		callback({ success: false, message: 'Error al cambiar propiedad de nodo' })
-	// 	}
-	// }
 }

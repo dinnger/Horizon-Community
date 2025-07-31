@@ -18,8 +18,8 @@ import { setupDeploymentRoutes } from './deployments.js'
 import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
 import { setupSubscribersRoutes } from './subscribers.js'
-import { workerManager } from '@server/src/services/workerManager.js'
 import NodeCache from 'node-cache'
+import { setupCredentialsRoutes } from './credentials.js'
 
 export interface AuthenticatedSocket extends Socket {
 	userId?: string
@@ -46,7 +46,8 @@ export const serverRouter = {
 	...setupDeploymentQueueRoutes,
 	...setupDeploymentTypesRoutes,
 	...setupDeploymentInstancesRoutes,
-	...setupSubscribersRoutes
+	...setupSubscribersRoutes,
+	...setupCredentialsRoutes
 } as const
 
 export const serverListeners = [setupWorkersListeners]
