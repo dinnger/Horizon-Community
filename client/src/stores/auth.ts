@@ -91,7 +91,7 @@ export const useAuthStore = defineStore('auth', () => {
 						user.value = await response.json()
 						return
 					}
-					if (response.status !== 500) localStorage.removeItem('horizon-token')
+
 					user.value = null
 				})
 				.catch((error) => {
@@ -118,7 +118,11 @@ export const useAuthStore = defineStore('auth', () => {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${token}`
 					}
-				}).then((response) => response.json())
+				}).then((response) => {
+					if (response.status !== 500) localStorage.removeItem('horizon-token')
+					if (response.status === 500) return { success: false, existToken: false }
+					return response.json()
+				})
 
 				if (response.success && response.user) {
 					user.value = response.user
@@ -127,6 +131,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 				return { success: false, existToken: false }
 			} catch (error) {
+				localStorage.removeItem('horizon-token')
 				console.error('Login error:', error)
 				return { success: false, existToken: false }
 			} finally {

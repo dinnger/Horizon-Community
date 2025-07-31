@@ -25,8 +25,9 @@ export interface classCredentialInterface {
 	getCredential: (name: string) => any
 }
 
-export interface classOnCreateInterface {
+export interface classOnCreateInterface<T extends IPropertiesType = IPropertiesType> {
 	context: IWorkflowExecutionContextInterface
+	properties: T
 }
 
 export interface classOnActionsInterface {
@@ -149,6 +150,11 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	onDeploy?(): void
 
 	/**
+	 * Lifecycle method called when the node is created
+	 */
+	onCreate?(o: classOnCreateInterface): Promise<void>
+
+	/**
 	 * Lifecycle method called when the node is executed
 	 * @param o - Execution context and parameters
 	 * @returns A promise that resolves when execution is complete
@@ -160,7 +166,7 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	 * @param o - Credential context and parameters
 	 * @returns A promise that resolves with credential processing results
 	 */
-	onCredential?(o: classOnCredential): IClassOnCredentialResponse
+	onCredential?(o: classOnCredential): Promise<{ status: boolean; data: any }>
 
 	/**
 	 * Lifecycle method called when the node is destroyed

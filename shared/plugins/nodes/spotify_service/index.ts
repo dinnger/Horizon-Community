@@ -394,54 +394,57 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	// async onCredential({ client, dependency }: classOnCredential) {
-	// 	const axios = await dependency.getRequire('axios')
-	// 	const { clientId, clientSecret, redirectUri, scope } = this.credentials
-	// 	// Obtener el token
-	// 	const resp = await client.openUrl({
-	// 		uri: 'https://accounts.spotify.com/authorize',
-	// 		headers: {
-	// 			'Content-Type': 'application/x-www-form-urlencoded'
-	// 		},
-	// 		queryParams: {
-	// 			client_id: clientId.value,
-	// 			response_type: 'code',
-	// 			redirect_uri: redirectUri.value,
-	// 			scope: scope.value
-	// 		},
-	// 		meta: {
-	// 			clientId: clientId.value,
-	// 			clientSecret: clientSecret.value,
-	// 			redirectUri: redirectUri.value,
-	// 			scope: scope.value
-	// 		}
-	// 	})
+	async onCredential({ client, dependency }: classOnCredential) {
+		const axios = await dependency.getRequire('axios')
+		const { clientId, clientSecret, redirectUri, scope } = this.credentials
+		// Obtener el token
+		const resp = await client.openUrl({
+			uri: 'https://accounts.spotify.com/authorize',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			queryParams: {
+				client_id: clientId.value,
+				response_type: 'code',
+				redirect_uri: redirectUri.value,
+				scope: scope.value
+			},
+			meta: {
+				clientId: clientId.value,
+				clientSecret: clientSecret.value,
+				redirectUri: redirectUri.value,
+				scope: scope.value
+			}
+		})
 
-	// 	const { code } = resp.data
-	// 	if (!code || !clientId.value || !clientSecret.value || !redirectUri.value) {
-	// 		throw new Error('Faltan parámetros')
-	// 	}
+		const { code } = resp.data
+		if (!code || !clientId.value || !clientSecret.value || !redirectUri.value) {
+			throw new Error('Faltan parámetros')
+		}
 
-	// 	const tokenResponse = await axios.post(
-	// 		'https://accounts.spotify.com/api/token',
-	// 		querystring.stringify({
-	// 			grant_type: 'authorization_code',
-	// 			code: String(code),
-	// 			redirect_uri: redirectUri.value
-	// 		}),
-	// 		{
-	// 			headers: {
-	// 				'Content-Type': 'application/x-www-form-urlencoded',
-	// 				Authorization: `Basic ${Buffer.from(`${clientId.value}:${clientSecret.value}`).toString('base64')}`
-	// 			}
-	// 		}
-	// 	)
+		const tokenResponse = await axios.post(
+			'https://accounts.spotify.com/api/token',
+			querystring.stringify({
+				grant_type: 'authorization_code',
+				code: String(code),
+				redirect_uri: redirectUri.value
+			}),
+			{
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					Authorization: `Basic ${Buffer.from(`${clientId.value}:${clientSecret.value}`).toString('base64')}`
+				}
+			}
+		)
 
-	// 	const { access_token, refresh_token } = tokenResponse.data
-	// 	return {
-	// 		refresh_token,
-	// 		client_id: clientId.value,
-	// 		client_secret: clientSecret.value
-	// 	}
-	// }
+		const { access_token, refresh_token } = tokenResponse.data
+		return {
+			status: true,
+			data: {
+				refresh_token,
+				client_id: clientId.value,
+				client_secret: clientSecret.value
+			}
+		}
+	}
 }

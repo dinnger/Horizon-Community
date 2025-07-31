@@ -20,7 +20,7 @@
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
     "@types/archiver": "^6.0.3",
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
     "@types/express-fileupload": "^1.5.1",
     "@types/express-session": "^1.18.2",
@@ -34,7 +34,7 @@
     "ajv-i18n": "^4.2.0",
     "amqplib": "^0.10.8",
     "archiver": "^7.0.1",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "crypto": "^1.0.1",
     "express-session": "^1.18.2",
@@ -52,15 +52,15 @@
     "sqlite3": "^5.1.7",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.20.3"
   },
   "dependencies": {
     "@nyariv/sandboxjs": "^0.8.25",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
-    "dotenv": "^17.0.0",
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "express-fileupload": "^1.5.1",
+    "express-fileupload": "^1.5.2",
     "glob": "^11.0.3",
     "helmet": "^8.1.0",
     "uuid": "^11.1.0",

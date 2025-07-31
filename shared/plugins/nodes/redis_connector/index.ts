@@ -1,6 +1,5 @@
 import type {
 	IClassNode,
-	IClassOnCredentialResponse,
 	classOnCreateInterface,
 	classOnCredential,
 	classOnExecuteInterface,
@@ -13,7 +12,6 @@ import type {
 	IOptionsProperty,
 	IPasswordProperty,
 	IPropertiesType,
-	ISecretProperty,
 	IStringProperty
 } from '@shared/interfaces/workflow.properties.interface.js'
 
@@ -44,17 +42,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		public dependencies: string[],
 		public info: infoInterface,
 		public properties: IProperties,
-		public credentials: ICredentials,
-		public credentialsActions = [
-			{
-				name: 'test',
-				label: 'Test'
-			},
-			{
-				name: 'new',
-				label: 'Crear Credencial'
-			}
-		]
+		public credentials: ICredentials
 	) {
 		this.accessSecrets = true
 		this.dependencies = ['ioredis']
@@ -170,6 +158,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 			}
 		}
 	}
+
 	async onCreate({ context }: classOnCreateInterface) {
 		const authMode = this.properties.authMode.value
 		const operation = this.properties.operation.value
@@ -197,26 +186,6 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	// Método para limpiar conexiones cerradas o con errores
-	private cleanupClosedConnections() {
-		for (const [key, connection] of this.redisConnections.entries()) {
-			if (connection.status !== 'ready') {
-				this.redisConnections.delete(key)
-			}
-		}
-	}
-
-	// Método para cerrar todas las conexiones al destruir el nodo
-	private closeAllConnections() {
-		for (const [key, connection] of this.redisConnections.entries()) {
-			try {
-				connection.quit()
-			} catch (error) {
-				// Ignorar errores al cerrar conexiones
-			}
-			this.redisConnections.delete(key)
-		}
-	}
 	async onExecute({ outputData, dependency, credential }: classOnExecuteInterface) {
 		const Redis = await dependency.getRequire('ioredis')
 
@@ -345,7 +314,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		// NO cerramos la conexión aquí para permitir reutilización
 	}
 
-	async onCredential({ action, dependency }: classOnCredential): IClassOnCredentialResponse {
+	async onCredential({ action, dependency }: classOnCredential) {
 		if (action === 'test') {
 			let redisClient: any
 			const Redis = await dependency.getRequire('ioredis')
@@ -366,17 +335,18 @@ export default class implements IClassNode<IProperties, ICredentials> {
 				redisClient.on('end', () => {})
 				redisClient.on('close', () => {})
 				await redisClient.ping()
-				return { alert: 'Conexión establecida', type: 'info' }
+				return { status: true, data: { alert: 'Conexión establecida', type: 'info' } }
 			} catch (error: any) {
 				redisClient.disconnect()
-				return { alert: String(error.message), type: 'error' }
+				return { status: false, data: { alert: String(error.message), type: 'error' } }
 			}
 		}
 		const { host, port, password, db, additionalOptions } = this.credentials
 		// Las credenciales se definen directamente en la configuración del nodo de credenciales.
 		// Este método podría usarse para validaciones adicionales si fuera necesario.
 		return {
-			save: {
+			status: true,
+			data: {
 				host: host.value,
 				port: port.value,
 				password: password.value,
