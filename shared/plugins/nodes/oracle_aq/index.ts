@@ -166,7 +166,7 @@ export default class OracleAQNode implements IClassNode<IProperties, ICredential
 		}
 	}
 
-	async onUpdate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnCreateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false

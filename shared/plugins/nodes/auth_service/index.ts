@@ -223,7 +223,7 @@ export default class AuthServiceNode implements IClassNode<IProperties> {
 		}
 	}
 
-	async onUpdate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnCreateInterface): Promise<void> {
 		// Mostrar/ocultar campos según el método de autenticación seleccionado
 		this.hideAllAuthFields()
 

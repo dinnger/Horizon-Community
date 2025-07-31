@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'express'
-import { getNodeOnCreate } from '@shared/store/node.store.js'
+import { getNodeOnUpdateProperties } from '@shared/store/node.store.js'
 
 const router = Router()
 
@@ -50,7 +50,7 @@ router.get('/:socketId/:nodeType/validate', validateSocketAuth, (req: any, res: 
 		}
 
 		// Check if the onCreate script exists for the node type
-		const onCreateScript = getNodeOnCreate(nodeType)
+		const onCreateScript = getNodeOnUpdateProperties(nodeType)
 
 		if (!onCreateScript) {
 			return res.status(404).json({
@@ -101,7 +101,7 @@ router.get('/:socketId/:nodeType', validateSocketAuth, (req: any, res: any) => {
 		}
 
 		// Get the onCreate script for the node type
-		const onCreateScript = getNodeOnCreate(nodeType)
+		const onCreateScript = getNodeOnUpdateProperties(nodeType)
 
 		if (!onCreateScript) {
 			return res.status(404).json({

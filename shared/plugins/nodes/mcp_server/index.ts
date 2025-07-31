@@ -182,7 +182,7 @@ export default class implements IClassNode<IProperties> {
 		}
 	}
 
-	async onUpdate() {
+	async onUpdateProperties() {
 		// Mostrar/ocultar campos según el tipo de transporte
 		const isSSE = this.properties.transport.value === 'sse'
 		this.properties.host.show = isSSE

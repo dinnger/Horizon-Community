@@ -303,7 +303,7 @@ export default class implements IClassNode<IProperty> {
 		}
 	}
 
-	async onUpdate({ context, properties }: classOnCreateInterface<IProperty>) {
+	async onUpdateProperties({ context, properties }: classOnCreateInterface<IProperty>) {
 		// Configuración de seguridad
 		properties.securityBasicUser.show = false
 		properties.securityBasicPass.show = false
