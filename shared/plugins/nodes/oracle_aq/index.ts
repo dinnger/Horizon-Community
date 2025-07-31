@@ -1,5 +1,5 @@
 //  https://node-oracledb.readthedocs.io/en/v6.7.2/user_guide/aq.html
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
 	IOptionsProperty,
@@ -166,7 +166,7 @@ export default class OracleAQNode implements IClassNode<IProperties, ICredential
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false

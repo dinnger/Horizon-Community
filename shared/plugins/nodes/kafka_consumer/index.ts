@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 
 export default class implements IClassNode {
@@ -80,7 +80,7 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface) {
+	async onUpdateProperties({ context }: classOnUpdateInterface) {
 		this.info.connectors.inputs = []
 		this.info.connectors.inputs.push('init')
 		if (this.properties.autoCommit.value) this.info.connectors.inputs.push('next')

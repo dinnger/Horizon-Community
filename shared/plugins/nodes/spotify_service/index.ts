@@ -1,4 +1,10 @@
-import type { IClassNode, classOnCredential, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type {
+	IClassNode,
+	classOnCredential,
+	classOnExecuteInterface,
+	classOnUpdateInterface,
+	infoInterface
+} from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
 	ICredentialProperty,
@@ -166,7 +172,9 @@ export default class implements IClassNode<IProperties, ICredentials> {
 				name: 'Redirect URI',
 				type: 'string',
 				value: 'http://localhost:3000/api/credential/callback',
-				disabled: true,
+				pattern: new RegExp(/^(https?:\/\/)([^\s$.?#].[^\s]*)$/).toString(),
+				patternHint: 'Debe ser una URL válida (http o https)',
+				description: 'URI de redirección para la autenticación',
 				required: true
 			}
 		}
@@ -393,6 +401,8 @@ export default class implements IClassNode<IProperties, ICredentials> {
 			outputData('error', { error: message })
 		}
 	}
+
+	async onUpdateCredential({ properties }: classOnUpdateInterface<ICredentials>) {}
 
 	async onCredential({ client, dependency }: classOnCredential) {
 		const axios = await dependency.getRequire('axios')

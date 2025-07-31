@@ -1,6 +1,5 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bottom-0 left-0 right-0"
-    @click.self="hidePanel">
+  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bottom-0 left-0 right-0">
 
     <!-- Overlay -->
     <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>

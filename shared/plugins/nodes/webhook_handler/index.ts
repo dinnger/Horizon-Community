@@ -4,7 +4,7 @@ import type { FileArray } from 'express-fileupload'
 interface Request extends ExpressRequest {
 	files?: FileArray | null
 }
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '../../../interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '../../../interfaces/class.interface.js'
 
 import type {
 	IBoxType,
@@ -303,7 +303,7 @@ export default class implements IClassNode<IProperty> {
 		}
 	}
 
-	async onUpdateProperties({ context, properties }: classOnCreateInterface<IProperty>) {
+	async onUpdateProperties({ context, properties }: classOnUpdateInterface<IProperty>) {
 		// Configuración de seguridad
 		properties.securityBasicUser.show = false
 		properties.securityBasicPass.show = false

@@ -25,7 +25,7 @@ export interface classCredentialInterface {
 	getCredential: (name: string) => any
 }
 
-export interface classOnCreateInterface<T extends IPropertiesType = IPropertiesType> {
+export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesType> {
 	context: IWorkflowExecutionContextInterface
 	properties: T
 }
@@ -97,10 +97,10 @@ export interface infoInterface {
 /**
  * Interface representing a class node with configurable properties and credentials.
  *
- * @template T - The type of properties this node will have, defaults to IPropertiesType
+ * @template P - The type of properties this node will have, defaults to IPropertiesType
  * @template C - The type of credentials this node will have, defaults to IPropertiesType
  */
-export interface IClassNode<T extends IPropertiesType = IPropertiesType, C extends IPropertiesType = IPropertiesType> {
+export interface IClassNode<P extends IPropertiesType = IPropertiesType, C extends IPropertiesType = IPropertiesType> {
 	/**
 	 * Determines if the node can access secrets
 	 */
@@ -120,7 +120,7 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	 * Configuration properties for the node.
 	 * These define the node's behavior and settings.
 	 */
-	properties: T
+	properties: P
 
 	/**
 	 * Authentication credentials required by the node
@@ -148,7 +148,7 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	 * Lifecycle method called when the node is updated
 	 * @param o - Execution context and parameters
 	 */
-	onUpdateProperties?(o: classOnCreateInterface): void
+	onUpdateProperties?(o: classOnUpdateInterface<P>): void
 
 	/**
 	 * Lifecycle method called when the node is executed
@@ -156,6 +156,12 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	 * @returns A promise that resolves when execution is complete
 	 */
 	onExecute(o: classOnExecuteInterface): Promise<void>
+
+	/**
+	 * Lifecycle method called when the node is updated
+	 * @param o - Execution context and parameters
+	 */
+	onUpdateCredential?(o: classOnUpdateInterface<C>): void
 
 	/**
 	 * Lifecycle method called for credential handling

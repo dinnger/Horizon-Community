@@ -66,7 +66,6 @@ export class NodeModule {
 		if (this.nodesClass[data.type]?.properties) {
 			for (const [key, value] of Object.entries(this.nodesClass[data.type].properties) as [string, any][]) {
 				prop[key] = JSON.parse(JSON.stringify(value))
-				if (value.onTransform) prop[key].onTransform = value.onTransform
 				if (value.type === 'list') {
 					prop[key].object = value.object
 				}

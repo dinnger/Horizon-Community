@@ -6,9 +6,10 @@
     </label>
 
     <!-- Box input -->
+
     <div v-if="property.type === 'box'" class="p-2 border-1 border-base-content/20 rounded-md"
       :class="{ 'input-error': property.required && !property.value }">
-      <div v-for="item in property.value" :key="item" class="flex flex-col  gap-2">
+      <div v-for="item in property.value" :key="item.label" class="flex flex-col  gap-2">
         <div class="text-sm text-base-content/70">{{ item.label }}</div>
         <div class="-mt-3 w-full truncate whitespace-nowrap overflow-hidden text-ellipsis">
           {{ item.value }}
@@ -17,19 +18,53 @@
     </div>
 
     <!-- String input -->
-    <input v-else-if="property.type === 'string'" v-model="localValue" type="text" :placeholder="property.placeholder"
-      :disabled="property.disabled || isReadOnly" class="input input-bordered w-full"
-      :class="{ 'input-error': property.required && !property.value }" />
+    <template v-else-if="property.type === 'string'" class="form-control">
+      {{ validPattern(property.pattern) }}
+      <label class="input input-bordered  w-full" :class="{ 'validator': property.pattern }">
+        <input v-model="localValue" type="text" :placeholder="property.placeholder"
+          :disabled="property.disabled || isReadOnly" :pattern="validPattern(property.pattern)"
+          :required="property.required" :class="{ 'input-error': property.required && !property.value }" />
+      </label>
+      <p class="validator-hint hidden">{{ property.patternHint }}</p>
+    </template>
 
     <!-- Number input -->
-    <input v-else-if="property.type === 'number'" v-model.number="localValue" type="number" :min="property.min"
-      :max="property.max" :step="property.step" :disabled="property.disabled || isReadOnly" class="input input-bordered w-full"
+    <template v-else-if="property.type === 'number'">
+      <label lass="input input-bordered validator w-full">
+        <input v-model.number="localValue" type="number" :min="property.min" :max="property.max" :step="property.step"
+          :disabled="property.disabled || isReadOnly"
+          :class="{ 'input-error': property.required && !property.value }" />
+      </label>
+      <p class="validator-hint hidden">{{ property.patternHint }}</p>
+    </template>
+
+    <!-- Textarea for long text -->
+    <template v-else-if="property.type === 'textarea'">
+      <label lass="textarea textarea-bordered validator w-full">
+        <textarea :value="String(localValue || '')" @input="localValue = ($event.target as HTMLTextAreaElement).value"
+          :disabled="property.disabled || isReadOnly" :rows="property.rows || 3"
+          :class="{ 'textarea-error': property.required && !property.value }" />
+      </label>
+      <p class="validator-hint hidden">{{ property.patternHint }}</p>
+    </template>
+
+    <!-- Code Editor -->
+    <NodeCodeEditor v-else-if="property.type === 'code'" :property="property" :property-key="propertyKey"
+      :model-value="localValue" :is-read-only="isReadOnly" @update:model-value="localValue = $event" />
+
+    <!-- Password input -->
+    <input v-else-if="property.type === 'password'" v-model="localValue" type="password"
+      :disabled="property.disabled || isReadOnly" class="input input-bordered"
       :class="{ 'input-error': property.required && !property.value }" />
+
+
+
 
     <!-- Boolean switch -->
     <div v-else-if="property.type === 'switch'" class="form-control">
       <label class="label cursor-pointer justify-start space-x-3">
-        <input v-model="localValue" type="checkbox" class="toggle toggle-primary" :disabled="property.disabled || isReadOnly" />
+        <input v-model="localValue" type="checkbox" class="toggle toggle-primary"
+          :disabled="property.disabled || isReadOnly" />
         <span class="label-text">{{ localValue ? 'Activado' : 'Desactivado' }}</span>
       </label>
     </div>
@@ -43,19 +78,7 @@
       </option>
     </select>
 
-    <!-- Textarea for long text -->
-    <textarea v-else-if="property.type === 'textarea'" :value="String(localValue || '')"
-      @input="localValue = ($event.target as HTMLTextAreaElement).value" :disabled="property.disabled || isReadOnly"
-      :rows="property.rows || 3" class="textarea textarea-bordered w-full"
-      :class="{ 'textarea-error': property.required && !property.value }" />
 
-    <!-- Code Editor -->
-    <NodeCodeEditor v-else-if="property.type === 'code'" :property="property" :property-key="propertyKey"
-      :model-value="localValue" :is-read-only="isReadOnly" @update:model-value="localValue = $event" />
-
-    <!-- Password input -->
-    <input v-else-if="property.type === 'password'" v-model="localValue" type="password" :disabled="property.disabled || isReadOnly"
-      class="input input-bordered" :class="{ 'input-error': property.required && !property.value }" />
 
     <!-- Default fallback -->
     <div v-else class="alert alert-warning">
@@ -71,15 +94,18 @@
     <div v-if="property.description" class="label">
       <span class="label-text-alt opacity-60">{{ property.description }}</span>
     </div>
+
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import NodeCodeEditor from './NodeCodeEditor.vue'
+import type { propertiesType } from '@shared/interfaces'
 
 interface Props {
-  property: any
+  property: propertiesType
   propertyKey: string
   modelValue: any
   isReadOnly?: boolean
@@ -100,6 +126,16 @@ const localValue = computed({
     }
   }
 })
+
+const validPattern = (pattern?: string) => {
+  if (!pattern) return undefined
+  // remove first and last slashes if they exist
+  if (pattern.startsWith('/') && pattern.endsWith('/')) {
+    return pattern.slice(1, -1)
+  }
+
+}
+
 </script>
 
 <style scoped>

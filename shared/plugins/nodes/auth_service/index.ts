@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
 	IOptionsProperty,
@@ -223,7 +223,7 @@ export default class AuthServiceNode implements IClassNode<IProperties> {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		// Mostrar/ocultar campos según el método de autenticación seleccionado
 		this.hideAllAuthFields()
 

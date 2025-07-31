@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { ICodeProperty, IListProperty, IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 
 interface IProperties extends IPropertiesType {
@@ -33,11 +33,7 @@ export default class ConditionalNode implements IClassNode<IProperties> {
 						name: 'Nombre:',
 						type: 'string',
 						value: 'condicion_{{index}}',
-						maxlength: 20,
-						onTransform: 'utils_standard_name',
-						evaluation: {
-							active: false
-						}
+						maxlength: 20
 					},
 					condition: {
 						name: 'Condición (JS):',
@@ -58,7 +54,7 @@ export default class ConditionalNode implements IClassNode<IProperties> {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface) {
+	async onUpdateProperties({ context }: classOnUpdateInterface) {
 		const valor = this.properties.conditions.value
 		this.info.connectors.outputs = []
 		for (let i = 0; i < valor.length; i++) {

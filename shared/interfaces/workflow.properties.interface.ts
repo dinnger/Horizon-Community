@@ -28,6 +28,8 @@ export interface IActionsProperty {
 /**
  * evalProperty
  * Define si la propiedad se evalúa o no
+ * Si active es true, la propiedad se evalúa
+ * Si all es true, se evalúa en todos. Se agrega {{ }} a todo el campo
  */
 export interface IEvalProperty {
 	evaluation?: {
@@ -36,27 +38,24 @@ export interface IEvalProperty {
 	}
 }
 
-export interface IEventProperty {
-	onValidation?: {
-		pattern?: string
-		hint?: string[]
-	}
-	onTransform?: 'utils_standard_name' | ((value: any) => any)
+export interface IValidProperty {
+	pattern?: string
+	patternHint?: string
 }
 
-export interface IStringProperty extends IBaseProperty, IActionsProperty, IEvalProperty, IEventProperty {
+export interface IStringProperty extends IBaseProperty, IActionsProperty, IEvalProperty, IValidProperty {
 	type: 'string'
 	value: string
 	placeholder?: string
 	maxlength?: number
 }
 
-export interface IPasswordProperty extends IBaseProperty, IActionsProperty, IEventProperty {
+export interface IPasswordProperty extends IBaseProperty, IActionsProperty, IValidProperty {
 	type: 'password'
 	value: string
 }
 
-export interface INumberProperty extends IBaseProperty, IActionsProperty, IEventProperty {
+export interface INumberProperty extends IBaseProperty, IActionsProperty, IValidProperty {
 	type: 'number'
 	value: number
 	min?: number
@@ -64,19 +63,19 @@ export interface INumberProperty extends IBaseProperty, IActionsProperty, IEvent
 	step?: number
 }
 
-export interface ITextareaProperty extends IBaseProperty, IActionsProperty, IEventProperty {
+export interface ITextareaProperty extends IBaseProperty, IActionsProperty, IValidProperty {
 	type: 'textarea'
 	value: string
 	maxlength?: number
 	rows?: number
 }
 
-export interface ISwitchProperty extends IBaseProperty, IEventProperty {
+export interface ISwitchProperty extends IBaseProperty {
 	type: 'switch'
 	value: boolean
 }
 
-export interface ICodeProperty extends IBaseProperty, IActionsProperty, IEventProperty {
+export interface ICodeProperty extends IBaseProperty, IActionsProperty, IValidProperty {
 	type: 'code'
 	lang: 'sql' | 'json' | 'js' | 'string'
 	value: string | object

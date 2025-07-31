@@ -40,8 +40,6 @@
               :property-key="String(key)" :model-value="property.value" />
           </div>
 
-
-
         </div>
         <template #actions>
           <button type="button" @click="close" class="btn btn-outline mr-2">Cancelar</button>
@@ -82,7 +80,7 @@ const newItem = ref({
 const useCredentials = useCredentialsComposable()
 const emits = defineEmits(['close', 'addItem'])
 const addItem = () => {
-  emits('addItem')
+  console.log('Adding item:', selectedNode.value)
 }
 
 const selectNode = (node: info) => {

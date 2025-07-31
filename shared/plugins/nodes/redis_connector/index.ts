@@ -1,6 +1,6 @@
 import type {
 	IClassNode,
-	classOnCreateInterface,
+	classOnUpdateInterface,
 	classOnCredential,
 	classOnExecuteInterface,
 	infoInterface
@@ -159,7 +159,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface) {
+	async onUpdateProperties({ context }: classOnUpdateInterface) {
 		const authMode = this.properties.authMode.value
 		const operation = this.properties.operation.value
 

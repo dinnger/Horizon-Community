@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { ICodeProperty, IOptionsProperty, IPropertiesType, ISecretProperty } from '@shared/interfaces/workflow.properties.interface.js'
 
 type IDialect = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'oracle'
@@ -194,7 +194,7 @@ export default class DatabaseNode implements IClassNode<IProperties, ICredential
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false
