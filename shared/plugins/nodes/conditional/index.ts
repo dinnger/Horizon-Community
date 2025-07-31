@@ -58,7 +58,7 @@ export default class ConditionalNode implements IClassNode<IProperties> {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface) {
+	async onUpdate({ context }: classOnCreateInterface) {
 		const valor = this.properties.conditions.value
 		this.info.connectors.outputs = []
 		for (let i = 0; i < valor.length; i++) {

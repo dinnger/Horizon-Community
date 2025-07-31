@@ -159,7 +159,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface) {
+	async onUpdate({ context }: classOnCreateInterface) {
 		const authMode = this.properties.authMode.value
 		const operation = this.properties.operation.value
 

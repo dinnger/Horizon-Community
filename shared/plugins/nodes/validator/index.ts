@@ -99,7 +99,7 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdate({ context }: classOnCreateInterface): Promise<void> {
 		// Mostrar u ocultar opciones avanzadas
 		const showAdvanced = this.properties.advancedOptions.value === true
 		this.properties.customErrorMessages.show = showAdvanced

@@ -80,7 +80,7 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface) {
+	async onUpdate({ context }: classOnCreateInterface) {
 		this.info.connectors.inputs = []
 		this.info.connectors.inputs.push('init')
 		if (this.properties.autoCommit.value) this.info.connectors.inputs.push('next')

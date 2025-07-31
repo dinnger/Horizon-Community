@@ -237,12 +237,12 @@ const importNodeOnCreate = async () => {
       }
     }
     const module = await import(scriptUrl)
-    const onCreateFunction = module.onCreate
+    const onUpdateFunction = module.onUpdate
 
     // Ejecutar la función con las propiedades actuales y el contexto mock
-    if (typeof onCreateFunction === 'function') {
+    if (typeof onUpdateFunction === 'function') {
       fnOnCreate = (properties: any) => {
-        onCreateFunction({ properties, context: mockContext })
+        onUpdateFunction({ properties, context: mockContext })
       }
     } else {
       console.warn('El script onCreate no exporta una función default ejecutable')

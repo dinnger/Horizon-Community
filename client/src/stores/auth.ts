@@ -119,7 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
 						Authorization: `Bearer ${token}`
 					}
 				}).then((response) => {
-					if (response.status !== 500) localStorage.removeItem('horizon-token')
+					if (![200, 500].includes(response.status)) localStorage.removeItem('horizon-token')
 					if (response.status === 500) return { success: false, existToken: false }
 					return response.json()
 				})

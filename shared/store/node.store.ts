@@ -1,4 +1,4 @@
-import type { newClassInterface } from '../interfaces/class.interface.js'
+import type { IClassNode, newClassInterface } from '../interfaces/class.interface.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import { glob } from 'glob'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -10,7 +10,7 @@ const dirPath = path.join(__dirname, '../plugins/nodes/')
 const files = glob.sync('**/index.js', { cwd: dirPath })
 
 const nodesClass: { [key: string]: newClassInterface } = {}
-const nodeOnCreate: { [key: string]: any } = {}
+const nodeOnUpdate: { [key: string]: any } = {}
 const nodeOnCredentials: { [key: string]: { credentials: IPropertiesType; class: any } } = {}
 
 for (const file of files) {
@@ -26,15 +26,15 @@ for (const file of files) {
 	const model = module.default
 
 	try {
-		const data = new model()
+		const data = new model() as IClassNode
 
-		// Guardar la función onCreate
-		if (data.onCreate) {
-			nodeOnCreate[type] = `export ${data.onCreate.toString().replace('onCreate({', 'function onCreate({')}`
+		// Guardar la función onUpdate
+		if (data.onUpdate) {
+			nodeOnUpdate[type] = `export ${data.onUpdate.toString().replace('onUpdate({', 'function onUpdate({')}`
 		}
 
 		// Guardar la función onDeploy
-		if (data.credentials || data.onCredential) {
+		if (data.credentials) {
 			nodeOnCredentials[type] = {
 				credentials: data.credentials,
 				class: data.onCredential
@@ -69,7 +69,7 @@ export function getNodeClassDependencies(node: string): string[] | null {
 }
 
 export function getNodeOnCreate(node: string): string {
-	return nodeOnCreate[node]
+	return nodeOnUpdate[node]
 }
 
 export function getNodeCredentials(node?: string): { properties?: IPropertiesType; class?: any } | { keys: () => any } {

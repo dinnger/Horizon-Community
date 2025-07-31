@@ -145,9 +145,10 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	onDeploy?(): void
 
 	/**
-	 * Lifecycle method called when the node is created
+	 * Lifecycle method called when the node is updated
+	 * @param o - Execution context and parameters
 	 */
-	onCreate?(o: classOnCreateInterface): Promise<void>
+	onUpdate?(o: classOnCreateInterface): void
 
 	/**
 	 * Lifecycle method called when the node is executed

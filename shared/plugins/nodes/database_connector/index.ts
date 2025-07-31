@@ -194,7 +194,7 @@ export default class DatabaseNode implements IClassNode<IProperties, ICredential
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdate({ context }: classOnCreateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false
