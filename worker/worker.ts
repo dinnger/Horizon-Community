@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import type { IContextWorkerInterface } from '@shared/interfaces/context.interface.js'
+import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
 import type { classBaseEnvironmentInterface } from '@shared/interfaces/class.interface.js'
 import type { Express } from 'express'
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
@@ -19,7 +19,7 @@ export class Worker {
 	app: Express
 	workflowId: string
 	flow: IWorkflowFull
-	context: IContextWorkerInterface
+	context: IWorkerContext
 	environment: classBaseEnvironmentInterface
 
 	index: number | null

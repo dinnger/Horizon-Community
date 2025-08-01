@@ -1,5 +1,6 @@
+import type { infoInterface } from '@shared/interfaces/index.js'
 import type { IPropertiesType } from '../../interfaces/workflow.properties.interface.js'
-import type { classDeployInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/deployment.interface.js'
+import type { classDeployInterface } from '@shared/interfaces/deployment.interface.js'
 
 export default class implements classDeployInterface {
 	// ===============================================
@@ -15,9 +16,15 @@ export default class implements classDeployInterface {
 		} = {}
 	) {
 		this.info = {
-			title: 'Azure',
+			name: 'Azure',
 			desc: 'Despliega el flujo en una instancia de Azure.',
-			icon: '󰠅'
+			icon: '󰠅',
+			group: 'Despliegue',
+			color: '#0078D4',
+			connectors: {
+				inputs: ['input'],
+				outputs: ['output']
+			}
 		}
 
 		this.properties = {
@@ -76,5 +83,5 @@ export default class implements classDeployInterface {
 		}
 	}
 
-	async onExecute({ context }: classOnExecuteInterface) {}
+	async onExecute({ context }: Parameters<classDeployInterface['onExecute']>[0]) {}
 }

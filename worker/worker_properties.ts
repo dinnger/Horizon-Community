@@ -1,4 +1,4 @@
-import type { IContextWorkerInterface } from '@shared/interfaces/context.interface.js'
+import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
 import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import type { Worker } from './worker.js'
@@ -16,7 +16,7 @@ export class initProperties {
 	node: INodeWorker
 	nodes: { [key: string]: INodeWorker }
 	input: object
-	context: IContextWorkerInterface
+	context: IWorkerContext
 	executeData: Map<string, { data: object; meta?: object; time: number }>
 	regexInit: RegExp
 	currentObject: { [key: string]: any }

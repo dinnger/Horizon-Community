@@ -1,7 +1,8 @@
 import fs from 'node:fs'
-import type { IPropertiesType } from '../../interfaces/workflow.properties.interface.js'
-import type { classDeployInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/deployment.interface.js'
 import archiver from 'archiver'
+import type { classOnExecuteInterface, infoInterface } from '@shared/interfaces/index.js'
+import type { IPropertiesType } from '../../interfaces/workflow.properties.interface.js'
+import type { classDeployInterface } from '@shared/interfaces/deployment.interface.js'
 
 export default class implements classDeployInterface {
 	// ===============================================
@@ -17,9 +18,15 @@ export default class implements classDeployInterface {
 		} = {}
 	) {
 		this.info = {
-			title: 'Local',
+			name: 'Local',
 			desc: 'Despliega el flujo localmente como un servicio.',
-			icon: '󰒍'
+			icon: '󰒍',
+			group: 'Despliegue',
+			color: '#4CAF50',
+			connectors: {
+				inputs: ['input'],
+				outputs: ['output']
+			}
 		}
 
 		this.properties = {
@@ -36,12 +43,12 @@ export default class implements classDeployInterface {
 		}
 	}
 
-	async onExecute({ context }: classOnExecuteInterface) {
+	async onExecute({ context }: Parameters<classDeployInterface['onExecute']>[0]) {
 		// crear archivo zip a partir de carpeta context.path
 		if (this.properties.isZip.value) {
 			const chunks: Buffer[] = []
 			// Create archiver instance
-			const output = fs.createWriteStream(`${this.properties.path.value}/${context.flow}.zip`)
+			const output = fs.createWriteStream(`${this.properties.path.value}/${context.info.uid}.zip`)
 			const archive = archiver('zip', {
 				zlib: { level: 9 } // Maximum compression
 			})
@@ -67,7 +74,7 @@ export default class implements classDeployInterface {
 			return
 		}
 		// copiar carpeta context.path a context.path
-		const destinyPath = `${this.properties.path.value}/${context.flow}`
+		const destinyPath = `${this.properties.path.value}/${context.info.uid}`
 		if (!fs.existsSync(destinyPath)) {
 			fs.mkdirSync(destinyPath, { recursive: true })
 		}

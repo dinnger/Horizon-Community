@@ -130,6 +130,7 @@ import Modal from '../Modal.vue'
 import Empty from '../Empty.vue'
 import NodePropertyInput from '../NodeProperties/NodePropertyInput.vue'
 import { toast } from 'vue-sonner'
+import { getClientCredentialContext } from '@/context'
 
 const serverUrl = import.meta.env.VITE_SERVER_URL
 
@@ -169,10 +170,10 @@ const nextStep = async () => {
     step.value = 3
     try {
       const credentialsScriptUrl = `${serverUrl}/api/external/nodes/credentials/${encodeURIComponent(selectedNode.value.key)}`
-      const credentialsModule = await import(credentialsScriptUrl)
+      const credentialsModule = await import(/* @vite-ignore */ credentialsScriptUrl)
       const onUpdateCredentialFunction = credentialsModule.onUpdateCredential
       if (typeof onUpdateCredentialFunction === 'function') {
-        fnOnUpdateCredential = (properties: any) => { onUpdateCredentialFunction({ properties, context: { createWebhookCallback: () => new Date() } }) }
+        fnOnUpdateCredential = (properties: any) => { onUpdateCredentialFunction({ properties, context: getClientCredentialContext() }) }
         fnOnUpdateCredential(credentialsPropertiesNode.value)
       } else {
         console.warn('El script onUpdateCredential no exporta una función ejecutable')

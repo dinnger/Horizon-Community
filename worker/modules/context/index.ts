@@ -1,4 +1,4 @@
-import type { IContextWorkerInterface } from '@shared/interfaces'
+import type { IWorkerContext } from '@shared/interfaces'
 import type { Worker } from '@worker/worker.js'
 
 export class ContextModule {
@@ -9,7 +9,7 @@ export class ContextModule {
 		this.el = el
 	}
 
-	getContext(): IContextWorkerInterface {
+	getContext(): IWorkerContext {
 		return {
 			info: this.el.flow.info,
 			properties: this.el.flow.properties,

@@ -1,6 +1,6 @@
 import type { IProjectTransportConfigByType, IWorkflowInfo, IWorkflowProperties } from './standardized'
 
-export interface IContextWorkerInterface {
+export interface IWorkerContext {
 	project?: IProjectTransportConfigByType
 	info: IWorkflowInfo
 	properties: IWorkflowProperties
@@ -15,7 +15,17 @@ export interface IContextWorkerInterface {
 	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
 }
 
-export interface IContextClientInterface {
+export interface IWorkerDeployContext {
+	project?: IProjectTransportConfigByType
+	info: IWorkflowInfo
+	path: string
+	properties: IWorkflowProperties
+	getEnvironment: (name: string) => any
+	getSecrets: (name: string) => any
+	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
+}
+
+export interface IClientContext {
 	project?: IProjectTransportConfigByType
 	info: IWorkflowInfo
 	properties: IWorkflowProperties
@@ -25,6 +35,13 @@ export interface IContextClientInterface {
 		type: string
 		meta?: object
 	} | null
+	getEnvironment: (name: string) => any
+	getSecrets: (name: string) => any
+	createWebhookCallback?: () => Promise<string>
+	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
+}
+
+export interface IClientCredentialContext {
 	getEnvironment: (name: string) => any
 	getSecrets: (name: string) => any
 	createWebhookCallback?: () => Promise<string>

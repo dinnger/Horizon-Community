@@ -1,4 +1,4 @@
-import type { IContextWorkerInterface } from '@shared/interfaces'
+import type { IWorkerContext } from '@shared/interfaces'
 import type { INodeCanvasAdd } from '@canvas/interfaz/node.interface.migrated'
 import type { IStatsAnimations, IPanelConsole, IPanelTrace, WorkflowData } from '@/types/canvas'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
@@ -34,7 +34,7 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const showDeploymentSelector = ref(false)
 	const autoDeploymentInfo = ref<{ workflowName: string; deploymentName: string } | null>(null)
 	const actions = ref<IUseCanvasActionsType | undefined>()
-	const context = ref<Omit<IContextWorkerInterface, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
+	const context = ref<Omit<IWorkerContext, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
 
 	const canvasInstance = ref<Canvas | undefined>()
 

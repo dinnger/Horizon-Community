@@ -49,6 +49,7 @@ import NodeCredentialsSection from './NodeProperties/NodeCredentialsSection.vue'
 import NodeMetaSection from './NodeProperties/NodeMetaSection.vue'
 import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
+import { getClientContext } from '@/context'
 
 interface Props {
   canvasComposable: IUseCanvasType
@@ -205,26 +206,16 @@ const importNodeOnCreate = async () => {
     const serverUrl = import.meta.env.VITE_SERVER_URL
     const propertiesScriptUrl = `${serverUrl}/api/external/nodes/properties/${encodeURIComponent(nodeType)}`
 
-    // Crear un contexto mock para las funciones
-    const mockContext = {
-      ...props.canvasComposable.context.value,
-      getEnvironment: (key: string) => {
-        const envMap: Record<string, string> = {
-          serverUrl: import.meta.env.VITE_SERVER_URL || '',
-          baseUrl: '/'
-        }
-        return envMap[key] || ''
-      }
-    }
 
     // Importar script de propiedades
     try {
-      const propertiesModule = await import(propertiesScriptUrl)
+
+      const propertiesModule = await import(/* @vite-ignore */  propertiesScriptUrl)
       const onUpdateFunction = propertiesModule.onUpdateProperties
 
       if (typeof onUpdateFunction === 'function') {
         fnOnCreate = (properties: any) => {
-          onUpdateFunction({ properties, context: mockContext })
+          onUpdateFunction({ properties, context: getClientContext(props.canvasComposable.context.value) })
         }
       } else {
         console.warn('El script onUpdateProperties no exporta una función ejecutable')
