@@ -206,25 +206,9 @@ const importNodeOnCreate = async () => {
 
     // Construir las URLs del endpoint REST
     const serverUrl = import.meta.env.VITE_SERVER_URL
-    const validateUrl = `${serverUrl}/api/nodes/${socketId}/${encodeURIComponent(nodeType)}/validate`
-    const scriptUrl = `${serverUrl}/api/nodes/${socketId}/${encodeURIComponent(nodeType)}`
+    const scriptUrl = `${serverUrl}/api/external/nodes/${encodeURIComponent(nodeType)}`
 
-    // Primero validar que tenemos acceso al script
-    const validateResponse = await fetch(validateUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
 
-    if (!validateResponse.ok) {
-      if (validateResponse.status === 404) {
-        console.log(`No se encontró script onCreate para el tipo de nodo: ${nodeType}`)
-      } else if (validateResponse.status === 401) {
-        console.log('Socket no autenticado o inactivo')
-      }
-      return
-    }
     // Crear un contexto mock para la función onCreate
     const mockContext = {
       ...props.canvasComposable.context.value,
@@ -237,7 +221,7 @@ const importNodeOnCreate = async () => {
       }
     }
     const module = await import(scriptUrl)
-    const onUpdateFunction = module.onUpdate
+    const onUpdateFunction = module.onUpdateProperties
 
     // Ejecutar la función con las propiedades actuales y el contexto mock
     if (typeof onUpdateFunction === 'function') {

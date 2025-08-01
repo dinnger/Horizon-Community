@@ -23,5 +23,6 @@ export interface IWorkflowExecutionContextInterface {
 	} | null
 	getEnvironment: (name: string) => any
 	getSecrets: (name: string) => any
+	createWebhookCallback: () => Promise<string>
 	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
 }

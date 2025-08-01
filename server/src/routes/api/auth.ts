@@ -6,9 +6,6 @@ import { setupAuthRoutes } from '../socket/auth.js'
 const router = express.Router()
 
 export default function ({ app, server }: { app: any; server: any }) {
-	app.use(passport.initialize())
-	app.use(passport.session())
-
 	passport.serializeUser((user, done) => {
 		done(null, user)
 	})

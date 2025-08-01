@@ -30,7 +30,8 @@ for (const file of files) {
 
 		// Guardar la función onUpdate
 		if (data.onUpdateProperties) {
-			nodeUpdateProperties[type] = `export ${data.onUpdateProperties.toString().replace('onUpdate({', 'function onUpdate({')}`
+			nodeUpdateProperties[type] =
+				`export ${data.onUpdateProperties.toString().replace('onUpdateProperties({', 'function onUpdateProperties({')}`
 		}
 
 		// Guardar la función onDeploy
