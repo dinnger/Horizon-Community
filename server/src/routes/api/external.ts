@@ -20,7 +20,7 @@ export default function ({ app, server }: { app: any; server: any }) {
 	 * @param {string} nodeType - The type of node to get onCreate script for
 	 * @returns {string} JavaScript code for the onCreate script
 	 */
-	router.get('/nodes/:nodeType', (req: any, res: any) => {
+	router.get('/nodes/properties/:nodeType', (req: any, res: any) => {
 		try {
 			const { nodeType } = req.params
 			const { userId } = req.session

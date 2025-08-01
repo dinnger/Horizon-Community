@@ -206,7 +206,7 @@ const importNodeOnCreate = async () => {
 
     // Construir las URLs del endpoint REST
     const serverUrl = import.meta.env.VITE_SERVER_URL
-    const scriptUrl = `${serverUrl}/api/external/nodes/${encodeURIComponent(nodeType)}`
+    const scriptUrl = `${serverUrl}/api/external/nodes/properties/${encodeURIComponent(nodeType)}`
 
 
     // Crear un contexto mock para la función onCreate
