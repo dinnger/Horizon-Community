@@ -272,6 +272,14 @@ export const seedDatabase = async () => {
 			},
 			{
 				module: 'storage',
+				action: 'get',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Obtener información de nodos específicos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
 				action: 'create',
 				scope: 'global' as const,
 				priority: 15,
@@ -292,6 +300,23 @@ export const seedDatabase = async () => {
 				scope: 'global' as const,
 				priority: 15,
 				description: 'Eliminar nodos',
+				status: 'active' as const
+			},
+			// Permisos de credenciales
+			{
+				module: 'storage-credentials',
+				action: 'list',
+				scope: 'global' as const,
+				priority: 100,
+				description: 'Ver todos los nodos disponibles',
+				status: 'active' as const
+			},
+			{
+				module: 'storage-credentials',
+				action: 'get',
+				scope: 'global' as const,
+				priority: 100,
+				description: 'Obtener información de credenciales',
 				status: 'active' as const
 			},
 
@@ -543,23 +568,6 @@ export const seedDatabase = async () => {
 				priority: 42,
 				description: 'Ver estadísticas de cola de despliegues en sus workspaces',
 				status: 'active' as const
-			},
-			// Permisos de credenciales
-			{
-				module: 'credentials',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 100,
-				description: 'Ver todos los nodos disponibles',
-				status: 'active' as const
-			},
-			{
-				module: 'credentials',
-				action: 'get',
-				scope: 'global' as const,
-				priority: 100,
-				description: 'Obtener información de credenciales',
-				status: 'active' as const
 			}
 		]
 
@@ -618,6 +626,7 @@ export const seedDatabase = async () => {
 					'workspaces',
 					'projects',
 					'storage',
+					'storage-credentials',
 					'workflows',
 					'executions',
 					'dashboard',
@@ -625,8 +634,7 @@ export const seedDatabase = async () => {
 					'workers',
 					'deployments',
 					'deployment-instances',
-					'deployment-types',
-					'credentials'
+					'deployment-types'
 				].includes(p.module) &&
 				['create', 'list', 'update', 'execute', 'get', 'getVersions', 'search', 'groups', 'info', 'stats', 'dashboard', 'message'].includes(
 					p.action

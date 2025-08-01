@@ -26,9 +26,6 @@ export function useNavigation() {
 			// Home siempre está disponible
 			if (item.path === '/') return true
 
-			// Settings siempre está disponible si el usuario está autenticado
-			if (item.path === '/settings') return true
-
 			// Verificar si el módulo está disponible para el usuario
 			return availableModules.includes(item.requiredModule)
 		})

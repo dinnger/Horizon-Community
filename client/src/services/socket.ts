@@ -10,7 +10,7 @@ import { socketRoles } from './socket/roles.service'
 import { socketNodes } from './socket/nodes.service'
 import { socketDeployments } from './socket/deployments.service'
 import { socketWorkers } from './socket/workers.service'
-import { socketCredentials } from './socket/credentials.service'
+import { socketStorage } from './socket/storage.service'
 
 let socket: Socket | null = null
 
@@ -162,8 +162,8 @@ export const socketService = {
 	deployments: () => socketDeployments(socket),
 	// Workers methods
 	workers: () => socketWorkers(socket),
-	// Credentials methods
-	credentials: () => socketCredentials(socket)
+	// Storage methods
+	storage: () => socketStorage(socket)
 }
 
 export default socketService

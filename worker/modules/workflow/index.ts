@@ -1,6 +1,6 @@
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { Worker } from '../../worker.js'
-import { getNodeClass } from '../../../shared/store/node.store.js'
+import { getNodeInfo } from '../../../shared/store/node.store.js'
 import { v4 as uuidv4 } from 'uuid'
 import type {
 	INodeWorker,
@@ -22,7 +22,7 @@ export class NodeModule {
 	nodesInit: INodeWorker | null = null
 	nodes: { [key: string]: INodeWorker } = {}
 	nodesType = new Map<string, Set<string>>()
-	nodesClass = getNodeClass()
+	nodesClass = getNodeInfo()
 	connections: {
 		[key: string]: {
 			[key: string]: { idNodeDestiny: string; connectorDestinyName: string }[]

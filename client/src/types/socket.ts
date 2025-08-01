@@ -1,223 +1,233 @@
+import type { StatusType } from '@shared/interfaces'
+
 // Socket Response Types
 export interface SocketResponse<T = unknown> {
-	success: boolean;
-	message?: string;
-	data?: T;
+	success: boolean
+	message?: string
+	data?: T
 }
 
 export interface LoginResponse extends SocketResponse {
 	user?: {
-		id: string;
-		email: string;
-		name: string;
-		avatar?: string;
+		id: string
+		email: string
+		name: string
+		avatar?: string
 		role: {
-			id: string;
-			name: string;
-			level: number;
-			description?: string;
-		};
+			id: string
+			name: string
+			level: number
+			description?: string
+		}
 		permissions: {
-			id: string;
-			module: string;
-			action: string;
-			description?: string;
-		}[];
-		settings?: UserSettings;
-	};
+			id: string
+			module: string
+			action: string
+			description?: string
+		}[]
+		settings?: UserSettings
+	}
 }
 
 export interface PermissionCheckResponse extends SocketResponse {
-	hasPermission: boolean;
+	hasPermission: boolean
 }
 
 // Entity Types
 export interface User {
-	id: string;
-	email: string;
-	name: string;
-	avatar?: string;
-	status: "active" | "inactive" | "suspended";
-	lastLoginAt?: Date;
-	role: Role;
-	permissions: Permission[];
-	settings?: UserSettings;
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	email: string
+	name: string
+	avatar?: string
+	status: StatusType
+	lastLoginAt?: Date
+	role: Role
+	permissions: Permission[]
+	settings?: UserSettings
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface Role {
-	id: string;
-	name: string;
-	description?: string;
-	level: number;
-	status: "active" | "inactive";
-	permissions?: Permission[];
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	name: string
+	description?: string
+	level: number
+	status: StatusType
+	permissions?: Permission[]
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface Permission {
-	id: string;
-	module: string;
-	action: string;
-	description?: string;
-	status: "active" | "inactive";
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	module: string
+	action: string
+	description?: string
+	status: StatusType
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface Workspace {
-	id: string;
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	isDefault: boolean;
-	userId?: string;
-	status: "active" | "archived";
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	name: string
+	description?: string
+	color?: string
+	icon?: string
+	isDefault: boolean
+	userId?: string
+	status: StatusType
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface Project {
-	id: string;
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	workspaceId: string;
-	status: "active" | "archived";
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	name: string
+	description?: string
+	color?: string
+	icon?: string
+	workspaceId: string
+	status: StatusType
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface Workflow {
-	id: string;
-	name: string;
-	description?: string;
-	version: string;
-	status:
-		| "draft"
-		| "active"
-		| "inactive"
-		| "running"
-		| "success"
-		| "error"
-		| "archived";
-	nodes: any;
-	connections: any;
-	variables: any;
-	triggers: any;
-	schedule?: string;
-	timeout?: number;
-	retryCount?: number;
-	lastRun?: Date;
-	duration?: string;
-	projectId: string;
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	name: string
+	description?: string
+	version: string
+	status: StatusType
+	nodes: any
+	connections: any
+	variables: any
+	triggers: any
+	schedule?: string
+	timeout?: number
+	retryCount?: number
+	lastRun?: Date
+	duration?: string
+	projectId: string
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface WorkflowExecution {
-	id: string;
-	workflowId: string;
-	status: "running" | "success" | "error" | "cancelled";
-	trigger: "manual" | "schedule" | "webhook" | "api";
-	startTime: Date;
-	endTime?: Date;
-	duration?: string;
-	inputData?: any;
-	outputData?: any;
-	errorMessage?: string;
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	workflowId: string
+	status: StatusType
+	trigger: 'manual' | 'schedule' | 'webhook' | 'api'
+	startTime: Date
+	endTime?: Date
+	duration?: string
+	inputData?: any
+	outputData?: any
+	errorMessage?: string
+	createdAt: Date
+	updatedAt: Date
 }
 
 export interface UserSettings {
-	id: string;
-	userId: string;
-	theme: "light" | "dark" | "system";
-	language: string;
-	timezone: string;
+	id: string
+	userId: string
+	theme: 'light' | 'dark' | 'system'
+	language: string
+	timezone: string
 	notifications: {
-		email: boolean;
-		push: boolean;
-		workflowComplete: boolean;
-		workflowError: boolean;
-	};
+		email: boolean
+		push: boolean
+		workflowComplete: boolean
+		workflowError: boolean
+	}
 	preferences: {
-		autoSave: boolean;
-		showLineNumbers: boolean;
-		wordWrap: boolean;
-	};
-	createdAt: Date;
-	updatedAt: Date;
+		autoSave: boolean
+		showLineNumbers: boolean
+		wordWrap: boolean
+	}
+	createdAt: Date
+	updatedAt: Date
 }
 
 // Socket Event Data Types
 export interface LoginData {
-	email: string;
-	password: string;
+	email: string
+	password: string
 }
 
 export interface PermissionCheckData {
-	userId: string;
-	module: string;
-	action: string;
+	userId: string
+	module: string
+	action: string
 }
 
 export interface WorkspaceCreateData {
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	isDefault?: boolean;
+	name: string
+	description?: string
+	color?: string
+	icon?: string
+	isDefault?: boolean
 }
 
 export interface WorkspaceUpdateData {
-	id: string;
-	name?: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	isDefault?: boolean;
+	id: string
+	name?: string
+	description?: string
+	color?: string
+	icon?: string
+	isDefault?: boolean
 }
 
 export interface ProjectCreateData {
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	workspaceId: string;
+	name: string
+	description?: string
+	color?: string
+	icon?: string
+	workspaceId: string
 }
 
 export interface WorkflowCreateData {
-	name: string;
-	description?: string;
-	projectId: string;
-	nodes?: any;
-	connections?: any;
+	name: string
+	description?: string
+	projectId: string
+	nodes?: any
+	connections?: any
 }
 
 export interface WorkflowExecuteData {
-	workflowId: string;
-	trigger?: "manual" | "schedule" | "webhook" | "api";
+	workflowId: string
+	trigger?: 'manual' | 'schedule' | 'webhook' | 'api'
 }
 
 export interface SettingsUpdateData {
-	theme?: "light" | "dark" | "system";
-	language?: string;
-	timezone?: string;
+	theme?: 'light' | 'dark' | 'system'
+	language?: string
+	timezone?: string
 	notifications?: {
-		email?: boolean;
-		push?: boolean;
-		workflowComplete?: boolean;
-		workflowError?: boolean;
-	};
+		email?: boolean
+		push?: boolean
+		workflowComplete?: boolean
+		workflowError?: boolean
+	}
 	preferences?: {
-		autoSave?: boolean;
-		showLineNumbers?: boolean;
-		wordWrap?: boolean;
-	};
+		autoSave?: boolean
+		showLineNumbers?: boolean
+		wordWrap?: boolean
+	}
+}
+
+export interface SocketData {
+	id: string
+	name: string
+	description?: string
+	type: 'file' | 'credential' | 'other'
+	nodeType: string // Ej: 'local', 'aws', 'gcp', 'azure', etc.
+	data: Blob // Ruta o identificador del recurso
+	metadata?: Record<string, any> // Información adicional (tamaño, mimetype, etc)
+	node: any
+	workspaceId: string
+	status: StatusType
+	createdAt: Date
+	updatedAt: Date
 }

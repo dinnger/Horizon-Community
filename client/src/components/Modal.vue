@@ -6,11 +6,10 @@
 
     <!-- Panel de command palette centrado -->
     <div
-      class="relative w-full max-w-2xl mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+      class="relative w-[80vw] max-w-[1000px] mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] ">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-base-300/50">
         <div class="flex items-center gap-3">
-
           <div>
             <h2 class="text-lg font-bold text-base-content">{{ title }}</h2>
             <p class="text-sm text-base-content/60">{{ description }}</p>
@@ -21,8 +20,9 @@
         </button>
       </div>
 
-      <div
-        :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ? 'grid grid-cols-[150px_minmax(100px,_1fr)]' : ''}`">
+      <div :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ?
+        'flex flex-col md:gap-3 md:flex-row md:[&>*:first-child]:basis-[290px] md:[&>*:first-child]:border-r-2 md:[&>*:first-child]:border-base-200  md:[&>*:first-child]:shrink-0 md:[&>*:last-child]:flex-1 md:[&>*]:overflow-auto [&>*]:p-2' :
+        'p-2'}`">
         <slot />
       </div>
 
@@ -68,41 +68,6 @@ const hidePanel = () => {
 </script>
 
 <style scoped>
-/* Animaciones de entrada */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-in {
-  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-.slide-in-from-bottom-4 {
-  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Efecto de vidrio mejorado */
 .bg-base-100\/95 {
   background-color: hsl(var(--b1) / 0.95);
@@ -137,12 +102,6 @@ const hidePanel = () => {
   box-shadow: 0 0 0 2px hsl(var(--p) / 0.2);
 }
 
-/* Mejores transiciones */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
-}
 
 /* Hover personalizado para preservar las animaciones */
 .hover\:scale-\[1\.02\]:hover {

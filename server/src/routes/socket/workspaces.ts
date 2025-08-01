@@ -8,16 +8,14 @@ export const setupWorkspaceRoutes = {
 			const { userId = socket.userId } = data
 
 			// Users can only see their own workspaces unless they have global scope
-			const targetUserId = socket.user?.role?.name === 'SuperAdmin' ? userId : socket.userId
 
 			const workspaces = await Workspace.findAll({
-				where: { userId: targetUserId, status: 'active' },
+				where: { userId, status: 'active' },
 				order: [
 					['isDefault', 'DESC'],
 					['createdAt', 'ASC']
 				]
 			})
-
 			callback({ success: true, workspaces })
 		} catch (error) {
 			console.error('Error listando workspaces:', error)

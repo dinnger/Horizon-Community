@@ -1,6 +1,7 @@
 import type { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
 import type { User, Role, Permission } from '../../models/index.js'
+import NodeCache from 'node-cache'
 import { envs } from '../../config/envs.js'
 import { setupAuthRoutes } from './auth.js'
 import { setupWorkspaceRoutes } from './workspaces.js'
@@ -18,8 +19,7 @@ import { setupDeploymentRoutes } from './deployments.js'
 import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
 import { setupSubscribersRoutes } from './subscribers.js'
-import NodeCache from 'node-cache'
-import { setupCredentialsRoutes } from './credentials.js'
+import { setupStorageRoutes } from './storage.js'
 
 export interface AuthenticatedSocket extends Socket {
 	userId?: string
@@ -47,7 +47,7 @@ export const serverRouter = {
 	...setupDeploymentTypesRoutes,
 	...setupDeploymentInstancesRoutes,
 	...setupSubscribersRoutes,
-	...setupCredentialsRoutes
+	...setupStorageRoutes
 } as const
 
 export const serverListeners = [setupWorkersListeners]
@@ -63,10 +63,10 @@ export type EventRouter = <T extends ServerRouterEvents>(
 	callback: (data: { success: boolean } & Record<string, any>) => void
 ) => void
 
-export interface SocketData {
+export interface SocketData<T = any> {
 	io: Server
 	socket: Required<AuthenticatedSocket>
-	data: any
+	data: T
 	callback: (data: { success: boolean } & Record<string, any>) => void
 	eventRouter: EventRouter
 }

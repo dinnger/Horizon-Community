@@ -24,8 +24,8 @@
         <table class="table">
           <thead>
             <tr>
+              <th>Nodo</th>
               <th>Nombre</th>
-              <th>Tipo</th>
               <th>Fecha</th>
               <th class="w-[120px]">Acciones</th>
             </tr>
@@ -33,18 +33,16 @@
           <tbody>
             <tr v-for="item in items" :key="item.id" class="hover cursor-pointer">
               <td>
+                <span class="material-icons">{{ item.node?.icon }} </span>
+                {{ item.node?.name || 'N/A' }}
+              </td>
+              <td>
                 <div class="flex items-center space-x-3">
-                  <div :class="['w-3 h-3 rounded-full', item.type === 'credencial' ? 'bg-primary' : 'bg-secondary']">
-                  </div>
+
                   <div>
                     <div class="font-bold">{{ item.name }}</div>
                     <div class="text-sm opacity-50">{{ item.description }}</div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <div :class="['badge', item.type === 'credencial' ? 'badge-primary' : 'badge-secondary']">
-                  {{ item.type }}
                 </div>
               </td>
               <td>{{ item.date }}</td>
@@ -64,16 +62,31 @@
 </template>
 
 <script setup lang="ts">
-import { useCredentialsComposable } from '@/composables/useCredentiasl.composable';
 import { defineProps, computed, ref, onMounted } from 'vue'
 import StorageCredentialsModal from './StorageCredentialsModal.vue';
-const items = ref<{ id: string; name: string; description: string; type: string; date: string }[]>([])
-items.value = [
-  { id: '1', name: 'API Key Producción 123', description: 'Clave para el entorno producción', type: 'credencial', date: '2024-06-09' },
-  { id: '3', name: 'Token GitHub', description: 'Acceso a repositorios', type: 'credencial', date: '2024-06-07' },
-]
+import { useStorageComposable } from '@/composables/useStorage.composable';
+const items = ref<{ node: any, id: string; name: string; description: string; date: string }[]>([])
 
-const useCredentials = useCredentialsComposable()
+
+
+const useStorage = useStorageComposable()
+
+
+onMounted(() => {
+  useStorage.getStorages({ type: 'credential' }).then((response) => {
+    console.log('Storage items fetched:', response)
+    items.value = response.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      date: new Date(item.createdAt).toLocaleDateString('es-ES'),
+      node: item.node || null
+    }))
+  }).catch(error => {
+    console.error('Error fetching storage items:', error)
+  })
+  // Fetch initial data or perform setup actions
+})
 
 
 </script>

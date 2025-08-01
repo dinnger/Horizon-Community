@@ -1,42 +1,36 @@
-import { DataTypes, Model, type Optional } from "sequelize";
-import { sequelize } from "../config/database.js";
-import User from "./User.js";
+import { DataTypes, Model, type Optional } from 'sequelize'
+import { sequelize } from '../config/database.js'
+import User from './User.js'
+import type { StatusType } from '@shared/interfaces/status.interface.js'
 
 export interface WorkspaceAttributes {
-	id: string;
-	name: string;
-	description?: string;
-	color: string;
-	icon: string;
-	userId: string;
-	isDefault: boolean;
-	status: "active" | "inactive" | "archived";
-	createdAt: Date;
-	updatedAt: Date;
+	id: string
+	name: string
+	description?: string
+	color: string
+	icon: string
+	userId: string
+	isDefault: boolean
+	status: StatusType
+	createdAt: Date
+	updatedAt: Date
 }
 
-export interface WorkspaceCreationAttributes
-	extends Optional<
-		WorkspaceAttributes,
-		"id" | "description" | "createdAt" | "updatedAt"
-	> {}
+export interface WorkspaceCreationAttributes extends Optional<WorkspaceAttributes, 'id' | 'description' | 'createdAt' | 'updatedAt'> {}
 
-export class Workspace
-	extends Model<WorkspaceAttributes, WorkspaceCreationAttributes>
-	implements WorkspaceAttributes
-{
-	public id!: string;
-	public name!: string;
-	public description?: string;
-	public color!: string;
-	public icon!: string;
-	public userId!: string;
-	public isDefault!: boolean;
-	public status!: "active" | "inactive" | "archived";
+export class Workspace extends Model<WorkspaceAttributes, WorkspaceCreationAttributes> implements WorkspaceAttributes {
+	public id!: string
+	public name!: string
+	public description?: string
+	public color!: string
+	public icon!: string
+	public userId!: string
+	public isDefault!: boolean
+	public status!: StatusType
 
 	// timestamps!
-	public readonly createdAt!: Date;
-	public readonly updatedAt!: Date;
+	public readonly createdAt!: Date
+	public readonly updatedAt!: Date
 }
 
 Workspace.init(
@@ -44,77 +38,77 @@ Workspace.init(
 		id: {
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
-			primaryKey: true,
+			primaryKey: true
 		},
 		name: {
 			type: DataTypes.STRING,
-			allowNull: false,
+			allowNull: false
 		},
 		description: {
 			type: DataTypes.TEXT,
-			allowNull: true,
+			allowNull: true
 		},
 		color: {
 			type: DataTypes.STRING,
 			allowNull: false,
-			defaultValue: "#3b82f6",
+			defaultValue: '#3b82f6'
 		},
 		icon: {
 			type: DataTypes.STRING,
 			allowNull: false,
-			defaultValue: "mdi-briefcase",
+			defaultValue: 'mdi-briefcase'
 		},
 		userId: {
 			type: DataTypes.UUID,
 			allowNull: false,
 			references: {
 				model: User,
-				key: "id",
+				key: 'id'
 			},
-			onUpdate: "CASCADE",
-			onDelete: "CASCADE",
+			onUpdate: 'CASCADE',
+			onDelete: 'CASCADE'
 		},
 		isDefault: {
 			type: DataTypes.BOOLEAN,
 			allowNull: false,
-			defaultValue: false,
+			defaultValue: false
 		},
 		status: {
-			type: DataTypes.ENUM("active", "inactive", "archived"),
+			type: DataTypes.ENUM('active', 'inactive', 'archived'),
 			allowNull: false,
-			defaultValue: "active",
+			defaultValue: 'active'
 		},
 		createdAt: {
 			type: DataTypes.DATE,
 			allowNull: false,
-			defaultValue: DataTypes.NOW,
+			defaultValue: DataTypes.NOW
 		},
 		updatedAt: {
 			type: DataTypes.DATE,
 			allowNull: false,
-			defaultValue: DataTypes.NOW,
-		},
+			defaultValue: DataTypes.NOW
+		}
 	},
 	{
 		sequelize,
-		modelName: "Workspace",
-		tableName: "workspaces",
+		modelName: 'Workspace',
+		tableName: 'workspaces',
 		indexes: [
 			{
-				fields: ["user_id"],
+				fields: ['user_id']
 			},
 			{
-				fields: ["status"],
+				fields: ['status']
 			},
 			{
-				fields: ["user_id", "is_default"],
-			},
-		],
-	},
-);
+				fields: ['user_id', 'is_default']
+			}
+		]
+	}
+)
 
 // Associations
-Workspace.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasMany(Workspace, { foreignKey: "userId", as: "workspaces" });
+Workspace.belongsTo(User, { foreignKey: 'userId', as: 'user' })
+User.hasMany(Workspace, { foreignKey: 'userId', as: 'workspaces' })
 
-export default Workspace;
+export default Workspace

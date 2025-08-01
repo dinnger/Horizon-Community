@@ -8,10 +8,9 @@ export const setupSettingsRoutes = {
 			const { userId = socket.userId } = data
 
 			// Users can only see their own settings unless they are admin
-			const targetUserId = socket.user?.role?.name === 'SuperAdmin' ? userId : socket.userId
 
 			const settings = await UserSettings.findOne({
-				where: { userId: targetUserId }
+				where: { userId }
 			})
 			callback({ success: true, settings })
 		} catch (error) {
@@ -29,10 +28,9 @@ export const setupSettingsRoutes = {
 			const { userId = socket.userId, ...updates } = data
 
 			// Users can only update their own settings unless they are admin
-			const targetUserId = socket.user?.role?.name === 'SuperAdmin' ? userId : socket.userId
 
 			const [settings] = await UserSettings.upsert({
-				userId: targetUserId,
+				userId,
 				...updates
 			})
 

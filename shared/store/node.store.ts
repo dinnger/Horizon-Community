@@ -55,7 +55,7 @@ for (const file of files) {
 	}
 }
 
-export function getNodeClass() {
+export function getNodeInfo() {
 	return Object.fromEntries(
 		Object.entries(nodesClass).map(([key, value]) => [
 			key,

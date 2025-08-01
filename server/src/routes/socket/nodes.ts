@@ -15,13 +15,13 @@
  */
 
 import type { SocketData } from './index.js'
-import { getNodeClass } from '@shared/store/node.store.js'
+import { getNodeInfo } from '@shared/store/node.store.js'
 
 export const setupNodeRoutes = {
 	// List all available node classes - requires read permission
 	'nodes:list': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			callback({ success: true, nodes: nodeClasses })
 		} catch (error) {
 			console.error('Error listando nodos:', error)
@@ -39,7 +39,7 @@ export const setupNodeRoutes = {
 				return
 			}
 
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			const nodeClass = nodeClasses[type]
 
 			if (!nodeClass) {
@@ -58,7 +58,7 @@ export const setupNodeRoutes = {
 	'nodes:list-by-group': async ({ socket, data, callback }: SocketData) => {
 		try {
 			const { group } = data
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 
 			let filteredNodes = nodeClasses
 			if (group) {
@@ -80,7 +80,7 @@ export const setupNodeRoutes = {
 	// Get all node groups - requires read permission
 	'nodes:groups': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			const groups = new Set<string>()
 
 			for (const node of Object.values(nodeClasses)) {
@@ -113,7 +113,7 @@ export const setupNodeRoutes = {
 				return
 			}
 
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			const searchTerm = query.toLowerCase()
 
 			const filteredNodes = Object.fromEntries(
@@ -144,7 +144,7 @@ export const setupNodeRoutes = {
 				return
 			}
 
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			const nodeClass = nodeClasses[type]
 
 			if (!nodeClass) {
@@ -174,7 +174,7 @@ export const setupNodeRoutes = {
 	// Get node statistics - requires read permission
 	'nodes:stats': async ({ socket, data, callback }: SocketData) => {
 		try {
-			const nodeClasses = getNodeClass()
+			const nodeClasses = getNodeInfo()
 			const totalNodes = Object.keys(nodeClasses).length
 
 			const groupStats = new Map<string, number>()
