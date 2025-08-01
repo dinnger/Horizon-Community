@@ -21,7 +21,7 @@
       </div>
 
       <div :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ?
-        'flex flex-col md:gap-3 md:flex-row md:[&>*:first-child]:basis-[290px] md:[&>*:first-child]:border-r-2 md:[&>*:first-child]:border-base-200  md:[&>*:first-child]:shrink-0 md:[&>*:last-child]:flex-1 md:[&>*]:overflow-auto [&>*]:p-2' :
+        'flex flex-col md:gap-3 md:flex-row md:[&>*:first-child]:basis-[240px] md:[&>*:first-child]:bg-base-200  md:[&>*:first-child]:shrink-0 md:[&>*:last-child]:flex-1 md:[&>*]:overflow-auto [&>*]:p-4' :
         'p-2'}`">
         <slot />
       </div>

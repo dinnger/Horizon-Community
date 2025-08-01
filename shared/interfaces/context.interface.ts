@@ -42,8 +42,9 @@ export interface IClientContext {
 }
 
 export interface IClientCredentialContext {
-	getEnvironment: (name: string) => any
-	getSecrets: (name: string) => any
-	createWebhookCallback?: () => Promise<string>
-	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
+	environments: {
+		serverUrl: string
+		baseUrl: string
+		callback: string
+	}
 }

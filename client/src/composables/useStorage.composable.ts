@@ -20,7 +20,7 @@ export function useStorageComposable() {
 		description?: string
 		type: 'file' | 'credential' | 'other'
 		nodeType: string
-		data: string
+		data: Record<string, any>
 		metadata?: Record<string, any>
 	}) => {
 		try {

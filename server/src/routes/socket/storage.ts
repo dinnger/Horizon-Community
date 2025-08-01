@@ -10,7 +10,6 @@ export const setupStorageRoutes = {
 	// Get the properties of a node class - requires read permission
 	'storage-credentials:get': async ({ callback, data }: SocketData) => {
 		const { node } = data as { node: string }
-
 		const nodeInfo = getNodeCredentials(node)
 		if (!nodeInfo) return callback({ success: false, message: 'No se encontró la credencial' })
 		const credentials = 'credentials' in nodeInfo ? nodeInfo.credentials : undefined

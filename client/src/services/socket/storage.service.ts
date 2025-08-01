@@ -55,7 +55,7 @@ export function socketStorage(socket: Socket | null) {
 			description?: string
 			type: 'file' | 'credential' | 'other'
 			nodeType: string
-			data: string
+			data: Record<string, any>
 			metadata?: Record<string, any>
 		}): Promise<any> {
 			return new Promise((resolve, reject) => {

@@ -2,6 +2,7 @@ import type {
 	IClassNode,
 	classOnCredential,
 	classOnExecuteInterface,
+	classOnUpdateCredentialInterface,
 	classOnUpdateInterface,
 	infoInterface
 } from '@shared/interfaces/class.interface.js'
@@ -171,10 +172,11 @@ export default class implements IClassNode<IProperties, ICredentials> {
 			redirectUri: {
 				name: 'Redirect URI',
 				type: 'string',
-				value: 'http://localhost:3000/api/credential/callback',
+				value: '',
 				pattern: new RegExp(/^(https?:\/\/)([^\s$.?#].[^\s]*)$/).toString(),
 				patternHint: 'Debe ser una URL válida (http o https)',
 				description: 'URI de redirección para la autenticación',
+				disabled: true,
 				required: true
 			}
 		}
@@ -402,10 +404,8 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	async onUpdateCredential({ properties, context }: classOnUpdateInterface<ICredentials>) {
-		if (context.createWebhookCallback) {
-			properties.redirectUri.value = await context.createWebhookCallback()
-		}
+	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface<ICredentials>) {
+		properties.redirectUri.value = context.environments.callback
 	}
 
 	async onCredential({ client, dependency }: classOnCredential) {

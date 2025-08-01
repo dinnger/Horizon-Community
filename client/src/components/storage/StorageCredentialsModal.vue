@@ -5,54 +5,54 @@
         two-panels>
 
         <div>
-          <div class="bg-base-300 p-5 rounded-xl border-primary border-1 mb-2" v-if="step === 3">
-            <div class="text-lg">
-              Propiedades
+          <!-- Paso 1: Selección de credenciales -->
+          <div class="bg-base-300 p-5 rounded-xl border-primary border-1" v-if="step === 1">
+            <div>
+              Selección de credencial
             </div>
-            <p class="text-sm opacity-40 leading-4">Proporciona las propiedades de la credencial seleccionada.</p>
+            <p class="text-sm opacity-40 leading-[13px]">Selecciona una credencial del listado disponible.</p>
           </div>
 
+          <!-- Paso 2: Información de la credencial -->
+          <div class="bg-base-300 p-5 rounded-xl mb-2" v-if="step > 1 && selectedNode">
+            <div class="flex">
+              <div class="material-icons mr-2 text-white">
+                {{ selectedNode.icon }}
+              </div>{{ selectedNode.name }}
+            </div>
+            <p class="text-[12px] opacity-40 leading-[13px]">{{ selectedNode.desc }}</p>
+          </div>
+
+          <!-- Paso 3: Información de la credencial -->
+          <div class="bg-base-300 p-5 rounded-xl border-primary border-1 mb-2" v-if="step === 2">
+            <div class="">
+              Información básica
+            </div>
+            <p class="text-[12px] opacity-40 leading-[13px]">Proporciona la información de la credencial seleccionada.
+            </p>
+          </div>
+
+          <!-- Paso 4: Resumen de la credencial -->
           <div class=" bg-base-300 p-5 rounded-xl mb-2" v-if="step === 3">
-            <div class="text-lg">
+            <div>
               Credencial
             </div>
-            Nombre:<br />
-            <input type="text" :value="newItem.name" class="input input-bordered w-full mb-2"
-              placeholder="Nombre de la credencial" disabled />
-            Descripción:
-            <textarea name="" class="textarea textarea-bordered w-full resize-none"
-              placeholder="Descripción de la credencial" rows="3" disabled>{{ newItem.description }}</textarea>
-          </div>
-
-          <div class="bg-base-300 p-5 rounded-xl border-primary border-1 mb-2" v-if="step === 2">
-            <div class="text-lg">
-              Información de la credencial
+            <div class="opacity-80 text-[12px] ">
+              <div class="text-primary">Nombre:</div>
+              {{ newItem.name }}
+              <div class="text-primary">Descripción:</div>
+              {{ newItem.description }}
             </div>
-            <p class="text-sm opacity-40 leading-4">Proporciona la información de la credencial seleccionada.</p>
           </div>
 
-
-          <div class="bg-base-300 p-5 rounded-xl border-primary border-1" v-if="step === 1">
-            <h3 class="card-title ">
-              Selección de credencial
-            </h3>
-            <p class="text-sm opacity-40">Selecciona una credencial del listado disponible.</p>
-          </div>
-
-          <div class="bg-base-300 p-5 rounded-xl" v-if="step > 1 && selectedNode">
-            <div class="flex gap-2">
-              <div class="material-icons text-4xl text-white">
-                {{ selectedNode.icon }}
-              </div>
-              <div>
-                <div class="text-lg">{{ selectedNode.name }}</div>
-                <p class="text-sm opacity-40 leading-4">{{ selectedNode.desc }}</p>
-              </div>
+          <!-- Paso 5: Proporcionar propiedades -->
+          <div class="bg-base-300 p-5 rounded-xl border-primary border-1 mb-2" v-if="step === 3">
+            <div>
+              Propiedades
             </div>
-            <span class="mdi mdi-close absolute top-3 right-3 cursor-pointer" @click="clearSelectedNode"></span>
+            <p class="text-[12px] opacity-40 leading-[13px]">Proporciona las propiedades de la credencial seleccionada.
+            </p>
           </div>
-
-
         </div>
 
         <!-- Paso 2: Selección de credenciales -->
@@ -62,7 +62,9 @@
               Selección de credencial
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 ">
-              <div v-for="node in nodesList" :key="node.name" class="btn  bg-base-300  h-18 " @click="selectNode(node)">
+              <div v-for="node in nodesList" :key="node.name"
+                class="hover:bg-base-300 bg-base-100 border-2 border-base-200 h-18 flex justify-center text-center items-center rounded-lg cursor-pointer"
+                @click="selectNode(node)">
                 <div>
                   <div class="material-icons text-2xl" :style="{ color: node.color }">{{ node.icon }}</div>
                   <div class="font-medium">{{ node.name }}</div>
@@ -107,8 +109,9 @@
 
         <template #actions>
           <button type="button" @click="close" class="btn btn-outline mr-2">Cancelar</button>
-          <button type="button" v-if="step >= 2" @click="back" class="btn btn-secondary mr-2">Volver</button>
-          <button type="submit" v-if="step === 2" class="btn btn-primary">Siguiente</button>
+          <button type="button" v-if="step >= 2" @click="back"
+            class="btn btn-secondary btn-outline mr-2">Volver</button>
+          <button type="submit" v-if="step === 2" class="btn btn-primary btn-outline">Siguiente</button>
           <button type="submit" v-if="step === 3" class="btn btn-primary btn-outline"
             :disabled="!selectedNode">Agregar</button>
         </template>
@@ -182,13 +185,13 @@ const nextStep = async () => {
       console.warn('No se pudo cargar el script onUpdateCredential:', error)
     }
   } else if (step.value === 3) {
-    if (!selectedNode.value?.key) return
+    if (!selectedNode.value?.key || !credentialsPropertiesNode.value) return
     useStorageComposable().createStorage({
       name: newItem.value.name,
       description: newItem.value.description,
       type: 'credential',
       nodeType: selectedNode.value.key,
-      data: credentialsPropertiesNode.value ? JSON.stringify(credentialsPropertiesNode.value) : '',
+      data: credentialsPropertiesNode.value,
       metadata: credentialsPropertiesNode.value ? Object.fromEntries(Object.entries(credentialsPropertiesNode.value).map(([k, v]) => [k, v.value])) : {}
     }).then((response) => {
       if (response.success) {
@@ -199,9 +202,7 @@ const nextStep = async () => {
         console.error('Error adding item:', response.message)
       }
     })
-
   }
-
 }
 
 const selectNode = (node: info) => {

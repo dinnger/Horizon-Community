@@ -19,7 +19,6 @@
 
     <!-- String input -->
     <template v-else-if="property.type === 'string'" class="form-control">
-      {{ validPattern(property.pattern) }}
       <label class="input input-bordered  w-full" :class="{ 'validator': property.pattern }">
         <input v-model="localValue" type="text" :placeholder="property.placeholder"
           :disabled="property.disabled || isReadOnly" :pattern="validPattern(property.pattern)"

@@ -1,7 +1,7 @@
 import type { Express } from 'express'
 import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
-import type { IClientContext, IWorkerContext } from './context.interface.js'
+import type { IClientContext, IClientCredentialContext, IWorkerContext } from './context.interface.js'
 import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
 import type { INodeMeta } from './standardized.js'
 
@@ -27,6 +27,11 @@ export interface classCredentialInterface {
 
 export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesType> {
 	context: IClientContext
+	properties: T
+}
+
+export interface classOnUpdateCredentialInterface<T extends IPropertiesType = IPropertiesType> {
+	context: IClientCredentialContext
 	properties: T
 }
 
@@ -161,7 +166,7 @@ export interface IClassNode<P extends IPropertiesType = IPropertiesType, C exten
 	 * Lifecycle method called when the node is updated
 	 * @param o - Execution context and parameters
 	 */
-	onUpdateCredential?(o: classOnUpdateInterface<C>): void
+	onUpdateCredential?(o: classOnUpdateCredentialInterface<C>): void
 
 	/**
 	 * Lifecycle method called for credential handling
