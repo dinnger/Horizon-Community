@@ -403,7 +403,9 @@ export default class implements IClassNode<IProperties, ICredentials> {
 	}
 
 	async onUpdateCredential({ properties, context }: classOnUpdateInterface<ICredentials>) {
-		properties.redirectUri.value = await context.createWebhookCallback()
+		if (context.createWebhookCallback) {
+			properties.redirectUri.value = await context.createWebhookCallback()
+		}
 	}
 
 	async onCredential({ client, dependency }: classOnCredential) {

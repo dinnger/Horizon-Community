@@ -1,7 +1,7 @@
 import type { Express } from 'express'
 import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
-import type { IWorkflowExecutionContextInterface } from './workflow.execute.interface.js'
+import type { IContextClientInterface, IContextWorkerInterface } from './context.interface.js'
 import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
 import type { INodeMeta } from './standardized.js'
 
@@ -26,7 +26,7 @@ export interface classCredentialInterface {
 }
 
 export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesType> {
-	context: IWorkflowExecutionContextInterface
+	context: IContextClientInterface
 	properties: T
 }
 
@@ -36,7 +36,7 @@ export interface classOnActionsInterface {
 
 export interface classOnExecuteInterface {
 	app: Express
-	context: IWorkflowExecutionContextInterface
+	context: IContextWorkerInterface
 	execute: IWorkflowExecutionInterface
 	logger: {
 		info: (...args: unknown[]) => void

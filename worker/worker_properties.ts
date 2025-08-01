@@ -1,4 +1,4 @@
-import type { IWorkflowExecutionContextInterface } from '@shared/interfaces/workflow.execute.interface.js'
+import type { IContextWorkerInterface } from '@shared/interfaces/context.interface.js'
 import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import type { Worker } from './worker.js'
@@ -16,7 +16,7 @@ export class initProperties {
 	node: INodeWorker
 	nodes: { [key: string]: INodeWorker }
 	input: object
-	context: IWorkflowExecutionContextInterface
+	context: IContextWorkerInterface
 	executeData: Map<string, { data: object; meta?: object; time: number }>
 	regexInit: RegExp
 	currentObject: { [key: string]: any }
@@ -24,25 +24,21 @@ export class initProperties {
 	constructor({
 		el,
 		node,
-		nodes,
 		input,
-		context,
 		executeData,
 		variables = {}
 	}: {
 		el: Worker
 		node: INodeWorker
-		nodes: { [key: string]: INodeWorker }
 		input: object
-		context: IWorkflowExecutionContextInterface
 		executeData: Map<string, { data: object; meta?: object; time: number }>
 		variables?: object
 	}) {
 		this.el = el
 		this.node = node
-		this.nodes = nodes
+		this.nodes = this.el.nodeModule.nodes
 		this.input = input
-		this.context = context
+		this.context = this.el.context
 		this.executeData = executeData
 		this.regexInit = /\{\{((?:(?!\{\{|\}\}).)+)\}\}/g
 		this.currentObject = {}

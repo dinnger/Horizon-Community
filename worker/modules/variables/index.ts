@@ -1,5 +1,4 @@
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
-import type { IWorkflowExecutionProject } from '@shared/interfaces/workflow.execute.interface.js'
 import type { IWorkflow } from '../workflow/index.js'
 import type { Worker } from '../../worker.js'
 import { setSecret } from '../../../shared/store/secret.store.js'
@@ -25,7 +24,6 @@ export class VariableModule {
 	 * @returns {Promise<void>} A promise that resolves when initialization is complete
 	 */
 	async initVariable({ uidFlow }: { uidFlow: string }) {
-		// const projectVariables: IWorkflowExecutionProject = await this.el.communicationModule.server.getWorkflowFromServer(uidFlow)
 		// if (projectVariables && typeof projectVariables === 'object') {
 		// 	try {
 		// 		for (const key of Object.keys(projectVariables.config)) {
@@ -78,9 +76,6 @@ export class VariableModule {
 	async checkWorkflowEnvironment({ flow }: { flow: IWorkflow }) {
 		// Project variables
 		if (flow.project) {
-			// this.el.context.project = {
-			// 	...flow.project
-			// }
 			for (const key of Object.keys(flow.project) as Array<keyof typeof flow.project>) {
 				const projectSection = flow.project[key]
 				if (projectSection && typeof projectSection === 'object') {

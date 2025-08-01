@@ -85,6 +85,4 @@ export default class implements classDeployInterface {
 			}
 		}
 	}
-
-	async onExecute({ context }: classOnExecuteInterface) {}
 }

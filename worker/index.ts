@@ -1,6 +1,4 @@
 import { type MessagePort, workerData, parentPort } from 'node:worker_threads'
-import type { IWorkflowExecutionContextInterface } from '@shared/interfaces/workflow.execute.interface.js'
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { v4 as uuidv4 } from 'uuid'
 import { Worker } from './worker.js'
 import { getArgs } from './shared/functions/utils.js'
@@ -16,7 +14,6 @@ import cluster from 'node:cluster'
 import bodyParser from 'body-parser'
 import fileUpload from 'express-fileupload'
 
-let PATH_FLOW = './data/workflows/'
 let { workflowId, port } = workerData || getArgs()
 const WORKER_ID = workerData?.workerId || process.env.WORKER_ID || uuidv4()
 const IS_DEV = envs.IS_DEV
@@ -37,65 +34,17 @@ const workerStart = async ({
 	uidFlow?: string
 	index?: number
 } = {}) => {
-	// Sanitize flow
-	if (uidFlow?.indexOf('/') > -1) {
-		PATH_FLOW = ''
-	}
-
-	// Load flow
-	const data = fs.readFileSync(uidFlow ? `${PATH_FLOW}${uidFlow}/flow.json` : 'flow.json', 'utf8')
-	if (!data) {
-		return
-	}
-	const flow: IWorkflowFull = JSON.parse(data)
-
 	// ============================================================================
 	// Worker
 	// ============================================================================
 	async function initWorker({ app }: { app: Express }) {
 		try {
-			const context: IWorkflowExecutionContextInterface = {
-				info: flow.info,
-				properties: flow.properties,
-				getEnvironment: (name: string) => flow.environment.find((e) => e === name),
-				getSecrets: (name: string) => flow.secrets.find((s) => s === name),
-				currentNode: null
-			}
-
 			const worker = new Worker({
 				app,
-				context,
 				uidFlow,
 				isDev: IS_DEV,
 				index
 			})
-
-			// Extend worker with server communication
-			// worker.serverComm = serverComm
-
-			// Nodes
-			for (const key of Object.keys(flow.nodes)) {
-				const node = flow.nodes[key]
-				const newNode = worker.nodeModule.addNode({
-					...node,
-					id: key
-				})
-			}
-			for (const key of Object.keys(flow.connections)) {
-				const connection = flow.connections[key as any]
-				worker.nodeModule.addEdge({
-					...connection
-				})
-			}
-
-			// =========================================================================
-			// ENVS
-			// =========================================================================
-			if (IS_DEV) {
-				await worker.variableModule.initVariable({ uidFlow })
-			}
-			await worker.variableModule.checkWorkflowEnvironment({ flow })
-			// =========================================================================
 
 			// Send periodic stats to server
 			// const statsInterval = setInterval(async () => {
@@ -170,7 +119,7 @@ const workerStart = async ({
 	const server = http.createServer(app)
 
 	server.listen(port, async () => {
-		console.log(`[port: ${port}, flow: ${flow.info.uid}, isDev: ${IS_DEV}]`)
+		console.log(`[port: ${port}, flow: ${uidFlow}, isDev: ${IS_DEV}]`)
 		// Indica que el worker se ha iniciado correctamente
 		if (IS_DEV) {
 			parentPort?.postMessage({ type: 'ready', value: 'worker ready' })

@@ -98,24 +98,6 @@ export interface IWorkflowClient extends IWorkflowBase {
 }
 
 /**
- * Interfaz para contexto de ejecución de workflow
- */
-export interface IWorkflowExecutionContext {
-	project?: IProjectBase
-	info: IWorkflowInfo
-	properties: IWorkflowProperties
-	variables?: string[]
-	secrets?: string[]
-	currentNode: {
-		id: string
-		name: string
-		type: string
-		meta?: object
-	} | null
-	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
-}
-
-/**
  * Interfaz para ejecución de workflow
  */
 export interface IWorkflowExecution {
@@ -172,12 +154,6 @@ export interface IWorkflowUpdate extends Partial<Omit<IWorkflowServer, 'id' | 'c
  * @deprecated Usar IWorkflowFull en su lugar
  */
 export interface IWorkflow extends IWorkflowFull {}
-
-/**
- * Interfaz legacy para compatibilidad - será depreciada
- * @deprecated Usar IWorkflowExecutionContext en su lugar
- */
-export interface IWorkflowExecutionContextInterface extends IWorkflowExecutionContext {}
 
 /**
  * Interfaz legacy para compatibilidad - será depreciada

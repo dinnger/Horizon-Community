@@ -22,7 +22,7 @@ class WorkerServerComm {
 	> = new Map()
 
 	constructor(el: Worker) {
-		this.workflowId = el.flow
+		this.workflowId = el.workflowId
 		this.setupMessageHandling()
 	}
 

@@ -86,19 +86,7 @@ export interface IDeploymentQueue {
 import type { IWorkflowFull } from './standardized.js'
 
 import type { IPropertiesType } from './workflow.properties.interface.js'
-
-export interface classOnExecuteInterface {
-	context: {
-		path: string
-		flow: string
-	}
-}
-
-export interface infoInterface {
-	title: string
-	desc: string
-	icon: string
-}
+import type { classOnExecuteInterface, infoInterface } from './index.js'
 
 export interface classDeployInterface {
 	info: infoInterface

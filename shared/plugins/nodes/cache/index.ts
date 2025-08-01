@@ -51,7 +51,7 @@ export default class implements IClassNode<IProperties> {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnUpdateInterface) {
+	async onUpdateProperties() {
 		// No hay configuraciones dinámicas por el momento
 	}
 

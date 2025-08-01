@@ -136,17 +136,10 @@ Workflow.init(
 				// Registrar la creación en el historial
 				try {
 					const { recordCreation } = await import('../services/WorkflowHistoryService.js')
-					await recordCreation(
-						workflow.projectId,
-						workflow.id,
-						undefined, // userId se puede obtener del contexto si está disponible
-						workflow.toJSON(),
-						workflow.version,
-						{
-							userAgent: 'system',
-							action: 'auto-created'
-						}
-					)
+					await recordCreation(workflow.projectId, workflow.id, undefined, workflow.toJSON(), workflow.version, {
+						userAgent: 'system',
+						action: 'auto-created'
+					})
 				} catch (error) {
 					console.error('Error registrando creación en historial:', error)
 				}
@@ -200,17 +193,10 @@ Workflow.init(
 				// Registrar la eliminación en el historial
 				try {
 					const { recordDeletion } = await import('../services/WorkflowHistoryService.js')
-					await recordDeletion(
-						workflow.projectId,
-						workflow.id,
-						undefined, // userId se puede obtener del contexto si está disponible
-						workflow.toJSON(),
-						workflow.version,
-						{
-							userAgent: 'system',
-							action: 'auto-deleted'
-						}
-					)
+					await recordDeletion(workflow.projectId, workflow.id, undefined, workflow.toJSON(), workflow.version, {
+						userAgent: 'system',
+						action: 'auto-deleted'
+					})
 				} catch (error) {
 					console.error('Error registrando eliminación en historial:', error)
 				}

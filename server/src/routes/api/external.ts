@@ -5,7 +5,7 @@
  * These endpoints complement the socket-based node routes with HTTP access.
  */
 import express from 'express'
-import { getNodeOnUpdateProperties } from '@shared/store/node.store.js'
+import { getNodeOnUpdateProperties, getNodeOnUpdateCredential } from '@shared/store/node.store.js'
 
 const router = express.Router()
 
@@ -66,6 +66,67 @@ ${onCreateScript}`
 console.error('Error interno del servidor al cargar el script onCreate');
 export default function() {
 	throw new Error('Error interno del servidor al cargar el script onCreate');
+};
+`)
+		}
+	})
+
+	/**
+	 * Get node onUpdateCredential script as JavaScript directly
+	 * Validates that the socketId is from an active, authenticated connection
+	 * Returns the script as JavaScript content-type for direct import()
+	 *
+	 * @route GET /:socketId/:nodeType/credentials
+	 * @param {string} socketId - The socket ID to validate
+	 * @param {string} nodeType - The type of node to get onUpdateCredential script for
+	 * @returns {string} JavaScript code for the onUpdateCredential script
+	 */
+	router.get('/nodes/credentials/:nodeType', (req: any, res: any) => {
+		try {
+			const { nodeType } = req.params
+			const { userId } = req.session
+
+			// Validate nodeType parameter
+			if (!nodeType) {
+				return res.status(400).json({
+					success: false,
+					message: 'nodeType es requerido'
+				})
+			}
+
+			// Get the onUpdateCredential script for the node type
+			const onUpdateCredentialScript = getNodeOnUpdateCredential(nodeType)
+
+			if (!onUpdateCredentialScript) {
+				return res.status(404).json({
+					success: false,
+					message: `No se encontró script onUpdateCredential para el tipo de nodo: ${nodeType}`
+				})
+			}
+
+			// Set JavaScript content type and return script directly
+			res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+			res.setHeader('Access-Control-Allow-Origin', '*')
+			res.setHeader('Access-Control-Allow-Methods', 'GET')
+			res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+			// Add a comment header for debugging
+			const scriptWithHeader = `// Node onUpdateCredential script for: ${nodeType}
+// User ID: ${userId}
+// Generated: ${new Date().toISOString()}
+
+${onUpdateCredentialScript}`
+
+			return res.send(scriptWithHeader)
+		} catch (error) {
+			console.error('Error getting node onUpdateCredential script:', error)
+			// Even for errors, return as JavaScript with error handling
+			res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+			return res.status(500).send(`
+// Error loading onUpdateCredential script
+console.error('Error interno del servidor al cargar el script onUpdateCredential');
+export default function() {
+	throw new Error('Error interno del servidor al cargar el script onUpdateCredential');
 };
 `)
 		}

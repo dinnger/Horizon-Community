@@ -236,9 +236,7 @@ export class CoreModule {
 		const fnProperties = new initProperties({
 			el: this.el,
 			node,
-			nodes: this.el.nodeModule.nodes,
 			input: inputData,
-			context: this.el.context,
 			executeData
 		})
 		for (const key in classExecute.properties) {

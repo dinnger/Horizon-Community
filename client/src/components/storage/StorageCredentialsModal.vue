@@ -131,6 +131,8 @@ import Empty from '../Empty.vue'
 import NodePropertyInput from '../NodeProperties/NodePropertyInput.vue'
 import { toast } from 'vue-sonner'
 
+const serverUrl = import.meta.env.VITE_SERVER_URL
+
 interface info extends infoInterface {
   key: string
 }
@@ -149,6 +151,8 @@ const newItem = ref({
 const useStore = useStorageComposable()
 const emits = defineEmits(['close', 'addItem'])
 
+let fnOnUpdateCredential: any = null
+
 const back = () => {
   if (step.value === 2) {
     step.value = 1
@@ -158,11 +162,24 @@ const back = () => {
   }
 }
 
-const nextStep = () => {
+const nextStep = async () => {
   if (step.value === 1) {
     step.value = 2
   } else if (step.value === 2 && selectedNode.value) {
     step.value = 3
+    try {
+      const credentialsScriptUrl = `${serverUrl}/api/external/nodes/credentials/${encodeURIComponent(selectedNode.value.key)}`
+      const credentialsModule = await import(credentialsScriptUrl)
+      const onUpdateCredentialFunction = credentialsModule.onUpdateCredential
+      if (typeof onUpdateCredentialFunction === 'function') {
+        fnOnUpdateCredential = (properties: any) => { onUpdateCredentialFunction({ properties, context: { createWebhookCallback: () => new Date() } }) }
+        fnOnUpdateCredential(credentialsPropertiesNode.value)
+      } else {
+        console.warn('El script onUpdateCredential no exporta una función ejecutable')
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar el script onUpdateCredential:', error)
+    }
   } else if (step.value === 3) {
     if (!selectedNode.value?.key) return
     useStorageComposable().createStorage({
@@ -216,6 +233,7 @@ const updateProperty = (key: string, value: any) => {
   if (credentialsPropertiesNode.value) {
     credentialsPropertiesNode.value[key].value = value
   }
+  if (fnOnUpdateCredential) fnOnUpdateCredential(credentialsPropertiesNode.value)
 }
 
 onMounted(() => {

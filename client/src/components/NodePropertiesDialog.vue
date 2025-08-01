@@ -63,7 +63,6 @@ interface Emits {
 }
 
 const nodesLibraryStore = useNodesLibraryStore()
-
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
@@ -200,16 +199,13 @@ const importNodeOnCreate = async () => {
     const socket = socketService.getSocket()
     if (!socket) return console.error('No hay socket conectado para importar nodos')
 
-
-    const socketId = socket.id
     const nodeType = props.nodeData.type
 
     // Construir las URLs del endpoint REST
     const serverUrl = import.meta.env.VITE_SERVER_URL
-    const scriptUrl = `${serverUrl}/api/external/nodes/properties/${encodeURIComponent(nodeType)}`
+    const propertiesScriptUrl = `${serverUrl}/api/external/nodes/properties/${encodeURIComponent(nodeType)}`
 
-
-    // Crear un contexto mock para la función onCreate
+    // Crear un contexto mock para las funciones
     const mockContext = {
       ...props.canvasComposable.context.value,
       getEnvironment: (key: string) => {
@@ -220,20 +216,27 @@ const importNodeOnCreate = async () => {
         return envMap[key] || ''
       }
     }
-    const module = await import(scriptUrl)
-    const onUpdateFunction = module.onUpdateProperties
 
-    // Ejecutar la función con las propiedades actuales y el contexto mock
-    if (typeof onUpdateFunction === 'function') {
-      fnOnCreate = (properties: any) => {
-        onUpdateFunction({ properties, context: mockContext })
+    // Importar script de propiedades
+    try {
+      const propertiesModule = await import(propertiesScriptUrl)
+      const onUpdateFunction = propertiesModule.onUpdateProperties
+
+      if (typeof onUpdateFunction === 'function') {
+        fnOnCreate = (properties: any) => {
+          onUpdateFunction({ properties, context: mockContext })
+        }
+      } else {
+        console.warn('El script onUpdateProperties no exporta una función ejecutable')
       }
-    } else {
-      console.warn('El script onCreate no exporta una función default ejecutable')
+    } catch (error) {
+      console.warn('No se pudo cargar el script onUpdateProperties:', error)
     }
 
+
+
   } catch (error) {
-    console.error('Error de red al importar nodo:', error)
+    console.error('Error de red al importar nodos:', error)
   }
 }
 
