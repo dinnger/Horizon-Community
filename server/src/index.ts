@@ -17,6 +17,13 @@ import fs from 'node:fs'
 import { sessionMiddleware } from './middleware/session.js'
 import passport from 'passport'
 
+declare module 'express-session' {
+	interface SessionData {
+		credentials: any
+		user: any
+	}
+}
+
 const app = express()
 let PORT = envs.PORT || 3001
 

@@ -26,7 +26,7 @@
           <label class="input validator">
             <span class="mdi mdi-key-outline"></span>
             <input v-model="password" type="password" required placeholder="Password" minlength="6"
-              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}"
+              pattern="^[A-Za-z]{5,20}$"
               title=" Contraseña debe contener al menos 6 caracteres, incluyendo números, letras minúsculas y mayúsculas." />
           </label>
           <p class="validator-hint hidden">

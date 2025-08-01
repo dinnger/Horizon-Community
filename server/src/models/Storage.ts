@@ -10,7 +10,7 @@ export interface StorageAttributes {
 	description?: string
 	type: 'file' | 'credential' | 'other'
 	nodeType: string // Ej: 'local', 'aws', 'gcp', 'azure', etc.
-	data: Blob // Ruta o identificador del recurso
+	data: any // Ruta o identificador del recurso
 	metadata?: Record<string, any> // Información adicional (tamaño, mimetype, etc)
 	workspaceId: string
 	status: StatusType

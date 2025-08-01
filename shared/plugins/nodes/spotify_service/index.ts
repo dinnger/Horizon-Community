@@ -408,9 +408,9 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		properties.redirectUri.value = context.environments.callback
 	}
 
-	async onCredential({ client, dependency }: classOnCredential) {
+	async onCredential({ credentials, client, dependency }: classOnCredential<ICredentials>) {
 		const axios = await dependency.getRequire('axios')
-		const { clientId, clientSecret, redirectUri, scope } = this.credentials
+		const { clientId, clientSecret, redirectUri, scope } = credentials
 		// Obtener el token
 		const resp = await client.openUrl({
 			uri: 'https://accounts.spotify.com/authorize',

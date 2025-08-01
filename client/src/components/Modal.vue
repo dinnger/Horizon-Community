@@ -15,9 +15,9 @@
             <p class="text-sm text-base-content/60">{{ description }}</p>
           </div>
         </div>
-        <button @click="hidePanel" class="btn btn-ghost btn-circle btn-sm hover:bg-base-300/50">
+        <label @click="hidePanel" class="btn btn-ghost btn-circle btn-sm hover:bg-base-300/50">
           <span class="mdi mdi-close text-lg"></span>
-        </button>
+        </label>
       </div>
 
       <div :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ?
@@ -43,8 +43,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { useNodesLibraryStore } from '@/stores/nodesLibrary'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 
 const props = defineProps<{
@@ -59,7 +57,6 @@ const emit = defineEmits<{
   nodeSelected: [node: INodeCanvas]
   close: []
 }>()
-const nodesStore = useNodesLibraryStore()
 
 const hidePanel = () => {
   emit('close')

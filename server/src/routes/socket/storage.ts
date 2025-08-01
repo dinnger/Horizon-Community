@@ -1,7 +1,8 @@
-import { getNodeCredentials, getNodeInfo } from '@shared/store/node.store.js'
-import { Storage, type StorageAttributes } from '../../models/index.js'
-import { envs } from '../../config/envs.js'
 import type { SocketData } from './index.js'
+import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
+import { Storage, type StorageAttributes } from '../../models/index.js'
+import { getNodeCredentials, getNodeInfo } from '@shared/store/node.store.js'
+import { onCredentialModule } from '@server/src/modules/context.js'
 
 export const setupStorageRoutes = {
 	// List all available node classes - requires read permission
@@ -63,102 +64,25 @@ export const setupStorageRoutes = {
 		callback,
 		socket,
 		io
-	}: SocketData<Omit<StorageAttributes, 'id' | 'createdAt' | 'updatedAt' | 'status'>>) => {
+	}: SocketData<Omit<StorageAttributes, 'id' | 'data' | 'createdAt' | 'updatedAt' | 'status'> & { data: IPropertiesType }>) => {
 		try {
-			const storageData = { ...data }
-
+			// Convert credential data to string for storage
+			const dataString = JSON.stringify(data.data)
 			// Si es tipo credential, verificar si el nodo tiene onCredential y ejecutarla
 			if (data.type === 'credential' && data.nodeType) {
 				const nodeCredentials = getNodeCredentials(data.nodeType)
 
-				if (nodeCredentials && 'class' in nodeCredentials && typeof nodeCredentials.class === 'function') {
+				if (nodeCredentials && 'fn' in nodeCredentials && typeof nodeCredentials.fn === 'function') {
 					try {
 						// Crear instancia del nodo para obtener credenciales
-						const nodeClass = nodeCredentials.class
-						const nodeInstance = new nodeClass()
-
-						// Primero ejecutar onUpdateCredential si existe para configurar el callback
-						if (nodeInstance.onUpdateCredential) {
-							const credentialContext = {
-								environments: {
-									serverUrl: envs.SERVER_URL,
-									baseUrl: envs.CLIENT_URL,
-									callback: `${envs.CLIENT_URL}/auth/callback`
-								}
-							}
-
-							await nodeInstance.onUpdateCredential({
-								properties: nodeInstance.credentials,
-								context: credentialContext
-							})
-						}
-
-						// Crear cliente real que se comunica con el frontend
-						const realClient = {
-							openUrl: async (options: any) => {
-								return new Promise((resolve, reject) => {
-									// Emitir evento al cliente para abrir URL
-									socket.emit('credential:open-url', options, (response: any) => {
-										if (response.success) {
-											resolve(response)
-										} else {
-											reject(new Error(response.message || 'Error al abrir URL'))
-										}
-									})
-
-									// Timeout de 5 minutos para la respuesta
-									setTimeout(() => {
-										reject(new Error('Timeout: El usuario no completó la autenticación'))
-									}, 300000)
-								})
-							}
-						}
-
-						// Crear dependency real
-						const realDependency = {
-							getRequire: async (moduleName: string) => {
-								try {
-									// Usar dynamic import para ES modules o require para CommonJS
-									if (moduleName === 'axios') {
-										const axios = await import('axios')
-										return axios.default || axios
-									}
-
-									// Para otros módulos, intentar import dinámico primero
-									try {
-										const module = await import(moduleName)
-										return module.default || module
-									} catch {
-										// Fallback a require si import falla
-										return require(moduleName)
-									}
-								} catch (error) {
-									throw new Error(`No se pudo cargar el módulo: ${moduleName}`)
-								}
-							}
-						}
+						const fnOnCredential = nodeCredentials.fn
 
 						// Ejecutar onCredential del nodo
-						const credentialResult = await nodeInstance.onCredential({
-							client: realClient,
-							dependency: realDependency
-						})
+						const credentialResult = await fnOnCredential(onCredentialModule({ socket, credentials: data.data }))
 
 						if (credentialResult?.status && credentialResult?.data) {
-							// Convert credential data to string for storage
-							const credentialDataString = JSON.stringify({
-								...storageData.data,
-								credentialData: credentialResult.data,
-								timestamp: new Date().toISOString()
-							})
-
-							// Guardar los datos de credencial en el storage (cast to any due to model flexibility)
-							storageData.data = credentialDataString as any
 						} else {
-							return callback({
-								success: false,
-								message: 'No se pudieron obtener las credenciales del nodo'
-							})
+							return callback({ success: false, message: 'No se pudieron obtener las credenciales del nodo' })
 						}
 					} catch (credentialError) {
 						console.error('Error ejecutando onCredential:', credentialError)
@@ -168,14 +92,10 @@ export const setupStorageRoutes = {
 						})
 					}
 				} else {
-					return callback({
-						success: false,
-						message: 'El nodo especificado no tiene configuración de credenciales'
-					})
+					return callback({ success: false, message: 'El nodo especificado no tiene configuración de credenciales' })
 				}
 			}
-
-			const storage = await Storage.create(storageData)
+			const storage = await Storage.create({ ...data, data: dataString })
 			callback({ success: true, storage })
 		} catch (error) {
 			console.error('Error creando storage:', error)

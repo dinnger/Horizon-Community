@@ -5,7 +5,6 @@ import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import { getMemoryUsage, getTime } from '../../shared/functions/utils.js'
 import { initProperties } from '../../worker_properties.js'
 import { CoreStats } from './stats.module.js'
-import { CoreDependencies } from './dependency.module.js'
 import { v4 as uid } from 'uuid'
 import { CoreCredential } from './credential.module.js'
 import { CoreDebug } from './debug.module.js'
@@ -380,7 +379,7 @@ export class CoreModule {
 					})
 				}
 			},
-			dependency: CoreDependencies('execute'),
+			dependency: this.el.dependencies,
 			credential: CoreCredential.apply(classExecute)
 		})
 	}

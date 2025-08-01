@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
-import type { classBaseEnvironmentInterface } from '@shared/interfaces/class.interface.js'
+import type { classBaseEnvironmentInterface, classDependencyInterface } from '@shared/interfaces/class.interface.js'
 import type { Express } from 'express'
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { VariableModule } from './modules/variables/index.js'
@@ -20,6 +20,7 @@ export class Worker {
 	workflowId: string
 	flow: IWorkflowFull
 	context: IWorkerContext
+	dependencies: classDependencyInterface
 	environment: classBaseEnvironmentInterface
 
 	index: number | null
@@ -51,6 +52,7 @@ export class Worker {
 		this.index = index
 
 		this.context = new ContextModule(this).getContext()
+		this.dependencies = new ContextModule(this).getDependencies()
 		this.environment = {
 			baseUrl: this.context.properties?.basic?.router || '',
 			serverUrl: envs.SERVER_URL,

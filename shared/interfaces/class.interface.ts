@@ -54,8 +54,9 @@ export interface classOnExecuteInterface {
 	credential: classCredentialInterface
 }
 
-export interface classOnCredential {
+export interface classOnCredential<T extends IPropertiesType = IPropertiesType> {
 	action: string
+	credentials: T
 	dependency: classDependencyInterface
 	client: IClientService
 }

@@ -12,7 +12,7 @@ const files = glob.sync('**/index.js', { cwd: dirPath })
 const nodesClass: { [key: string]: newClassInterface } = {}
 const nodeUpdateProperties: { [key: string]: any } = {}
 const nodeUpdateCredentials: { [key: string]: any } = {}
-const nodeOnCredentials: { [key: string]: { credentials: IPropertiesType; class: any } } = {}
+const nodeOnCredentials: { [key: string]: { credentials: IPropertiesType; fn: any } } = {}
 
 for (const file of files) {
 	if (file && file.replace(/\\/g, '/').indexOf('/_') > -1) continue
@@ -45,7 +45,7 @@ for (const file of files) {
 		if (data.credentials) {
 			nodeOnCredentials[type] = {
 				credentials: data.credentials,
-				class: data.onCredential
+				fn: data.onCredential
 			}
 		}
 
@@ -84,7 +84,7 @@ export function getNodeOnUpdateCredential(node: string): string {
 	return nodeUpdateCredentials[node]
 }
 
-export function getNodeCredentials(node?: string): { properties?: IPropertiesType; class?: any } | { keys: () => any } {
+export function getNodeCredentials(node?: string): { properties?: IPropertiesType; fn?: any } | { keys: () => any } {
 	if (node) {
 		return nodeOnCredentials[node]
 	}

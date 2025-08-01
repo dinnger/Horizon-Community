@@ -196,7 +196,7 @@ const nextStep = async () => {
     }).then((response) => {
       if (response.success) {
         toast.success('Credencial agregada correctamente')
-        close()
+        // close()
       } else {
         toast.error(`Error al agregar la credencial: ${response.message}`)
         console.error('Error adding item:', response.message)

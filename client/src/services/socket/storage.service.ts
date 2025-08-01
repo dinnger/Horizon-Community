@@ -9,71 +9,14 @@ export function socketStorage(socket: Socket | null) {
 
 	// Setup listener for credential URL opening
 	if (socket) {
-		socket.on('credential:open-url', async (options: any, callback: (response: any) => void) => {
-			try {
-				// Open URL in a new window/tab
-				const authWindow = window.open(
-					`${options.uri}?${new URLSearchParams(options.queryParams).toString()}`,
-					'credential-auth',
-					'width=600,height=700,scrollbars=yes,resizable=yes'
-				)
-
-				if (!authWindow) {
-					callback({
-						success: false,
-						message: 'No se pudo abrir la ventana de autenticación. Verifica que no esté bloqueada por el navegador.'
-					})
-					return
-				}
-
-				// Wait for the callback URL (usually contains authorization code)
-				const checkClosed = setInterval(() => {
-					if (authWindow.closed) {
-						clearInterval(checkClosed)
-						callback({
-							success: false,
-							message: 'La ventana de autenticación fue cerrada antes de completar el proceso'
-						})
-					}
-				}, 1000)
-
-				// Listen for postMessage from the auth window
-				const messageListener = (event: MessageEvent) => {
-					if (event.origin !== window.location.origin) return
-
-					if (event.data.type === 'credential-callback') {
-						clearInterval(checkClosed)
-						authWindow.close()
-						window.removeEventListener('message', messageListener)
-
-						callback({
-							success: true,
-							data: event.data.data
-						})
-					}
-				}
-
-				window.addEventListener('message', messageListener)
-
-				// Timeout after 5 minutes
-				setTimeout(() => {
-					clearInterval(checkClosed)
-					if (!authWindow.closed) {
-						authWindow.close()
-					}
-					window.removeEventListener('message', messageListener)
-					callback({
-						success: false,
-						message: 'Timeout: El proceso de autenticación tardó demasiado tiempo'
-					})
-				}, 300000)
-			} catch (error) {
-				console.error('Error opening credential URL:', error)
-				callback({
-					success: false,
-					message: 'Error al abrir la URL de credenciales'
-				})
-			}
+		socket.on('credential:open-url', async (data: { token: string }) => {
+			// Open URL in a new window/tab
+			const serverUrl = import.meta.env.VITE_SERVER_URL
+			window.open(
+				`${serverUrl}/api/external/credentials/open?token=${data.token}`,
+				'credential-auth',
+				'width=600,height=700,scrollbars=yes,resizable=yes'
+			)
 		})
 	}
 
@@ -120,6 +63,7 @@ export function socketStorage(socket: Socket | null) {
 				})
 			})
 		},
+		// Creación de storage
 		createStorage(data: {
 			name: string
 			description?: string
