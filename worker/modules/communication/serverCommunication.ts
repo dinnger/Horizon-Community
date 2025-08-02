@@ -270,7 +270,7 @@ export class ServerCommunication extends WorkerServerComm {
 	 */
 	async getCredentialsFromServer(credentialId: string): Promise<any> {
 		try {
-			return await this.requestFromServer('credentials:get', { id: credentialId })
+			return await this.requestFromServer('storage:get', { id: credentialId })
 		} catch (error) {
 			console.error(`Error getting credentials ${credentialId} from server:`, error)
 			throw error

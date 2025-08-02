@@ -83,7 +83,7 @@ export class NodeModule {
 			if (value.type === 'secret') {
 				this.dependencies.secrets.add({
 					idNode: data.id,
-					name: value.value,
+					value: value.value,
 					type: data.type,
 					secret: value.value
 				})
@@ -93,7 +93,7 @@ export class NodeModule {
 				this.dependencies.credentials.add({
 					idNode: data.id,
 					type: data.type,
-					name: value.value,
+					value: value.value,
 					credentials: Array.isArray(data.credentials) ? data.credentials : []
 				})
 			}

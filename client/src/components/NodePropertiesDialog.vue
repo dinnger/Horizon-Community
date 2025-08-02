@@ -17,7 +17,7 @@
         <!-- Main content -->
         <div class="flex-1 overflow-y-auto p-6">
           <NodePropertiesSection v-if="activeSection === 'properties'" :properties="editableProperties"
-            :is-read-only="props.isReadOnly" @update:property="updateProperty" />
+            :is-read-only="props.isReadOnly" :node-type="props.nodeData?.type" @update:property="updateProperty" />
 
           <NodeCredentialsSection v-else-if="activeSection === 'credentials'" :credentials="editableCredentials"
             :is-read-only="props.isReadOnly" @update:credential="updateCredential" />
@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
-import type { INodePropertiesType } from '@canvas/interfaz/node.properties.interface'
+import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface'
 import { useNodesLibraryStore } from '@/stores'
 import socketService from '@/services/socket'
 
@@ -73,8 +73,8 @@ const activeSection = ref('properties')
 const isSaving = ref(false)
 
 // Estados editables - se inicializan cuando se abre el diálogo
-const editableProperties = ref<INodePropertiesType>({})
-const editableCredentials = ref<INodePropertiesType>({})
+const editableProperties = ref<IPropertiesType>({})
+const editableCredentials = ref<IPropertiesType>({})
 const editableMeta = ref({
   id: '',
   type: '',
@@ -82,9 +82,9 @@ const editableMeta = ref({
 })
 
 // Estados originales para comparar cambios
-const originalProperties = ref<INodePropertiesType>({})
-const tempProperties = ref<INodePropertiesType>({})
-const originalCredentials = ref<INodePropertiesType>({})
+const originalProperties = ref<IPropertiesType>({})
+const tempProperties = ref<IPropertiesType>({})
+const originalCredentials = ref<IPropertiesType>({})
 const originalMeta = ref({
   id: '',
   type: '',
@@ -111,7 +111,7 @@ const sections = computed(() => [
 
 const properties = computed(() => {
   const entries = Object.entries(editableProperties.value)
-    .filter(([_, prop]) => prop.show !== false)
+    .filter(([_, prop]) => (prop as any).show !== false)
   return Object.fromEntries(entries)
 })
 

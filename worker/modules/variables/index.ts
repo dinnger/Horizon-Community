@@ -42,17 +42,17 @@ export class VariableModule {
 		// }
 
 		// Credentials
-		for (const value of this.el.nodeModule.dependencies.credentials.values()) {
-			const { idNode, type, name, credentials } = value
-			const credentialsResult = await this.el.communicationModule.server.getCredentialsFromServer(type)
+		for (const credential of this.el.nodeModule.dependencies.credentials.values()) {
+			const { value } = credential
+			const credentialsResult = await this.el.communicationModule.server.getCredentialsFromServer(value)
 			if (credentialsResult) {
 				const { name, result } = credentialsResult
 				for (const key in result) {
 					process.env[`WFC_${name.toUpperCase()}_${key.toUpperCase()}`] = result[key]
 				}
 				// Cambiar el node para en su meta agregar las credenciales que necesitan
-				if (value.credentials !== Object.keys(result)) {
-					value.credentials = Object.keys(result)
+				if (credential.credentials !== Object.keys(result)) {
+					credential.credentials = Object.keys(result)
 				}
 			}
 		}
@@ -95,15 +95,15 @@ export class VariableModule {
 			if (value) setVariable({ name, value })
 		}
 		// Credentials
-		for (const value of this.el.nodeModule.dependencies.credentials.values()) {
-			const { credentials, name } = value
+		for (const list of this.el.nodeModule.dependencies.credentials.values()) {
+			const { credentials, value } = list
 			// console.log({ value })
 			if (!credentials) continue
 			for (const field of credentials) {
-				const credential = `WFC_${name.toUpperCase()}_${field.toUpperCase()}`
-				const value = process.env[credential]
+				const credential = `WFC_${value.toUpperCase()}_${field.toUpperCase()}`
+				const valueEnv = process.env[credential]
 				console.log(`\x1b[44m Variable \x1b[0m  ${value ? '\x1b[32m\u2713' : '\x1b[33m\u26a0'} ${credential} \x1b[0m`)
-				if (value) setSecret({ name, value })
+				if (valueEnv) setSecret({ name: value, value: valueEnv })
 			}
 		}
 	}

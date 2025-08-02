@@ -6,7 +6,6 @@
     </label>
 
     <!-- Box input -->
-
     <div v-if="property.type === 'box'" class="p-2 border-1 border-base-content/20 rounded-md"
       :class="{ 'input-error': property.required && !property.value }">
       <div v-for="item in property.value" :key="item.label" class="flex flex-col  gap-2">
@@ -16,6 +15,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Credentials -->
+    <template v-if="property.type === 'credential'">
+      <div class="flex gap-2">
+        <select v-model="localValue" class="select select-bordered flex-1" :disabled="property.disabled || isReadOnly"
+          :class="{ 'select-error': property.required && !property.value }">
+          <option value="" disabled>Selecciona una credencial</option>
+          <option v-for="credential in availableCredentials" :key="credential.id" :value="credential.id">
+            {{ credential.name }} - {{ credential.nodeType }}
+          </option>
+        </select>
+        <button @click="refreshCredentials" :disabled="isLoadingCredentials || property.disabled || isReadOnly"
+          class="btn btn-square btn-outline" :class="{ 'loading': isLoadingCredentials }">
+          <svg v-if="!isLoadingCredentials" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+    </template>
 
     <!-- String input -->
     <template v-else-if="property.type === 'string'" class="form-control">
@@ -99,15 +118,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import NodeCodeEditor from './NodeCodeEditor.vue'
 import type { propertiesType } from '@shared/interfaces'
+import socketService from '@/services/socket'
+import { useWorkspaceStore } from '@/stores'
 
 interface Props {
   property: propertiesType
   propertyKey: string
   modelValue: any
   isReadOnly?: boolean
+  nodeType?: string // Nuevo prop para identificar el tipo de nodo
 }
 
 interface Emits {
@@ -116,6 +138,12 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const workspaceStore = useWorkspaceStore()
+
+// Estados para credentials
+const availableCredentials = ref<any[]>([])
+const isLoadingCredentials = ref(false)
 
 const localValue = computed({
   get: () => props.modelValue,
@@ -132,8 +160,66 @@ const validPattern = (pattern?: string) => {
   if (pattern.startsWith('/') && pattern.endsWith('/')) {
     return pattern.slice(1, -1)
   }
-
 }
+
+// Función para cargar credenciales filtradas por tipo de nodo y workspace
+const loadCredentials = async () => {
+  if (props.property.type !== 'credential') return
+
+  isLoadingCredentials.value = true
+  try {
+    const storageService = socketService.storage()
+    const credentials = await storageService.getStorageList({
+      type: 'credential'
+    })
+
+    // Filtrar por tipo de nodo si está especificado
+    let filteredCredentials = credentials
+    if (props.nodeType) {
+      filteredCredentials = credentials.filter((cred: any) =>
+        cred.nodeType === props.nodeType
+      )
+    }
+
+    availableCredentials.value = filteredCredentials.map((cred: any) => ({
+      id: cred.id,
+      name: cred.name,
+      nodeType: cred.nodeType,
+      description: cred.description
+    }))
+  } catch (error) {
+    console.error('Error loading credentials:', error)
+    availableCredentials.value = []
+  } finally {
+    isLoadingCredentials.value = false
+  }
+}
+
+// Función para refrescar credenciales
+const refreshCredentials = async () => {
+  await loadCredentials()
+}
+
+// Cargar credenciales al montar el componente
+onMounted(() => {
+  if (props.property.type === 'credential') {
+    loadCredentials()
+  }
+})
+
+// Observar cambios en el workspace para recargar credenciales
+watch(() => workspaceStore.currentWorkspaceId, () => {
+  if (props.property.type === 'credential') {
+    loadCredentials()
+  }
+})
+
+// Observar cambios en el tipo de nodo
+watch(() => props.nodeType, () => {
+  if (props.property.type === 'credential') {
+    loadCredentials()
+  }
+})
 
 </script>
 

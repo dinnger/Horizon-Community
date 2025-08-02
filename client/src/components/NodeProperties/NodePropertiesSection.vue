@@ -2,19 +2,20 @@
   <div class="space-y-4">
     <h3 class="text-lg font-semibold mb-4">Propiedades</h3>
     <NodePropertyInput v-for="(property, key) in visibleProperties" :key="key" :property="property"
-      :property-key="String(key)" :model-value="property.value" :is-read-only="isReadOnly"
+      :property-key="String(key)" :model-value="property.value" :is-read-only="isReadOnly" :node-type="nodeType"
       @update:model-value="updateProperty(String(key), $event)" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { INodePropertiesType } from '@canvas/interfaz/node.properties.interface'
+import type { propertiesType } from '@shared/interfaces'
 import NodePropertyInput from './NodePropertyInput.vue'
 
 interface Props {
-  properties: INodePropertiesType
+  properties: Record<string, propertiesType>
   isReadOnly?: boolean
+  nodeType?: string
 }
 
 interface Emits {

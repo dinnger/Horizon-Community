@@ -29,13 +29,13 @@ export interface IWorkflowDependencies {
 	secrets: Set<{
 		idNode: string
 		type: string
-		name: string
+		value: string
 		secret: string
 	}>
 	credentials: Set<{
 		idNode: string
 		type: string
-		name: string
+		value: string
 		credentials: string[]
 	}>
 }
