@@ -23,15 +23,12 @@
           <label class="label">
             <span class="label-text font-medium">Contraseña</span>
           </label>
-          <label class="input validator">
+          <label class="input">
             <span class="mdi mdi-key-outline"></span>
-            <input v-model="password" type="password" required placeholder="Password" minlength="6"
-              pattern="^[A-Za-z]{5,20}$"
+            <input v-model="password" type="password" required placeholder="Password" minlength="5" maxlength="20"
               title=" Contraseña debe contener al menos 6 caracteres, incluyendo números, letras minúsculas y mayúsculas." />
           </label>
-          <p class="validator-hint hidden">
-            Contraseña debe contener al menos 6 caracteres, incluyendo números, letras minúsculas y mayúsculas.
-          </p>
+
         </div>
 
         <!-- Login Button -->
