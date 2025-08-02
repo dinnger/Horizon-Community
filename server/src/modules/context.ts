@@ -1,6 +1,6 @@
 import type { classDependencyInterface, classOnCredential, IClientService, IPropertiesType } from '@shared/interfaces/index.js'
 import type { AuthenticatedSocket } from '../routes/socket/index.js'
-import { getSecret, listSecrets } from '../../../shared/store/secret.store.js'
+import { getSecret, listSecrets } from '../../../shared/engine/secret.engine.js'
 import { createRequire } from 'node:module'
 import { encrypt } from '../utils/cryptography.js'
 import paths from 'node:path'
@@ -12,13 +12,7 @@ function clientContext({ socket }: { socket: Required<AuthenticatedSocket> }): I
 		openUrl: async (options) => {
 			return new Promise((resolve, reject) => {
 				// Emitir evento al cliente para abrir URL
-				socket.emit('credential:open-url', { token: encrypt(JSON.stringify(options)) }, (response: any) => {
-					if (response.success) {
-						resolve(response)
-					} else {
-						reject(new Error(response.message || 'Error al abrir URL'))
-					}
-				})
+				socket.emit('credential:open-url', { token: encrypt(JSON.stringify(options)) })
 
 				// Timeout de 5 minutos para la respuesta
 				setTimeout(() => {

@@ -1,8 +1,8 @@
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { IWorkflow } from '../workflow/index.js'
 import type { Worker } from '../../worker.js'
-import { setSecret } from '../../../shared/store/secret.store.js'
-import { setVariable } from '../../../shared/store/variables.store.js'
+import { setSecret } from '../../../shared/engine/secret.engine.js'
+import { setVariable } from '../../../shared/engine/variables.engine.js'
 
 export class VariableModule {
 	el: Worker

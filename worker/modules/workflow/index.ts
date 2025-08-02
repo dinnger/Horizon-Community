@@ -1,6 +1,6 @@
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { Worker } from '../../worker.js'
-import { getNodeInfo } from '../../../shared/store/node.store.js'
+import { getNodeInfo } from '../../../shared/engine/node.engine.js'
 import { v4 as uuidv4 } from 'uuid'
 import type {
 	INodeWorker,

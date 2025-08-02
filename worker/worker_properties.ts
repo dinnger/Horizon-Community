@@ -4,7 +4,7 @@ import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import type { Worker } from './worker.js'
 import { proprietaryFunctions } from './worker_properties_proprietary.js'
 import { createRequire } from 'node:module'
-import { variablesValue } from '../shared/store/variables.store.js'
+import { variablesValue } from '../shared/engine/variables.engine.js'
 const require = createRequire(import.meta.url)
 const Sandbox = require('@nyariv/sandboxjs')
 

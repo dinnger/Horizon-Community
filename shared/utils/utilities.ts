@@ -1,4 +1,4 @@
-import { INodeFull } from "@shared/interfaces/standardized"
+import type { INodeFull } from '@shared/interfaces/standardized'
 
 export function convertJson(json: string | object) {
 	try {

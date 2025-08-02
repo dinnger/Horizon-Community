@@ -15,7 +15,7 @@
  */
 
 import type { SocketData } from './index.js'
-import { getNodeInfo } from '@shared/store/node.store.js'
+import { getNodeInfo } from '@shared/engine/node.engine.js'
 
 export const setupNodeRoutes = {
 	// List all available node classes - requires read permission

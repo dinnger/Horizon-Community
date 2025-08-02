@@ -5,7 +5,7 @@
  * These endpoints complement the socket-based node routes with HTTP access.
  */
 import express from 'express'
-import { getNodeOnUpdateProperties, getNodeOnUpdateCredential } from '@shared/store/node.store.js'
+import { getNodeOnUpdateProperties, getNodeOnUpdateCredential } from '@shared/engine/node.engine.js'
 
 const router = express.Router()
 
@@ -20,7 +20,7 @@ export function ApiExternalNodes({ app, server }: { app: any; server: any }) {
 	 * @param {string} nodeType - The type of node to get onCreate script for
 	 * @returns {string} JavaScript code for the onCreate script
 	 */
-	router.get('properties/:nodeType', (req: any, res: any) => {
+	router.get('/properties/:nodeType', (req: any, res: any) => {
 		try {
 			const { nodeType } = req.params
 			const { userId } = req.session
@@ -81,7 +81,7 @@ export default function() {
 	 * @param {string} nodeType - The type of node to get onUpdateCredential script for
 	 * @returns {string} JavaScript code for the onUpdateCredential script
 	 */
-	router.get('credentials/:nodeType', (req: any, res: any) => {
+	router.get('/credentials/:nodeType', (req: any, res: any) => {
 		try {
 			const { nodeType } = req.params
 			const { userId } = req.session

@@ -1,6 +1,6 @@
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { promises as fs } from 'node:fs'
-import { getNodeClassDependencies } from '@shared/store/node.store.js'
+import { getNodeClassDependencies } from '@shared/engine/node.engine.js'
 import { DeploymentQueue, DeploymentInstanceAssignment, DeploymentInstance, Workflow } from '../models/index.js'
 import path from 'node:path'
 

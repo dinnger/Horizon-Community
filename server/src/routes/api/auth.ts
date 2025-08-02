@@ -1,6 +1,6 @@
 import passport from 'passport'
 import express from 'express'
-import { getAuthList } from '@shared/store/auth.store.js'
+import { getAuthList } from '@shared/engine/auth.engine.js'
 import { setupAuthRoutes } from '../socket/auth.js'
 
 const router = express.Router()

@@ -1,6 +1,6 @@
 import type { classDependencyInterface, IWorkerContext } from '@shared/interfaces'
 import type { Worker } from '@worker/worker.js'
-import { getSecret, listSecrets } from '../../../shared/store/secret.store.js'
+import { getSecret, listSecrets } from '../../../shared/engine/secret.engine.js'
 import { createRequire } from 'node:module'
 import paths from 'node:path'
 const require = createRequire(import.meta.url)

@@ -1,7 +1,7 @@
 import type { SocketData } from './index.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import { Storage, type StorageAttributes } from '../../models/index.js'
-import { getNodeCredentials, getNodeInfo } from '@shared/store/node.store.js'
+import { getNodeCredentials, getNodeInfo } from '@shared/engine/node.engine.js'
 import { onCredentialModule } from '@server/src/modules/context.js'
 
 export const setupStorageRoutes = {
