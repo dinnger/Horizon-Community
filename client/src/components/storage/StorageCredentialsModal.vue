@@ -191,8 +191,7 @@ const nextStep = async () => {
       description: newItem.value.description,
       type: 'credential',
       nodeType: selectedNode.value.key,
-      data: credentialsPropertiesNode.value,
-      metadata: credentialsPropertiesNode.value ? Object.fromEntries(Object.entries(credentialsPropertiesNode.value).map(([k, v]) => [k, v.value])) : {}
+      properties: credentialsPropertiesNode.value,
     }).then((response) => {
       if (response.success) {
         toast.success('Credencial agregada correctamente')

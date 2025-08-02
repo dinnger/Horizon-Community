@@ -9,9 +9,9 @@ export interface StorageAttributes {
 	name: string
 	description?: string
 	type: 'file' | 'credential' | 'other'
-	nodeType: string // Ej: 'local', 'aws', 'gcp', 'azure', etc.
+	nodeType?: string // Ej: 'local', 'aws', 'gcp', 'azure', etc.
+	properties: any // Propiedades adicionales del storage
 	data: any // Ruta o identificador del recurso
-	metadata?: Record<string, any> // Información adicional (tamaño, mimetype, etc)
 	workspaceId: string
 	status: StatusType
 	createdAt: Date
@@ -20,7 +20,7 @@ export interface StorageAttributes {
 
 // Atributos opcionales para la creación
 export interface StorageCreationAttributes
-	extends Optional<StorageAttributes, 'id' | 'description' | 'nodeType' | 'data' | 'metadata' | 'createdAt' | 'updatedAt' | 'status'> {}
+	extends Optional<StorageAttributes, 'id' | 'nodeType' | 'description' | 'createdAt' | 'updatedAt' | 'status'> {}
 
 // Modelo Storage
 class Storage extends Model<StorageAttributes, StorageCreationAttributes> implements StorageAttributes {
@@ -29,8 +29,8 @@ class Storage extends Model<StorageAttributes, StorageCreationAttributes> implem
 	public description?: string
 	public type!: 'file' | 'credential' | 'other'
 	public nodeType!: string
+	public properties!: any
 	public data: any // Puede ser string o Buffer
-	public metadata?: Record<string, any>
 	public workspaceId!: string
 	public status!: StatusType
 	public readonly createdAt!: Date
@@ -64,15 +64,14 @@ Storage.init(
 			type: DataTypes.STRING,
 			allowNull: true
 		},
+		properties: {
+			type: DataTypes.BLOB,
+			allowNull: false
+		},
 		data: {
 			type: DataTypes.BLOB,
-			allowNull: true
+			allowNull: false
 		},
-		metadata: {
-			type: DataTypes.JSON,
-			allowNull: true
-		},
-
 		workspaceId: {
 			type: DataTypes.UUID,
 			allowNull: false,
@@ -109,6 +108,9 @@ Storage.init(
 
 // Hook para encriptar el campo data antes de crear
 Storage.addHook('beforeCreate', (storage: Storage) => {
+	if (storage.properties && typeof storage.properties === 'string') {
+		storage.properties = Buffer.from(encrypt(storage.properties), 'utf-8')
+	}
 	if (storage.data && typeof storage.data === 'string') {
 		storage.data = Buffer.from(encrypt(storage.data), 'utf-8')
 	}

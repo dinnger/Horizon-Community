@@ -4,6 +4,8 @@ import { getSecret, listSecrets } from '../../../shared/engine/secret.engine.js'
 import { createRequire } from 'node:module'
 import { encrypt } from '../utils/cryptography.js'
 import paths from 'node:path'
+import { temporalKeyManager } from '@shared/store/temporalKey.js'
+import { v4 as uuidv4 } from 'uuid'
 
 const require = createRequire(import.meta.url)
 
@@ -11,13 +13,16 @@ function clientContext({ socket }: { socket: Required<AuthenticatedSocket> }): I
 	return {
 		openUrl: async (options) => {
 			return new Promise((resolve, reject) => {
+				const uid = uuidv4()
 				// Emitir evento al cliente para abrir URL
-				socket.emit('credential:open-url', { token: encrypt(JSON.stringify(options)) })
+				temporalKeyManager
+					.set({
+						key: uid
+					})
+					.then((data) => resolve(data))
+					.catch((error) => reject(error))
 
-				// Timeout de 5 minutos para la respuesta
-				setTimeout(() => {
-					reject(new Error('Timeout: El usuario no completó la autenticación'))
-				}, 300000)
+				socket.emit('credential:open-url', { token: encrypt(JSON.stringify({ ...options, uid })) })
 			})
 		}
 	}

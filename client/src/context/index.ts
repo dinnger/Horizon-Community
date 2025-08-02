@@ -21,7 +21,7 @@ export const getClientCredentialContext = (): IClientCredentialContext => {
 		environments: {
 			serverUrl: import.meta.env.VITE_SERVER_URL || '',
 			baseUrl: '/',
-			callback: `${import.meta.env.VITE_SERVER_URL || ''}/api/external/callback/${socketService.getSocket()?.id || ''}`
+			callback: `${import.meta.env.VITE_SERVER_URL || ''}/api/external/credentials/callback`
 		}
 	}
 }

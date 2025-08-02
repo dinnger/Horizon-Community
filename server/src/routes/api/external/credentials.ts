@@ -1,6 +1,7 @@
 import express from 'express'
 import type { Request, Response } from 'express'
 import { decrypt } from '../../../utils/cryptography.js'
+import { temporalKeyManager } from '@shared/store/temporalKey.js'
 
 const router = express.Router()
 
@@ -56,14 +57,18 @@ export function ApiExternalCredentials({ app, server }: { app: any; server: any 
 		const { uid, meta } = req.session.credentials
 		if (!uid || !meta) {
 			res.send('No se encontró el usuario')
+			temporalKeyManager.reject({
+				key: uid,
+				data: { expired: true, message: 'Session expired or not found' }
+			})
 			return
 		}
-		// const callback = clientsCredentialsList.get(uid)
-		// if (!callback) {
-		// 	res.send('No se encontró la credencial')
-		// 	return
-		// }
-		// callback({ data: req.query, meta })
+
+		temporalKeyManager.resolve({
+			key: uid,
+			data: req.query,
+			meta
+		})
 		res.send('<script>window.close();</script > ')
 	})
 	return router

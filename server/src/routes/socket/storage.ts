@@ -66,9 +66,24 @@ export const setupStorageRoutes = {
 		io
 	}: SocketData<Omit<StorageAttributes, 'id' | 'data' | 'createdAt' | 'updatedAt' | 'status'> & { data: IPropertiesType }>) => {
 		try {
-			// Convert credential data to string for storage
-			const dataString = JSON.stringify(data.data)
-			// Si es tipo credential, verificar si el nodo tiene onCredential y ejecutarla
+			// =======================================================================
+			// Valores iniciales
+			// =======================================================================
+			const dataProperties = JSON.stringify(
+				Object.fromEntries(
+					Object.entries(data.properties || {}).map(([key, value]) => {
+						if (value && typeof value === 'object' && 'value' in value) {
+							return [key, (value as { value: unknown }).value]
+						}
+						return [key, value]
+					})
+				)
+			)
+			let dataResult = ''
+
+			// =======================================================================
+			// Credenciales
+			// =======================================================================
 			if (data.type === 'credential' && data.nodeType) {
 				const nodeCredentials = getNodeCredentials(data.nodeType)
 
@@ -78,12 +93,13 @@ export const setupStorageRoutes = {
 						const fnOnCredential = nodeCredentials.fn
 
 						// Ejecutar onCredential del nodo
-						const credentialResult = await fnOnCredential(onCredentialModule({ socket, credentials: data.data }))
+						const credentialResult = await fnOnCredential(onCredentialModule({ socket, credentials: data.properties }))
 
 						if (credentialResult?.status && credentialResult?.data) {
 						} else {
 							return callback({ success: false, message: 'No se pudieron obtener las credenciales del nodo' })
 						}
+						dataResult = JSON.stringify(credentialResult.data)
 					} catch (credentialError) {
 						console.error('Error ejecutando onCredential:', credentialError)
 						return callback({
@@ -95,7 +111,11 @@ export const setupStorageRoutes = {
 					return callback({ success: false, message: 'El nodo especificado no tiene configuración de credenciales' })
 				}
 			}
-			const storage = await Storage.create({ ...data, data: dataString })
+
+			// =======================================================================
+			// Crear storage
+			// =======================================================================
+			const storage = await Storage.create({ ...data, properties: dataProperties, data: dataResult })
 			callback({ success: true, storage })
 		} catch (error) {
 			console.error('Error creando storage:', error)

@@ -19,9 +19,9 @@ export function useStorageComposable() {
 		name: string
 		description?: string
 		type: 'file' | 'credential' | 'other'
-		nodeType: string
-		data: Record<string, any>
-		metadata?: Record<string, any>
+		nodeType?: string
+		properties: Record<string, any>
+		data?: Record<string, any>
 	}) => {
 		try {
 			const result = await socketService.storage().createStorage(data)

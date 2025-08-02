@@ -68,13 +68,12 @@ export function socketStorage(socket: Socket | null) {
 			name: string
 			description?: string
 			type: 'file' | 'credential' | 'other'
-			nodeType: string
-			data: Record<string, any>
-			metadata?: Record<string, any>
+			nodeType?: string
+			properties: Record<string, any>
+			data?: Record<string, any>
 		}): Promise<any> {
 			return new Promise((resolve, reject) => {
 				if (!socket) return reject(new Error('Socket not connected'))
-
 				socket.emit('storage:create', { workspaceId, ...data }, (response: any) => {
 					if (response.success) {
 						return resolve(response.storage)
