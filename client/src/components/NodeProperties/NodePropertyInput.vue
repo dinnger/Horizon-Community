@@ -22,7 +22,8 @@
         <select v-model="localValue" class="select select-bordered flex-1" :disabled="property.disabled || isReadOnly"
           :class="{ 'select-error': property.required && !property.value }">
           <option value="" disabled>Selecciona una credencial</option>
-          <option v-for="credential in availableCredentials" :key="credential.id" :value="credential.id">
+          <option v-for="credential in availableCredentials" :key="credential.id"
+            :value="`${credential.id}::${credential.name}`">
             {{ credential.name }} - {{ credential.nodeType }}
           </option>
         </select>

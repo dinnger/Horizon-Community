@@ -1,13 +1,14 @@
 import './style/style.css'
 import '@fontsource-variable/comfortaa'
-import type { INodeCanvas, INodeConnections } from './interfaz/node.interface.js'
-import type { INote } from './interfaz/note.interface.js'
 import { drawNodeConnectionPreview, renderSelected, getTempConnection, setIndexTime, renderAnimation } from './canvasHelpers'
 import { pattern_dark, pattern_light } from './canvasPattern'
 import { v4 as uuidv4 } from 'uuid'
 import { Nodes, type ICanvasNodeNew } from './canvasNodes'
 import { CanvasNotes } from './canvasNotes'
 import { CanvasGroups } from './canvasGroups'
+import type { INodeCanvas, INodeConnections } from './interfaz/node.interface.js'
+import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
+import type { INodeSave, IWorkflowDataSave } from '@shared/interfaces/standardized.js'
 
 export interface ILog {
 	logs?: object
@@ -880,18 +881,26 @@ export class Canvas {
 	 * Get the current workflow data.
 	 * @returns A workflow data object with nodes, connections, notes, and groups.
 	 */
-	getWorkflowData(): { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[]; notes: any[]; groups: any[] } {
+	getWorkflowData(): IWorkflowDataSave {
 		const nodes = this.nodes.getNodes()
 		const connections: INodeConnections[] = []
 		const notes = this.notes.exportNotes()
 		const groups = this.groups.exportGroups()
-		const plainNodes: { [key: string]: INodeCanvas } = {}
+		const plainNodes: { [key: string]: INodeSave } = {}
+		const credentials: string[] = []
+
 		for (const node of Object.values(nodes)) {
-			plainNodes[node.id] = JSON.parse(JSON.stringify(node.get()))
+			const nodeData = node.get()
+			plainNodes[node.id] = JSON.parse(JSON.stringify(nodeData))
 			// Extraer solo los value de las propiedades
 			for (const [key, value] of Object.entries(plainNodes[node.id].properties)) {
-				;(plainNodes[node.id].properties[key] as any) = { value: value.value }
+				;(plainNodes[node.id].properties[key] as any) = { value: (value as any).value }
 			}
+			// Extraer credenciales si existen
+			for (const [key, value] of Object.entries(nodeData.properties) as [string, propertiesType][]) {
+				if (value.type === 'credential' && value.value) credentials.push((value as any).value)
+			}
+
 			if (node.connections) {
 				for (const conn of node.connections) {
 					if (conn.idNodeOrigin === node.id) {
@@ -907,7 +916,7 @@ export class Canvas {
 			}
 			plainNodes[node.id].connections = []
 		}
-		return { nodes: plainNodes, connections, notes, groups }
+		return { nodes: plainNodes, connections, notes, groups, credentials }
 	}
 
 	/**

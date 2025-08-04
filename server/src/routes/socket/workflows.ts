@@ -1,4 +1,4 @@
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
+import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
 import { Project, Workflow, WorkflowExecution, WorkflowHistory } from '../../models/index.js'
@@ -211,16 +211,17 @@ export const setupWorkflowRoutes = {
 	// Update workflow - requires update permission
 	'workflows:update': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workspaceId, id, connections, nodes, notes, groups } = data
+			const { workspaceId, id, connections, nodes, notes, groups, credentials } = data
 
 			eventRouter('workflows:validate', { workspaceId, workflowId: id }, async (data) => {
 				if (!data.success) return callback(data)
-				const updates = {
+				const updates: { workflowData: IWorkflowDataSave; updatedAt: Date } = {
 					workflowData: {
 						nodes,
 						connections,
 						notes,
-						groups
+						groups,
+						credentials
 					},
 					updatedAt: new Date()
 				}
@@ -471,7 +472,7 @@ export const setupWorkflowRoutes = {
 				fs.mkdirSync(dataDir, { recursive: true })
 			}
 
-			const flowData: IWorkflowFull = {
+			const flowData: IWorkflowSaveFull = {
 				info: {
 					name: workflow.name,
 					uid: workflow.id

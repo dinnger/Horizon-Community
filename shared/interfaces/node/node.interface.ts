@@ -95,6 +95,15 @@ export interface INodeBase {
 	tags?: string[]
 }
 
+export interface INodeSave {
+	id: string
+	type: string
+	info: INodeInfo
+	properties: { [key: string]: { value: any } }
+	design: { x: number; y: number; width?: number; height?: number }
+	connections?: INodeConnection[]
+}
+
 /**
  * Interfaz para un nodo con información completa
  */

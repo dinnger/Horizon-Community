@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import path from 'node:path'
 import WorkflowExecution from '../models/WorkflowExecution.js'
+import Storage from '../models/Storage.js'
 
 class WorkerManager extends EventEmitter {
 	private workers: Map<
@@ -318,6 +319,7 @@ class WorkerManager extends EventEmitter {
 					port,
 					serverPort: process.env.SERVER_PORT || '3000',
 					nodeEnv: process.env.NODE_ENV || 'development'
+					// Credentials
 				}
 			})
 

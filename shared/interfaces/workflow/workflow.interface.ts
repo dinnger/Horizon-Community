@@ -1,4 +1,4 @@
-import type { INodeFull, INodeConnection, INodeWorker } from '../node/node.interface.js'
+import type { INodeFull, INodeConnection, INodeWorker, INodeCanvas, INodeSave } from '../node/node.interface.js'
 import type { IProjectBase } from '../standardized.js'
 import type { IPropertiesType } from '../workflow.properties.interface.js'
 
@@ -74,7 +74,15 @@ export interface IWorkflowData {
 		createdAt: string
 		updatedAt: string
 	}[]
+	credentials?: string[]
 }
+
+export type IWorkflowDataSave = Omit<IWorkflowData, 'nodes'> & { nodes: { [key: string]: INodeSave } }
+
+/**
+ * Interfaz para workflow completo guardada
+ */
+export interface IWorkflowSaveFull extends IWorkflowBase, IWorkflowDataSave {}
 
 /**
  * Interfaz para workflow completo
