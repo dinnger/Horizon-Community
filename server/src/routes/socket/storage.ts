@@ -1,18 +1,25 @@
 import type { SocketData } from './index.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import { Storage, type StorageAttributes } from '../../models/index.js'
-import { getNodeCredentials, getNodeInfo } from '@shared/engine/node.engine.js'
+import { getNodeInfo, getNodesInfo } from '@shared/engine/node.engine.js'
 import { onCredentialModule } from '@server/src/modules/context.js'
 
 export const setupStorageRoutes = {
 	// List all available node classes - requires read permission
 	'storage-credentials:list': async ({ callback }: SocketData) => {
-		callback({ success: true, credentials: getNodeCredentials() })
+		const arr = getNodesInfo()
+		const getNodeCredentials = Object.keys(arr).map((key) => {
+			return {
+				name: key,
+				info: arr[key].info
+			}
+		})
+		callback({ success: true, credentials: getNodeCredentials })
 	},
 	// Get the properties of a node class - requires read permission
 	'storage-credentials:get': async ({ callback, data }: SocketData) => {
 		const { node } = data as { node: string }
-		const nodeInfo = getNodeCredentials(node)
+		const nodeInfo = getNodeInfo(node)
 		if (!nodeInfo) return callback({ success: false, message: 'No se encontró la credencial' })
 		const credentials = 'credentials' in nodeInfo ? nodeInfo.credentials : undefined
 		return callback({ success: true, credentials })
@@ -31,7 +38,7 @@ export const setupStorageRoutes = {
 			callback({
 				success: true,
 				storages: storages.map((storage: any) => {
-					const node = getNodeInfo()[storage.nodeType]
+					const node = getNodesInfo()[storage.nodeType]
 					storage.dataValues.node = node ? node.info : null
 					return { ...storage.dataValues }
 				})
@@ -46,7 +53,10 @@ export const setupStorageRoutes = {
 	'storage:get': async ({ data, callback }: SocketData) => {
 		try {
 			const { id } = data
-			const storage = await Storage.findByPk(id)
+			const storage = await Storage.findOne({
+				attributes: ['id', 'name', 'type', 'nodeType', 'status', 'createdAt'],
+				where: { id }
+			})
 			if (!storage) {
 				callback({ success: false, message: 'Storage not found' })
 				return
@@ -85,12 +95,12 @@ export const setupStorageRoutes = {
 			// Credenciales
 			// =======================================================================
 			if (data.type === 'credential' && data.nodeType) {
-				const nodeCredentials = getNodeCredentials(data.nodeType)
+				const nodeCredentials = getNodeInfo(data.nodeType)
 
-				if (nodeCredentials && 'fn' in nodeCredentials && typeof nodeCredentials.fn === 'function') {
+				if (nodeCredentials && 'onCredential' in nodeCredentials && typeof nodeCredentials.onCredential === 'function') {
 					try {
 						// Crear instancia del nodo para obtener credenciales
-						const fnOnCredential = nodeCredentials.fn
+						const fnOnCredential = nodeCredentials.onCredential
 
 						// Ejecutar onCredential del nodo
 						const credentialResult = await fnOnCredential(onCredentialModule({ socket, credentials: data.properties }))

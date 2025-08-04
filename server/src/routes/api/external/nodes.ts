@@ -5,7 +5,7 @@
  * These endpoints complement the socket-based node routes with HTTP access.
  */
 import express from 'express'
-import { getNodeOnUpdateProperties, getNodeOnUpdateCredential } from '@shared/engine/node.engine.js'
+import { getNodeInfo } from '@shared/engine/node.engine.js'
 
 const router = express.Router()
 
@@ -34,12 +34,12 @@ export function ApiExternalNodes({ app, server }: { app: any; server: any }) {
 			}
 
 			// Get the onCreate script for the node type
-			const onCreateScript = getNodeOnUpdateProperties(nodeType)
+			const onUpdateProperties = getNodeInfo(nodeType).onUpdateProperties
 
-			if (!onCreateScript) {
+			if (!onUpdateProperties) {
 				return res.status(404).json({
 					success: false,
-					message: `No se encontró script onCreate para el tipo de nodo: ${nodeType}`
+					message: `No se encontró script onUpdateProperties para el tipo de nodo: ${nodeType}`
 				})
 			}
 
@@ -54,7 +54,7 @@ export function ApiExternalNodes({ app, server }: { app: any; server: any }) {
 // User ID: ${userId}
 // Generated: ${new Date().toISOString()}
 
-${onCreateScript}`
+${onUpdateProperties}`
 
 			return res.send(scriptWithHeader)
 		} catch (error) {
@@ -95,9 +95,9 @@ export default function() {
 			}
 
 			// Get the onUpdateCredential script for the node type
-			const onUpdateCredentialScript = getNodeOnUpdateCredential(nodeType)
+			const onUpdateCredential = getNodeInfo(nodeType).onUpdateCredential
 
-			if (!onUpdateCredentialScript) {
+			if (!onUpdateCredential) {
 				return res.status(404).json({
 					success: false,
 					message: `No se encontró script onUpdateCredential para el tipo de nodo: ${nodeType}`
@@ -115,7 +115,7 @@ export default function() {
 // User ID: ${userId}
 // Generated: ${new Date().toISOString()}
 
-${onUpdateCredentialScript}`
+${onUpdateCredential}`
 
 			return res.send(scriptWithHeader)
 		} catch (error) {

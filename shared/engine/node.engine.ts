@@ -12,7 +12,6 @@ const files = glob.sync('**/index.js', { cwd: dirPath })
 const nodesClass: { [key: string]: newClassInterface } = {}
 const nodeUpdateProperties: { [key: string]: any } = {}
 const nodeUpdateCredentials: { [key: string]: any } = {}
-const nodeOnCredentials: { [key: string]: { credentials: IPropertiesType; fn: any } } = {}
 
 for (const file of files) {
 	if (file && file.replace(/\\/g, '/').indexOf('/_') > -1) continue
@@ -41,14 +40,6 @@ for (const file of files) {
 				`export ${data.onUpdateCredential.toString().replace('onUpdateCredential({', 'function onUpdateCredential({')}`
 		}
 
-		// Guardar la función onDeploy
-		if (data.credentials) {
-			nodeOnCredentials[type] = {
-				credentials: data.credentials,
-				fn: data.onCredential
-			}
-		}
-
 		nodesClass[type] = {
 			type,
 			info: data.info,
@@ -56,6 +47,7 @@ for (const file of files) {
 			dependencies: data.dependencies,
 			properties: data.properties,
 			credentials: data.credentials,
+			onCredential: data.onCredential,
 			class: model
 		}
 	} catch (error) {
@@ -63,7 +55,7 @@ for (const file of files) {
 	}
 }
 
-export function getNodeInfo() {
+export function getNodesInfo() {
 	return Object.fromEntries(
 		Object.entries(nodesClass).map(([key, value]) => [
 			key,
@@ -72,26 +64,10 @@ export function getNodeInfo() {
 	)
 }
 
-export function getNodeClassDependencies(node: string): string[] | null {
-	return nodesClass[node]?.dependencies || null
-}
-
-export function getNodeOnUpdateProperties(node: string): string {
-	return nodeUpdateProperties[node]
-}
-
-export function getNodeOnUpdateCredential(node: string): string {
-	return nodeUpdateCredentials[node]
-}
-
-export function getNodeCredentials(node?: string): { properties?: IPropertiesType; fn?: any } | { keys: () => any } {
-	if (node) {
-		return nodeOnCredentials[node]
+export function getNodeInfo(node: string) {
+	return {
+		...nodesClass[node],
+		onUpdateProperties: nodeUpdateProperties[node] || '',
+		onUpdateCredential: nodeUpdateCredentials[node] || ''
 	}
-	return Object.keys(nodeOnCredentials).map((key) => {
-		return {
-			name: key,
-			info: nodesClass[key].info
-		}
-	})
 }

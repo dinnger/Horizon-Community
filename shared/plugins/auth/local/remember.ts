@@ -6,8 +6,8 @@ function getToken(value: string) {
 	try {
 		const val = jwt.verify(value, envs.SECURITY_TOKEN || '', { algorithms: ['RS256'] })
 		return val
-	} catch (err) {
-		console.error('Error al obtener token:', err)
+	} catch (err: any) {
+		console.error('Error al obtener token:', err.toString)
 		return null
 	}
 }

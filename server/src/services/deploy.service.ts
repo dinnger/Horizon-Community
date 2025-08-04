@@ -1,6 +1,6 @@
 import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { promises as fs } from 'node:fs'
-import { getNodeClassDependencies } from '@shared/engine/node.engine.js'
+import { getNodeInfo } from '@shared/engine/node.engine.js'
 import { DeploymentQueue, DeploymentInstanceAssignment, DeploymentInstance, Workflow } from '../models/index.js'
 import path from 'node:path'
 
@@ -335,7 +335,7 @@ export class DeploymentQueueService {
 		for (const nodeId in flow.nodes) {
 			const node = flow.nodes[nodeId]
 			if (node?.type) {
-				const nodeDependencies = getNodeClassDependencies(node.type)
+				const nodeDependencies = getNodeInfo(node.type).dependencies
 				if (nodeDependencies && Array.isArray(nodeDependencies)) {
 					for (const dep of nodeDependencies) {
 						dependencies.add(dep)

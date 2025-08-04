@@ -2,7 +2,7 @@ import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
 import { Project, Workflow, WorkflowExecution, WorkflowHistory } from '../../models/index.js'
-import { getNodeInfo } from '@shared/engine/node.engine.js'
+import { getNodesInfo } from '@shared/engine/node.engine.js'
 import { workerManager } from '../../services/workerManager.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const nodeClass = getNodeInfo()
+const nodeClass = getNodesInfo()
 
 export const setupWorkflowRoutes = {
 	'workflows:validate': async ({ socket, data, callback }: SocketData) => {
