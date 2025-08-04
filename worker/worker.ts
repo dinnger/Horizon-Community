@@ -9,6 +9,7 @@ import { CoreModule } from './modules/core/index.js'
 import { envs } from './config/envs.js'
 import { CommunicationModule } from './modules/communication/index.js'
 import { ContextModule } from './modules/context/index.js'
+import { loadJsonFromFile } from '@shared/utils/utilities.js'
 // -----------------------------------------------------------------------------
 // Base
 // -----------------------------------------------------------------------------
@@ -46,7 +47,7 @@ export class Worker {
 		if (uidFlow?.indexOf('/') > -1) PATH_FLOW = ''
 
 		this.workflowId = uidFlow
-		this.flow = this.loadWorkflow()
+		this.flow = loadJsonFromFile(this.workflowId ? `${PATH_FLOW}${this.workflowId}/flow.json` : 'flow.json')
 		this.app = app
 		this.isDev = isDev
 		this.index = index
@@ -71,14 +72,6 @@ export class Worker {
 
 		// Iniciar el server
 		this.communicationModule.server.sendReady()
-	}
-
-	loadWorkflow() {
-		const data = fs.readFileSync(this.workflowId ? `${PATH_FLOW}${this.workflowId}/flow.json` : 'flow.json', 'utf8')
-		if (!data) {
-			return null
-		}
-		return JSON.parse(data)
 	}
 
 	async initWorker() {

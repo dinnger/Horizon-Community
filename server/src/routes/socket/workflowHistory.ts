@@ -1,5 +1,5 @@
-import { WorkflowHistoryService } from '../../services/index.js'
 import type { SocketData } from './index.js'
+import * as WorkflowHistoryService from '../../services/WorkflowHistoryService.js'
 
 export const setupWorkflowHistoryRoutes = {
 	// Get workflow history - requires read permission

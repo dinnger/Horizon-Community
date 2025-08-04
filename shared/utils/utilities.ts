@@ -1,4 +1,13 @@
 import type { INodeFull } from '@shared/interfaces/standardized'
+import fs from 'node:fs'
+
+export function loadJsonFromFile(path: string) {
+	const data = fs.readFileSync(path, 'utf8')
+	if (!data) {
+		return null
+	}
+	return convertJson(data)
+}
 
 export function convertJson(json: string | object) {
 	try {

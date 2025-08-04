@@ -20,7 +20,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import path from 'node:path'
 import WorkflowExecution from '../models/WorkflowExecution.js'
-import Storage from '../models/Storage.js'
+import fs from 'node:fs'
+import { loadJsonFromFile } from '@shared/utils/utilities.js'
 
 class WorkerManager extends EventEmitter {
 	private workers: Map<
@@ -312,6 +313,10 @@ class WorkerManager extends EventEmitter {
 		const workerPath = path.join(process.cwd(), 'dist', 'worker', 'index.js')
 
 		try {
+			// Estraer el json de flow.json
+			const flow = loadJsonFromFile(`./data/workflows/${workflowId}/flow.json`)
+			// const credentials = getCredentialsById
+
 			const worker = new Worker(workerPath, {
 				workerData: {
 					workerId,
