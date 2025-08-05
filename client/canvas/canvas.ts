@@ -25,6 +25,8 @@ type EventsCanvas =
 	| 'node_update_properties'
 	| 'node_connection_selected'
 	| 'node_connection_context'
+	| 'connection_added'
+	| 'connection_removed'
 	| 'canvas_context'
 	| 'note_context'
 	| 'note_added'
@@ -39,6 +41,7 @@ type EventsCanvas =
 	| 'mouse_move'
 	| 'zoom'
 	| 'clear'
+	| 'msg_error'
 
 /**
  * Clase principal que maneja el canvas de flujo de trabajo.
@@ -688,7 +691,7 @@ export class Canvas {
 				})
 				const connectorOriginName =
 					typeof this.newConnectionNode.value === 'string' ? this.newConnectionNode.value : this.newConnectionNode.value.name || ''
-				originNode.addConnection({
+				const isAdded = originNode.addConnection({
 					connectorOriginName,
 					idNodeDestiny: targetInput.node.id,
 					connectorDestinyName: targetInput.connectorOriginName,
@@ -697,6 +700,15 @@ export class Canvas {
 
 				this.newConnectionNode = null
 				this.isNodeConnectionVisible = false
+
+				if (!isAdded) {
+					this.emit('msg_error', {
+						msg: 'Ya existe una conexión con el mismo origen y destino'
+					})
+					return
+				}
+
+				this.emit('connection_added', true)
 			} else {
 				this.emit('node_added', {
 					design: this.canvasPosition,
@@ -830,6 +842,7 @@ export class Canvas {
 		for (const node of Object.values(this.nodes.nodes)) {
 			node.deleteConnections({ id })
 		}
+		this.emit('connection_removed', { id })
 	}
 
 	/**

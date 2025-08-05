@@ -10,6 +10,7 @@ import { useCanvasSubscribersComposable } from './useCanvasSubscribers.composabl
 import { useDeploymentComposable } from './useDeployment.composable'
 import { useCanvasActionsComposable, type IUseCanvasActionsType } from './useCanvasActions.composable'
 import { useWorkflowComposable } from './useWorkflow.composable'
+import { toast } from 'vue-sonner'
 
 export type IUseCanvasType = ReturnType<typeof useCanvasComposable>
 
@@ -102,6 +103,9 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 				},
 				onChanges: () => {
 					changes.value = true
+				},
+				onError: (msg: string) => {
+					toast.error(msg)
 				}
 			})
 

@@ -64,14 +64,20 @@ export class NewNode {
 	// 	return true
 	// }
 
-	addConnection(element: INodeConnections) {
-		if (element.idNodeDestiny === this.id) {
-			this.isMove = false
-			this.isSelected = false
-			return this.connections.push(element)
+	addConnection(element: INodeConnections): boolean {
+		let { id, idNodeDestiny } = element
+
+		// Verificar si el nodo destino ya tiene una conexión
+		for (const connection of this.connections) {
+			if (
+				connection.idNodeDestiny === idNodeDestiny &&
+				connection.connectorOriginName === element.connectorOriginName &&
+				connection.connectorDestinyName === element.connectorDestinyName
+			) {
+				return false
+			}
 		}
 
-		let { id, idNodeDestiny } = element
 		id = id || uuidv4()
 		const connection = new NewConnector({
 			...element,
@@ -79,10 +85,21 @@ export class NewNode {
 		})
 		if (!connection.idNodeOrigin || connection.idNodeOrigin === '') connection.idNodeOrigin = this.id
 		this.connections.push(connection)
-		if (connection.idNodeOrigin === this.id) {
-			this.el.nodes[idNodeDestiny].addConnection(connection)
-			this.isMove = true
-		}
+		this.isMove = false
+		this.isSelected = false
+		this.el.nodes[idNodeDestiny].isSelected = false
+
+		// Ordernar en base a conectores
+		const outputs = this.info.connectors.outputs.map((f) => (typeof f === 'object' ? f.name : f))
+		this.connections = this.connections.sort((a, b) => {
+			return outputs.indexOf(b.connectorOriginName) - outputs.indexOf(a.connectorOriginName)
+		})
+
+		this.connections.map((f) => {
+			f.pointers = undefined
+		})
+
+		return true
 	}
 
 	deleteConnections({ id }: { id?: string }) {
@@ -280,13 +297,18 @@ export class NewNode {
 	}
 
 	renderConnections({ ctx, nodes }: { ctx: CanvasRenderingContext2D; nodes: { [key: string]: INodeCanvas } }) {
+		let shapeMargin = 10
 		for (const connection of this.connections) {
 			const nodeOrigin = connection.idNodeOrigin
+			connection.isFocused = this.isSelected
+			// Si es el nodo origen, renderizar los nodos destino
 			if (nodeOrigin !== this.id) continue
+			shapeMargin += 5
 			renderConnectionNodes({
 				ctx,
 				connection,
-				nodes
+				nodes,
+				shapeMargin
 			})
 		}
 	}
