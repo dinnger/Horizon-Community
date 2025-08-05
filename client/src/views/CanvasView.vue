@@ -1,8 +1,7 @@
 <template>
   <div>
     <div v-if="!isLoading && !isError" class="h-screen bg-base-100 overflow-hidden flex flex-col">
-      <CanvasHeader :project-name="canvasStore.projectName" :active-tab="canvasStore.activeTab"
-        @update:active-tab="updateTab" :version="canvasDesign?.version.value" />
+      <CanvasHeader @update:active-tab="updateTab" :version="canvasDesign?.version.value" />
 
       <!-- Content Area -->
       <div class="flex-1 relative">
@@ -65,8 +64,9 @@ onMounted(() => {
   workerStore.workerInfo = null
   workflowComposable.validWorkflow({ workflowId: workflowId.value }).then((result) => {
     if (result.success && result.workflow != null) {
-      console.log('result', result.workflow)
-      canvasStore.projectName = `${result.workflow.project.name} - ${result.workflow.name}`
+      canvasStore.projectName = result.workflow.project.name
+      canvasStore.workflowName = result.workflow.name
+      canvasStore.transportType = result.workflow.project.transportType
       isLoading.value = false
       isError.value = false
       workerComposable.initSubscriptionsWorker({ workflowId: workflowId.value })
