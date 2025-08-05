@@ -1,6 +1,6 @@
 import type { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
-import type { User, Role, Permission } from '../../models/index.js'
+import type { User, Role, Permission, UserSettings } from '../../models/index.js'
 import NodeCache from 'node-cache'
 import { envs } from '../../config/envs.js'
 import { setupAuthRoutes } from './auth.js'
@@ -23,9 +23,13 @@ import { setupStorageRoutes } from './storage.js'
 
 export interface AuthenticatedSocket extends Socket {
 	userId?: string
-	user?: User & {
-		roleId?: string
-		permissions?: Permission[]
+	user?: {
+		userId: string
+		name: string
+		avatar: string | undefined
+		roleId: string | undefined
+		settings: UserSettings | undefined
+		permissions: Permission[]
 	}
 }
 

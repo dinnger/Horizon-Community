@@ -42,7 +42,7 @@
       <div class="p-4 border-t border-base-300" v-if="authStore.user">
         <div class="flex items-center space-x-3">
           <div class="avatar">
-            <div class="w-10 h-10 rounded-full">
+            <div class="w-10 h-10 rounded-full border-3" :class="[isConnected ? 'border-green-700' : 'border-red-800']">
               <img :src="authStore.user.avatar" :alt="authStore.user.name" />
             </div>
           </div>
@@ -52,10 +52,7 @@
           </div>
           <div class="dropdown dropdown-top dropdown-end">
             <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
+              <span class="mdi mdi-dots-vertical"></span>
             </div>
             <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-48">
               <li>
@@ -174,7 +171,7 @@ const setTheme = (theme: string) => {
   settingsStore.setTheme(theme)
 }
 
-const isConnected = computed(() => socketService.isConnected)
+const isConnected = computed(() => socketService.isConnected.value)
 
 const handleLogout = async () => {
   await authStore.logout()
