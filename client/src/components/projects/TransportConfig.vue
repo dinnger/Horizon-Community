@@ -6,7 +6,8 @@
       <label class="label">
         <span class="label-text">Tipo de Transporte</span>
       </label>
-      <select :value="transportType" @change="$emit('update:transportType', ($event.target as HTMLSelectElement).value)"
+      <select :value="transportType"
+        @change="$emit('update:transportType', ($event.target as HTMLSelectElement).value as IProjectTransportType)"
         class="select select-bordered w-full">
         <option value="none">Sin transporte</option>
         <option value="tcp">TCP</option>
@@ -111,60 +112,30 @@
       </div>
 
       <!-- Configuración común -->
-      <div class="collapse collapse-arrow bg-base-200">
-        <input type="checkbox" />
-        <div class="collapse-title text-sm font-medium">
-          Configuración Avanzada
-        </div>
-        <div class="collapse-content space-y-3">
-          <div class="grid grid-cols-2 gap-2">
-            <input :value="transportConfig.username || ''"
-              @input="updateConfig('username', ($event.target as HTMLInputElement).value)" type="text"
-              placeholder="Usuario" class="input input-bordered input-sm" />
-            <input :value="transportConfig.password || ''"
-              @input="updateConfig('password', ($event.target as HTMLInputElement).value)" type="password"
-              placeholder="Contraseña" class="input input-bordered input-sm" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <input :value="transportConfig.retries || ''"
-              @input="updateConfig('retries', Number(($event.target as HTMLInputElement).value))" type="number"
-              placeholder="Reintentos" class="input input-bordered input-sm" />
-            <input :value="transportConfig.retryDelay || ''"
-              @input="updateConfig('retryDelay', Number(($event.target as HTMLInputElement).value))" type="number"
-              placeholder="Retraso (ms)" class="input input-bordered input-sm" />
-          </div>
-          <div class="form-control">
-            <label class="label cursor-pointer">
-              <span class="label-text">Usar SSL/TLS</span>
-              <input :checked="transportConfig.ssl || false"
-                @change="updateConfig('ssl', ($event.target as HTMLInputElement).checked)" type="checkbox"
-                class="checkbox" />
-            </label>
-          </div>
-        </div>
-      </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ProjectTransportConfig } from '@/stores'
+import type { IProjectTransportConfig, IProjectTransportConfigByType, IProjectTransportType } from '@shared/interfaces/standardized';
 
 interface Props {
-  transportType: 'none' | 'tcp' | 'rabbitmq' | 'kafka' | 'nats' | 'http' | 'websocket' | 'mqtt' | undefined
-  transportConfig: ProjectTransportConfig
+  transportType: IProjectTransportType
+  transportConfig: IProjectTransportConfig
 }
 
 const emit = defineEmits<{
-  'update:transportType': [value: string]
-  'update:transportConfig': [config: ProjectTransportConfig]
+  'update:transportType': [value: IProjectTransportType]
+  'update:transportConfig': [config: IProjectTransportConfig]
 }>()
 
 const props = defineProps<Props>()
 
+
 const updateConfig = (key: string, value: any) => {
   const config = { ...props.transportConfig }
-  config[key as keyof ProjectTransportConfig] = value
+  config[key as keyof IProjectTransportConfig] = value
   emit('update:transportConfig', config)
 }
 </script>

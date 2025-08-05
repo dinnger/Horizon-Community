@@ -6,7 +6,8 @@
 
     <!-- Panel de command palette centrado -->
     <div
-      class="relative w-[80vw] max-w-[1000px] mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] ">
+      class="relative w-[80vw] max-w-[1000px] mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] "
+      :style="{ width: width }">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-base-300/50">
         <div class="flex items-center gap-3">
@@ -51,6 +52,7 @@ const props = defineProps<{
   isVisible: boolean,
   twoPanels?: boolean
   customClass?: string
+  width?: string
 }>()
 
 const emit = defineEmits<{

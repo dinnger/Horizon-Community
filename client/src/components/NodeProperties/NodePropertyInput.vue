@@ -48,7 +48,7 @@
 
     <!-- Number input -->
     <template v-else-if="property.type === 'number'">
-      <label lass="input input-bordered validator w-full">
+      <label class="input input-bordered w-full" :class="{ 'validator': property.pattern }">
         <input v-model.number="localValue" type="number" :min="property.min" :max="property.max" :step="property.step"
           :disabled="property.disabled || isReadOnly"
           :class="{ 'input-error': property.required && !property.value }" />

@@ -63,7 +63,7 @@ export interface classOnCredential<T extends IPropertiesType = IPropertiesType> 
 }
 export interface INodeConnectors {
 	inputs?: { name: string; nextNodeTag?: string }[] | Record<string, any>
-	outputs: { name: string; nextNodeTag?: string }[] | Record<string, any>
+	outputs: { name: string; nextNodeTag?: string; type?: 'callback' }[] | Record<string, any>
 	callbacks?: { name: string; nextNodeTag?: string }[] | Record<string, any>
 }
 

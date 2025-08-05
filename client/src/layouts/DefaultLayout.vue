@@ -25,7 +25,7 @@
           <li v-for="item in availableMenuItems" :key="item.path">
             <router-link :to="item.path"
               class="flex items-center p-3 rounded-lg hover:bg-base-300 transition-colors group"
-              :class="{ 'bg-primary text-primary-content': route.path === item.path }">
+              :class="{ 'bg-primary text-primary-content': route.path === item.path || (item.path.length > 2 && route.path.startsWith(item.path)) }">
               <span class="mdi text-lg ml-1" :class="item.icon"></span>
               <span :class="[
                 'ml-3 font-medium transition-opacity',

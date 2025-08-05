@@ -65,7 +65,8 @@ onMounted(() => {
   workerStore.workerInfo = null
   workflowComposable.validWorkflow({ workflowId: workflowId.value }).then((result) => {
     if (result.success && result.workflow != null) {
-      console.log('result', result)
+      console.log('result', result.workflow)
+      canvasStore.projectName = `${result.workflow.project.name} - ${result.workflow.name}`
       isLoading.value = false
       isError.value = false
       workerComposable.initSubscriptionsWorker({ workflowId: workflowId.value })
