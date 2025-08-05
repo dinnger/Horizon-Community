@@ -324,6 +324,8 @@ export default class Spotify implements IClassNode {
 		)
 
 		const { refresh_token } = tokenResponse.data
+
+		// Estos datos se guardaran y se utilizaran en el onExecute al obtener getCredential
 		return {
 			status: true,
 			data: {

@@ -84,23 +84,26 @@
                     <div class="text-base-content/70">{{ project.description }}</div>
                   </td>
                   <td>
-                    <div :class="['badge', project.status === 'active' ? 'badge-success' : 'badge-ghost']">
+                    <div
+                      :class="['badge badge-outline', project.status === 'active' ? 'badge-success' : 'badge-ghost']">
                       {{ project.status === 'active' ? 'Activo' : 'Inactivo' }}
                     </div>
                   </td>
                   <td>
-                    <div class="badge badge-info badge-sm">{{ project.transportType?.toUpperCase() || 'Sin transporte'
-                      }}</div>
+                    <div class="badge badge-info badge-sm badge-outline">{{ project.transportType?.toUpperCase() ||
+                      'Sin transporte'
+                    }}</div>
                   </td>
                   <td>
-                    <div class="badge badge-secondary badge-sm">
+                    <div class="badge badge-secondary badge-outline">
                       {{ project.workflows?.length || 0 }} workflows
                     </div>
                   </td>
                   <td>
                     <div class="flex space-x-2" @click.stop>
                       <button @click="editProject(project)" class="btn btn-xs btn-ghost">Editar</button>
-                      <button @click="deleteProject(project.id)" class="btn btn-xs btn-error">Eliminar</button>
+                      <button @click="deleteProject(project.id)"
+                        class="btn btn-xs btn-error btn-outline">Eliminar</button>
                     </div>
                   </td>
                 </tr>

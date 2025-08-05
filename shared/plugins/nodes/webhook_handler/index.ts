@@ -4,64 +4,12 @@ import type { FileArray } from 'express-fileupload'
 interface Request extends ExpressRequest {
 	files?: FileArray | null
 }
-import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '../../../interfaces/class.interface.js'
-
-import type {
-	IBoxType,
-	ICodeProperty,
-	INumberProperty,
-	IOptionsProperty,
-	IPropertiesType,
-	IStringProperty,
-	ISwitchProperty
-} from '@shared/interfaces'
-
-export interface IProperty extends IPropertiesType {
-	url: IBoxType
-	endpoint: IStringProperty
-	type: IOptionsProperty
-	timeout: INumberProperty
-	security: IOptionsProperty
-	securityBasicUser: IStringProperty
-	securityBasicPass: IStringProperty
-	securityBearerToken: IStringProperty
-	securityJWTSecret: IStringProperty
-	// Opciones avanzadas
-	advancedOptions: ISwitchProperty
-	// Opciones de redirección
-	enableRedirect: ISwitchProperty
-	redirectUrl: IStringProperty
-	redirectStatusCode: IOptionsProperty
-	// Opciones de proxy
-	enableProxy: ISwitchProperty
-	proxyUrl: IStringProperty
-	proxyPreserveHeaders: ISwitchProperty
-	// Opciones CORS
-	enableCors: ISwitchProperty
-	corsOrigin: IStringProperty
-	corsMethods: IStringProperty
-	corsHeaders: IStringProperty
-	// Respuesta personalizada
-	customResponse: ISwitchProperty
-	responseStatusCode: INumberProperty
-	responseContentType: IOptionsProperty
-	responseBody: ICodeProperty
-}
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface } from '../../../interfaces/class.interface.js'
+import { IBoxType, ICodeProperty, INumberProperty, IOptionsProperty, IStringProperty, ISwitchProperty } from '@shared/interfaces/workflow.properties.interface.js'
 
 export default class implements IClassNode {
-	// ===============================================
-	// Dependencias
-	// ===============================================
-	// #pk jsonwebtoken
-	// #pk axios
-	// ===============================================
-	constructor(
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperty
-	) {
-		this.dependencies = ['jsonwebtoken', 'axios']
-		this.info = {
+		dependencies = ['jsonwebtoken', 'axios']
+		info = {
 			name: 'Webhook',
 			desc: 'Call webhook',
 			icon: '󰘯',
@@ -74,16 +22,16 @@ export default class implements IClassNode {
 			}
 		}
 
-		this.properties = {
+		properties = {
 			url: {
 				name: 'URL asignada:',
 				type: 'box'
-			},
+			} as IBoxType,
 			endpoint: {
 				name: 'Endpoint:',
 				type: 'string',
 				value: '/'
-			},
+			} as IStringProperty,
 			type: {
 				name: 'Tipo de llamada:',
 				type: 'options',
@@ -110,12 +58,12 @@ export default class implements IClassNode {
 					}
 				],
 				value: 'get'
-			},
+			} as IOptionsProperty,
 			timeout: {
 				name: 'Tiempo de espera (seg):',
 				type: 'number',
 				value: 50
-			},
+			} as INumberProperty,
 			security: {
 				name: 'Seguridad:',
 				type: 'options',
@@ -138,51 +86,51 @@ export default class implements IClassNode {
 					}
 				],
 				value: 'null'
-			},
+			} as IOptionsProperty,
 			securityBasicUser: {
 				name: 'Usuario',
 				type: 'string',
 				value: '',
 				show: false
-			},
+			} as IStringProperty,
 			securityBasicPass: {
 				name: 'Contraseña',
 				type: 'string',
 				value: '',
 				show: false
-			},
+			} as IStringProperty,
 			securityBearerToken: {
 				name: 'Token',
 				type: 'string',
 				value: '',
 				show: false
-			},
+			} as IStringProperty,
 			securityJWTSecret: {
 				name: 'Secreto',
 				type: 'string',
 				value: '',
 				show: false
-			},
+			} as IStringProperty,
 			// Opciones avanzadas
 			advancedOptions: {
 				name: 'Opciones avanzadas',
 				type: 'switch',
 				value: false
-			},
+			} as ISwitchProperty,
 			// Opciones de redirección
 			enableRedirect: {
 				name: 'Habilitar redirección',
 				type: 'switch',
 				value: false,
 				show: false
-			},
+			} as ISwitchProperty,
 			redirectUrl: {
 				name: 'URL de redirección',
 				type: 'string',
 				value: '',
 				description: 'URL a la que se redireccionará',
 				show: false
-			},
+			} as IStringProperty,
 			redirectStatusCode: {
 				name: 'Código de estado',
 				type: 'options',
@@ -210,65 +158,65 @@ export default class implements IClassNode {
 				],
 				value: 302,
 				show: false
-			},
+			} as IOptionsProperty,
 			// Opciones de proxy
 			enableProxy: {
 				name: 'Habilitar proxy',
 				type: 'switch',
 				value: false,
 				show: false
-			},
+			} as ISwitchProperty,
 			proxyUrl: {
 				name: 'URL de destino del proxy',
 				type: 'string',
 				value: '',
 				description: 'URL a la que se reenviarán las peticiones',
 				show: false
-			},
+			} as IStringProperty,
 			proxyPreserveHeaders: {
 				name: 'Preservar cabeceras',
 				type: 'switch',
 				value: true,
 				show: false
-			},
+			} as ISwitchProperty,
 			// Opciones CORS
 			enableCors: {
 				name: 'Habilitar CORS',
 				type: 'switch',
 				value: false,
 				show: false
-			},
+			} as ISwitchProperty,
 			corsOrigin: {
 				name: 'Access-Control-Allow-Origin',
 				type: 'string',
 				value: '*',
 				show: false
-			},
+			} as IStringProperty,
 			corsMethods: {
 				name: 'Access-Control-Allow-Methods',
 				type: 'string',
 				value: 'GET,POST,PUT,DELETE,OPTIONS',
 				show: false
-			},
+			} as IStringProperty,
 			corsHeaders: {
 				name: 'Access-Control-Allow-Headers',
 				type: 'string',
 				value: 'Content-Type,Authorization',
 				show: false
-			},
+			} as IStringProperty,
 			// Respuesta personalizada
 			customResponse: {
 				name: 'Habilitar respuesta personalizada',
 				type: 'switch',
 				value: false,
 				show: false
-			},
+			} as ISwitchProperty,
 			responseStatusCode: {
 				name: 'Código de estado',
 				type: 'number',
 				value: 200,
 				show: false
-			},
+			} as INumberProperty,
 			responseContentType: {
 				name: 'Content-Type',
 				type: 'options',
@@ -292,18 +240,18 @@ export default class implements IClassNode {
 				],
 				value: 'application/json',
 				show: false
-			},
+			} as IOptionsProperty,
 			responseBody: {
 				name: 'Cuerpo de respuesta',
 				type: 'code',
 				lang: 'json',
 				value: '{\n  "success": true\n}',
 				show: false
-			}
+			} as ICodeProperty
 		}
-	}
+	
 
-	async onUpdateProperties({ context, properties }: classOnUpdateInterface<IProperty>) {
+	async onUpdateProperties({ context, properties }: classOnUpdateInterface<this['properties']>) {
 		// Configuración de seguridad
 		properties.securityBasicUser.show = false
 		properties.securityBasicPass.show = false

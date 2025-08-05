@@ -183,7 +183,8 @@ export class Canvas {
 			this.nodes.addNode({ ...node, id: key })
 		}
 		for (const connection of connections) {
-			this.nodes.addConnection(connection)
+			const exist = this.nodes.addConnection(connection)
+			if (!exist) delete this.nodes[connection.idNodeDestiny]
 		}
 	}
 

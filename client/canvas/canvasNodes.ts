@@ -36,7 +36,7 @@ export class Nodes {
 	 */
 	getNode(data: { id: string }) {
 		const node = this.nodes[data.id]
-		if (!node) throw new Error(`[getNode]  No se encontró el nodo ${data.id}`)
+		if (!node) return console.error(`[getNode]  No se encontró el nodo ${data.id}`)
 		return this.nodes[data.id]
 	}
 
@@ -126,9 +126,16 @@ export class Nodes {
 	 */
 	addConnection(connection: INodeConnections & { isManual?: boolean }) {
 		const id = connection.idNodeOrigin || ''
-		if (!this.nodes[id]) throw new Error(`No se encontró el nodo${id}`)
-		if (!this.nodes[connection.idNodeDestiny]) throw new Error(`No se encontró el nodo destino${connection.idNodeDestiny}`)
-		return this.nodes[id].addConnection(connection)
+		if (!this.nodes[id]) {
+			console.error(`No se encontró el nodo${id}`)
+			return false
+		}
+		if (!this.nodes[connection.idNodeDestiny]) {
+			console.error(`No se encontró el nodo destino${connection.idNodeDestiny}`)
+			return false
+		}
+		this.nodes[id].addConnection(connection)
+		return true
 	}
 
 	/**
