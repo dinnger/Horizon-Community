@@ -18,10 +18,9 @@ import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
 import { createProxyMiddleware } from 'http-proxy-middleware'
+import { getCreditialsByWorkflow } from './workerManagerCredentials.js'
 import path from 'node:path'
 import WorkflowExecution from '../models/WorkflowExecution.js'
-import fs from 'node:fs'
-import { loadJsonFromFile } from '@shared/utils/utilities.js'
 
 class WorkerManager extends EventEmitter {
 	private workers: Map<
@@ -58,9 +57,7 @@ class WorkerManager extends EventEmitter {
 		const workerId = uuidv4()
 		const port = this.getAvailablePort({ workflowId: options.workflowId })
 
-		if (!port) {
-			throw new Error('No hay puertos disponibles para el worker')
-		}
+		if (!port) throw new Error('No hay puertos disponibles para el worker')
 
 		// Proxy para el flujo de trabajo
 		if (!port.exist) {
@@ -306,16 +303,12 @@ class WorkerManager extends EventEmitter {
 		}
 	}
 
-	/**
-	 * Try different commands to spawn the worker process
-	 */
 	private async trySpawnWorker(workerId: string, workflowId: string, port: number, retryCount = 0): Promise<Worker> {
 		const workerPath = path.join(process.cwd(), 'dist', 'worker', 'index.js')
 
 		try {
-			// Estraer el json de flow.json
-			const flow = loadJsonFromFile(`./data/workflows/${workflowId}/flow.json`)
 			// const credentials = getCredentialsById
+			const credentials = await getCreditialsByWorkflow(workflowId)
 
 			const worker = new Worker(workerPath, {
 				workerData: {
@@ -323,8 +316,9 @@ class WorkerManager extends EventEmitter {
 					workflowId,
 					port,
 					serverPort: process.env.SERVER_PORT || '3000',
-					nodeEnv: process.env.NODE_ENV || 'development'
+					nodeEnv: process.env.NODE_ENV || 'development',
 					// Credentials
+					...credentials
 				}
 			})
 

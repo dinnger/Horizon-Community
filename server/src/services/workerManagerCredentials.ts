@@ -1,7 +1,21 @@
-import Storage from '../models/Storage.js'
+import type { IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
+import { loadWorkflowFile } from '@shared/utils/utilities.js'
 import { decrypt } from '../utils/cryptography.js'
+import Storage from '../models/Storage.js'
 
-export async function getCredentialsById(id: string) {
+export async function getCreditialsByWorkflow(workflowId: string) {
+	const data = loadWorkflowFile(`./data/workflows/${workflowId}/flow.json`)
+	if (!data?.credentials) return {}
+	let list: { [key: string]: any } = {}
+	for (const credential of data.credentials) {
+		const [id, ...name] = credential.split('::')
+		const listCredentials = await getCredentialsById(id)
+		list = { ...list, ...listCredentials }
+	}
+	return list
+}
+
+async function getCredentialsById(id: string) {
 	const storageData = await Storage.findOne({
 		where: { id }
 	})
@@ -10,15 +24,10 @@ export async function getCredentialsById(id: string) {
 		throw new Error(`No credentials found for ID: ${id}`)
 	}
 
-	// get Data and
-	try {
-		const data = JSON.parse(decrypt(storageData.data))
-		const list: { name: string; value: any }[] = []
-		for (const key of Object.keys(data)) {
-			list.push({ name: `${storageData.name}_${key}`, value: data[key] })
-		}
-		return list
-	} catch (error: any) {
-		throw new Error(error)
+	const data = JSON.parse(decrypt(storageData.data.toString()))
+	const list: { [key: string]: any } = {}
+	for (const key of Object.keys(data)) {
+		list[`WORKFLOW_${storageData.name.toUpperCase()}_${key.toUpperCase()}`] = data[key]
 	}
+	return list
 }

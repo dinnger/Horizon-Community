@@ -36,7 +36,6 @@ export interface IWorkflowDependencies {
 		idNode: string
 		type: string
 		value: string
-		credentials: string[]
 	}>
 }
 

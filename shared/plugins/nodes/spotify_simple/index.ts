@@ -1,197 +1,177 @@
 import type {
 	IClassNode,
-	classOnCredential,
 	classOnExecuteInterface,
-	classOnUpdateCredentialInterface,
-	infoInterface
+	classOnCredential,
+	classOnUpdateCredentialInterface
 } from '@shared/interfaces/class.interface.js'
 import type {
-	ICodeProperty,
+	IOptionsProperty,
+	IStringProperty,
 	ICredentialProperty,
 	INumberProperty,
-	IOptionsProperty,
-	IPropertiesType,
-	IStringProperty
+	ICodeProperty
 } from '@shared/interfaces/workflow.properties.interface.js'
 import querystring from 'node:querystring'
 
-interface IProperties extends IPropertiesType {
-	operation: IOptionsProperty
-	authSecret: ICredentialProperty
-	query: IStringProperty
-	limit: IStringProperty
-	offset: IStringProperty
-	volume: INumberProperty
-	parameters: ICodeProperty
-}
+export default class SpotifySimple implements IClassNode {
+	accessSecrets = true
+	dependencies = ['axios']
 
-interface ICredentials {
-	properties: {
-		clientId: IStringProperty
-		clientSecret: IStringProperty
-		redirectUri: IStringProperty
-		scope: IStringProperty
+	info = {
+		name: 'Spotify Simple',
+		desc: 'Nodo simplificado para conectar con Spotify',
+		icon: '󰓇',
+		group: 'Servicios',
+		color: '#1DB954',
+		connectors: {
+			inputs: ['input'],
+			outputs: ['response', 'error']
+		},
+		isSingleton: true
 	}
-	required: string[]
-}
 
-export default class implements IClassNode<IProperties, ICredentials> {
-	constructor(
-		public accessSecrets: boolean,
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperties,
-		public credentials: ICredentials
-	) {
-		this.accessSecrets = true
-		this.dependencies = ['axios']
-		this.info = {
-			name: 'Spotify',
-			desc: 'Conecta con Spotify para acceder a información de canciones y playlists',
-			icon: '󰓇',
-			group: 'Servicios',
-			color: '#1DB954',
-			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
-			},
-			isSingleton: true
-		}
+	properties = {
+		credential: {
+			name: 'Credencial',
+			type: 'credential' as const,
+			options: [],
+			value: ''
+		} as ICredentialProperty,
 
-		this.properties = {
-			authSecret: {
-				name: 'Credencial',
-				type: 'credential',
-				options: [],
-				value: ''
-			},
-			operation: {
-				name: 'Operación',
-				type: 'options',
-				options: [
-					{
-						label: 'Buscar (tracks, artistas, albums)',
-						value: 'search'
-					},
-					{
-						label: 'Mis canciones guardadas',
-						value: 'saved_tracks'
-					},
-					{
-						label: 'Obtener playlist',
-						value: 'get_playlist'
-					},
-					{
-						label: 'Top tracks del artista',
-						value: 'artist_top_tracks'
-					},
-					{
-						label: 'Recomendaciones',
-						value: 'recommendations'
-					},
-					{
-						label: 'Nuevos lanzamientos',
-						value: 'new_releases'
-					},
-					{
-						label: 'Reproducir siguiente canción',
-						value: 'next_track'
-					},
-					{
-						label: 'Reproducir canción anterior',
-						value: 'previous_track'
-					},
-					{
-						label: 'Pausar reproducción',
-						value: 'pause'
-					},
-					{
-						label: 'Reanudar reproducción',
-						value: 'play'
-					},
-					{
-						label: 'Ajustar volumen',
-						value: 'volume'
-					},
-					{
-						label: 'Estado de reproducción actual',
-						value: 'current_playback'
-					}
-				],
-				value: 'search'
-			},
-			query: {
-				name: 'Query/ID',
-				type: 'string',
-				value: '',
-				description: 'Término de búsqueda o ID según la operación'
-			},
-			limit: {
-				name: 'Límite',
-				type: 'string',
-				value: '20',
-				description: 'Número máximo de resultados (máx. 50)'
-			},
-			offset: {
-				name: 'Offset',
-				type: 'string',
-				value: '0',
-				description: 'Índice de inicio para paginación'
-			},
-			volume: {
-				name: 'Volumen',
-				type: 'number',
-				value: 100,
-				description: 'Volumen de reproducción (0-100)'
-			},
-			parameters: {
-				name: 'Parámetros adicionales',
-				type: 'code',
-				lang: 'json',
-				value: '{\n  "market": "ES"\n}'
-			}
-		}
-
-		this.credentials = {
-			properties: {
-				clientId: {
-					name: 'Client ID',
-					type: 'string',
-					value: '',
-					required: true
+		operation: {
+			name: 'Operación',
+			type: 'options' as const,
+			options: [
+				{
+					label: 'Buscar (tracks, artistas, albums)',
+					value: 'search'
 				},
-				clientSecret: {
-					name: 'Client Secret',
-					type: 'string',
-					value: '',
-					required: true
+				{
+					label: 'Mis canciones guardadas',
+					value: 'saved_tracks'
 				},
-				scope: {
-					name: 'Scope',
-					type: 'string',
-					value:
-						'playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing'
+				{
+					label: 'Obtener playlist',
+					value: 'get_playlist'
 				},
-				redirectUri: {
-					name: 'Redirect URI',
-					type: 'string',
-					value: '',
-					pattern: new RegExp(/^(https?:\/\/)([^\s$.?#].[^\s]*)$/).toString(),
-					patternHint: 'Debe ser una URL válida (http o https)',
-					description: 'URI de redirección para la autenticación',
-					disabled: true,
-					required: true
+				{
+					label: 'Top tracks del artista',
+					value: 'artist_top_tracks'
+				},
+				{
+					label: 'Recomendaciones',
+					value: 'recommendations'
+				},
+				{
+					label: 'Nuevos lanzamientos',
+					value: 'new_releases'
+				},
+				{
+					label: 'Reproducir siguiente canción',
+					value: 'next_track'
+				},
+				{
+					label: 'Reproducir canción anterior',
+					value: 'previous_track'
+				},
+				{
+					label: 'Pausar reproducción',
+					value: 'pause'
+				},
+				{
+					label: 'Reanudar reproducción',
+					value: 'play'
+				},
+				{
+					label: 'Ajustar volumen',
+					value: 'volume'
+				},
+				{
+					label: 'Estado de reproducción actual',
+					value: 'current_playback'
 				}
-			},
-			required: ['client_id', 'client_secret', 'refresh_token']
-		}
+			],
+			value: 'search'
+		} as IOptionsProperty,
+
+		query: {
+			name: 'Query/ID',
+			type: 'string' as const,
+			value: '',
+			description: 'Término de búsqueda o ID según la operación'
+		} as IStringProperty,
+
+		limit: {
+			name: 'Límite',
+			type: 'string' as const,
+			value: '20',
+			description: 'Número máximo de resultados (máx. 50)'
+		} as IStringProperty,
+
+		offset: {
+			name: 'Offset',
+			type: 'string' as const,
+			value: '0',
+			description: 'Índice de inicio para paginación'
+		} as IStringProperty,
+
+		volume: {
+			name: 'Volumen',
+			type: 'number' as const,
+			value: 100,
+			description: 'Volumen de reproducción (0-100)'
+		} as INumberProperty,
+
+		parameters: {
+			name: 'Parámetros adicionales',
+			type: 'code' as const,
+			lang: 'json',
+			value: '{\n  "market": "ES"\n}'
+		} as ICodeProperty
+	}
+
+	credentials = {
+		properties: {
+			clientId: {
+				name: 'Client ID',
+				type: 'string' as const,
+				value: '',
+				required: true
+			} as IStringProperty,
+
+			clientSecret: {
+				name: 'Client Secret',
+				type: 'string' as const,
+				value: '',
+				required: true
+			} as IStringProperty,
+
+			scope: {
+				name: 'Scope',
+				type: 'string' as const,
+				value:
+					'playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing'
+			} as IStringProperty,
+
+			redirectUri: {
+				name: 'Redirect URI',
+				type: 'string' as const,
+				value: '',
+				pattern: new RegExp(/^(https?:\/\/)([^\s$.?#].[^\s]*)$/).toString(),
+				patternHint: 'Debe ser una URL válida (http o https)',
+				description: 'URI de redirección para la autenticación',
+				disabled: true,
+				required: true
+			} as IStringProperty
+		},
+		required: ['client_id', 'client_secret', 'refresh_token']
 	}
 
 	async onExecute({ outputData, dependency, credential }: classOnExecuteInterface) {
 		const axios = await dependency.getRequire('axios')
 
 		try {
-			const { client_id, client_secret, refresh_token } = await credential.getCredential(String(this.properties.authSecret.value))
+			const { client_id, client_secret, refresh_token } = await credential.getCredential(String(this.properties.credential.value))
 
 			const response = await axios.post(
 				'https://accounts.spotify.com/api/token',
@@ -408,13 +388,14 @@ export default class implements IClassNode<IProperties, ICredentials> {
 		}
 	}
 
-	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface<ICredentials['properties']>) {
+	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface) {
 		properties.redirectUri.value = context.environments.callback
 	}
 
-	async onCredential({ credentials, client, dependency }: classOnCredential<ICredentials['properties']>) {
+	async onCredential({ credentials, client, dependency }: classOnCredential) {
 		const axios = await dependency.getRequire('axios')
-		const { clientId, clientSecret, redirectUri, scope } = credentials
+		const { clientId, clientSecret, redirectUri, scope } = credentials as any
+
 		// Obtener el token
 		const resp = await client.openUrl({
 			uri: 'https://accounts.spotify.com/authorize',
@@ -455,7 +436,7 @@ export default class implements IClassNode<IProperties, ICredentials> {
 			}
 		)
 
-		const { access_token, refresh_token } = tokenResponse.data
+		const { refresh_token } = tokenResponse.data
 		return {
 			status: true,
 			data: {

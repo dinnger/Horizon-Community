@@ -1,12 +1,12 @@
 import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
-import { Project, Workflow, WorkflowExecution, WorkflowHistory } from '../../models/index.js'
+import { Project, Workflow, WorkflowHistory } from '../../models/index.js'
 import { getNodesInfo } from '@shared/engine/node.engine.js'
 import { workerManager } from '../../services/workerManager.js'
+import { fileURLToPath } from 'node:url'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -295,9 +295,9 @@ export const setupWorkflowRoutes = {
 
 	// Execute workflow - requires authentication and project access
 	// Execute workflow - requires execute permission
-	'workflows:execute': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
+	'workflows:execute': async ({ data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workspaceId, workflowId, trigger = 'manual', version } = data
+			const { workspaceId, workflowId, version } = data
 
 			eventRouter('workflows:validate', { workspaceId, workflowId }, async (data) => {
 				if (!data.success) return callback(data)

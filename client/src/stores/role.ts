@@ -59,7 +59,6 @@ export const useRoleStore = defineStore('role', {
 			this.error = null
 
 			try {
-				// TODO: Implementar llamada a la API
 				// const response = await fetch('/api/roles')
 				// this.roles = await response.json()
 				// Mock data por ahora
@@ -77,7 +76,6 @@ export const useRoleStore = defineStore('role', {
 			this.error = null
 
 			try {
-				// TODO: Implementar llamada a la API
 				// const response = await fetch('/api/permissions')
 				// this.permissions = await response.json()
 
@@ -99,7 +97,6 @@ export const useRoleStore = defineStore('role', {
 			this.error = null
 
 			try {
-				// TODO: Implementar llamada a la API
 				// const response = await fetch(`/api/users/${authStore.user.id}/permissions`)
 				// this.userPermissions = await response.json()
 
@@ -116,7 +113,6 @@ export const useRoleStore = defineStore('role', {
 
 		async updateRole(id: string, updates: Partial<IRole>) {
 			try {
-				// TODO: Implementar llamada a la API
 				// const response = await fetch(`/api/roles/${id}`, {
 				//   method: 'PUT',
 				//   headers: { 'Content-Type': 'application/json' },
@@ -136,7 +132,6 @@ export const useRoleStore = defineStore('role', {
 
 		async createRole(roleData: Omit<IRole, 'id'>) {
 			try {
-				// TODO: Implementar llamada a la API
 				// const response = await fetch('/api/roles', {
 				//   method: 'POST',
 				//   headers: { 'Content-Type': 'application/json' },
@@ -158,7 +153,6 @@ export const useRoleStore = defineStore('role', {
 
 		async deleteRole(id: string) {
 			try {
-				// TODO: Implementar llamada a la API
 				// await fetch(`/api/roles/${id}`, { method: 'DELETE' })
 
 				this.roles = this.roles.filter((role) => role.id !== id)

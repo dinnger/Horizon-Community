@@ -2,14 +2,14 @@ import fs from 'node:fs'
 import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
 import type { classBaseEnvironmentInterface, classDependencyInterface } from '@shared/interfaces/class.interface.js'
 import type { Express } from 'express'
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
+import type { IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { VariableModule } from './modules/variables/index.js'
 import { NodeModule } from './modules/workflow/index.js'
 import { CoreModule } from './modules/core/index.js'
 import { envs } from './config/envs.js'
 import { CommunicationModule } from './modules/communication/index.js'
 import { ContextModule } from './modules/context/index.js'
-import { loadJsonFromFile } from '@shared/utils/utilities.js'
+import { loadWorkflowFile } from '@shared/utils/utilities.js'
 // -----------------------------------------------------------------------------
 // Base
 // -----------------------------------------------------------------------------
@@ -19,7 +19,7 @@ export const info = {}
 export class Worker {
 	app: Express
 	workflowId: string
-	flow: IWorkflowFull
+	flow: IWorkflowSaveFull
 	context: IWorkerContext
 	dependencies: classDependencyInterface
 	environment: classBaseEnvironmentInterface
@@ -47,7 +47,7 @@ export class Worker {
 		if (uidFlow?.indexOf('/') > -1) PATH_FLOW = ''
 
 		this.workflowId = uidFlow
-		this.flow = loadJsonFromFile(this.workflowId ? `${PATH_FLOW}${this.workflowId}/flow.json` : 'flow.json')
+		this.flow = loadWorkflowFile(this.workflowId ? `${PATH_FLOW}${this.workflowId}/flow.json` : 'flow.json')
 		this.app = app
 		this.isDev = isDev
 		this.index = index

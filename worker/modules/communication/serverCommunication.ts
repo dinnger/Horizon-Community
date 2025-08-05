@@ -266,18 +266,6 @@ export class ServerCommunication extends WorkerServerComm {
 	}
 
 	/**
-	 * Request credentials from server (secure credential management)
-	 */
-	async getCredentialsFromServer(credentialId: string): Promise<any> {
-		try {
-			return await this.requestFromServer('storage:get', { id: credentialId })
-		} catch (error) {
-			console.error(`Error getting credentials ${credentialId} from server:`, error)
-			throw error
-		}
-	}
-
-	/**
 	 * Request environment variables from server
 	 */
 	async getEnvironmentFromServer(key?: string): Promise<any> {

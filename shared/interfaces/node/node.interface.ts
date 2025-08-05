@@ -136,7 +136,8 @@ export interface INodeCanvas extends INodeBase {
 /**
  * Interfaz para un nodo de worker
  */
-export interface INodeWorker extends Omit<INodeFull, 'color' | 'icon' | 'width' | 'height' | 'inputs' | 'outputs' | 'connections'> {
+export interface INodeWorker
+	extends Omit<INodeFull, 'x' | 'y' | 'color' | 'icon' | 'width' | 'height' | 'inputs' | 'outputs' | 'connections'> {
 	color?: string
 	icon?: string
 	width?: number

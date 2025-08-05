@@ -7,7 +7,8 @@ import type {
 	INodeConnection,
 	IWorkflowFull,
 	IWorkflowExecution,
-	IWorkflowDependencies
+	IWorkflowDependencies,
+	INodeSave
 } from '@shared/interfaces/standardized.js'
 
 // Interfaces legacy - usar las nuevas interfaces estandarizadas
@@ -55,7 +56,7 @@ export class NodeModule {
 	 * @returns {INode} The newly added node.
 	 * @throws {Error} If the class name does not exist in nodesClass.
 	 */
-	addNode(data: Omit<INodeWorker, 'class'>) {
+	addNode(data: INodeSave) {
 		if (!this.el) return null
 		if (!this.nodesClass[data.type]) {
 			console.error(`No existe el nodo ${data.type}`)
@@ -93,14 +94,14 @@ export class NodeModule {
 				this.dependencies.credentials.add({
 					idNode: data.id,
 					type: data.type,
-					value: value.value,
-					credentials: Array.isArray(data.credentials) ? data.credentials : []
+					value: value.value
 				})
 			}
 		}
 
 		this.nodes[data.id] = {
 			...data,
+			name: data.info.name,
 			properties: prop,
 			class: this.nodesClass[data.type]?.class
 		}

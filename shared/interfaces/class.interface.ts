@@ -106,7 +106,10 @@ export interface infoInterface {
  * @template P - The type of properties this node will have, defaults to IPropertiesType
  * @template C - The type of credentials this node will have, defaults to IPropertiesType
  */
-export interface IClassNode<P extends IPropertiesType = IPropertiesType, C extends IPropertiesType = IPropertiesType> {
+export interface IClassNode<
+	P extends IPropertiesType = IPropertiesType,
+	C extends { properties: IPropertiesType } = { properties: IPropertiesType; required: string[] }
+> {
 	/**
 	 * Determines if the node can access secrets
 	 */
@@ -167,7 +170,7 @@ export interface IClassNode<P extends IPropertiesType = IPropertiesType, C exten
 	 * Lifecycle method called when the node is updated
 	 * @param o - Execution context and parameters
 	 */
-	onUpdateCredential?(o: classOnUpdateCredentialInterface<C>): void
+	onUpdateCredential?(o: classOnUpdateCredentialInterface<C['properties']>): void
 
 	/**
 	 * Lifecycle method called for credential handling

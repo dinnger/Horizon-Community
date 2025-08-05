@@ -182,7 +182,6 @@ const handleLogout = async () => {
 }
 
 const editProfile = () => {
-  // TODO: Implementar modal o redirección para editar perfil
   console.log('Editar perfil - por implementar')
 }
 

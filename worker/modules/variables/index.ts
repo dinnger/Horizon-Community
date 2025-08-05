@@ -1,6 +1,5 @@
-import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
-import type { IWorkflow } from '../workflow/index.js'
 import type { Worker } from '../../worker.js'
+import type { IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { setSecret } from '../../../shared/engine/secret.engine.js'
 import { setVariable } from '../../../shared/engine/variables.engine.js'
 
@@ -42,19 +41,20 @@ export class VariableModule {
 		// }
 
 		// Credentials
+		// TODO: Obtener credenciales
 		for (const credential of this.el.nodeModule.dependencies.credentials.values()) {
 			const { value } = credential
-			const credentialsResult = await this.el.communicationModule.server.getCredentialsFromServer(value)
-			if (credentialsResult) {
-				const { name, result } = credentialsResult
-				for (const key in result) {
-					process.env[`WFC_${name.toUpperCase()}_${key.toUpperCase()}`] = result[key]
-				}
-				// Cambiar el node para en su meta agregar las credenciales que necesitan
-				if (credential.credentials !== Object.keys(result)) {
-					credential.credentials = Object.keys(result)
-				}
-			}
+			// const credentialsResult = await this.el.communicationModule.server.getCredentialsFromServer(value)
+			// if (credentialsResult) {
+			// 	const { name, result } = credentialsResult
+			// 	for (const key in result) {
+			// 		process.env[`WORKFLOW_${name.toUpperCase()}_${key.toUpperCase()}`] = result[key]
+			// 	}
+			// 	// Cambiar el node para en su meta agregar las credenciales que necesitan
+			// 	if (credential.credentials !== Object.keys(result)) {
+			// 		credential.credentials = Object.keys(result)
+			// 	}
+			// }
 		}
 	}
 
@@ -73,7 +73,7 @@ export class VariableModule {
 	 * @param params.flow - The workflow object to verify variables against
 	 * @returns A Promise that resolves when verification is complete
 	 */
-	async checkWorkflowEnvironment({ flow }: { flow: IWorkflow }) {
+	async checkWorkflowEnvironment({ flow }: { flow: IWorkflowSaveFull }) {
 		// Project variables
 		if (flow.project) {
 			for (const key of Object.keys(flow.project) as Array<keyof typeof flow.project>) {
@@ -95,40 +95,16 @@ export class VariableModule {
 			if (value) setVariable({ name, value })
 		}
 		// Credentials
-		for (const list of this.el.nodeModule.dependencies.credentials.values()) {
-			const { credentials, value } = list
-			// console.log({ value })
-			if (!credentials) continue
-			for (const field of credentials) {
-				const credential = `WFC_${value.toUpperCase()}_${field.toUpperCase()}`
-				const valueEnv = process.env[credential]
-				console.log(`\x1b[44m Variable \x1b[0m  ${value ? '\x1b[32m\u2713' : '\x1b[33m\u26a0'} ${credential} \x1b[0m`)
-				if (valueEnv) setSecret({ name: value, value: valueEnv })
-			}
-		}
-	}
-
-	async virtualSecretsAndCredentials(type: string, properties: IPropertiesType) {
-		// =========================================================================
-		// SECRETOS Y CREDENCIALES
-		// =========================================================================
-		const propertySecrets = Object.entries(properties).filter(([key, value]) => value && value.type === 'secret')
-		// Solicitar credenciales
-		const propertyCredentials = Object.entries(properties).filter(([key, value]) => value && value.type === 'credential')
-		if (propertyCredentials.length > 0) {
-			const credentials = await this.el.communicationModule.server.getCredentialsFromServer(type)
-			if (!credentials) return
-			for (const [key, value] of propertyCredentials) {
-				if ('options' in value) {
-					value.options = credentials.map((cred: any) => {
-						return {
-							label: cred.name.split('-').pop(),
-							value: cred.name
-						}
-					})
-				}
-			}
-		}
-		// =========================================================================
+		// for (const list of this.el.nodeModule.dependencies.credentials.values()) {
+		// 	const { credentials, value } = list
+		// 	// console.log({ value })
+		// 	if (!credentials) continue
+		// 	for (const field of credentials) {
+		// 		const credential = `WFC_${value.toUpperCase()}_${field.toUpperCase()}`
+		// 		const valueEnv = process.env[credential]
+		// 		console.log(`\x1b[44m Variable \x1b[0m  ${value ? '\x1b[32m\u2713' : '\x1b[33m\u26a0'} ${credential} \x1b[0m`)
+		// 		if (valueEnv) setSecret({ name: value, value: valueEnv })
+		// 	}
+		// }
 	}
 }
