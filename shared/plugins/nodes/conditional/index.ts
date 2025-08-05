@@ -5,7 +5,7 @@ interface IProperties extends IPropertiesType {
 	conditions: IListProperty
 }
 
-export default class ConditionalNode implements IClassNode<IProperties> {
+export default class ConditionalNode implements IClassNode {
 	constructor(
 		public info: infoInterface,
 		public properties: IProperties,

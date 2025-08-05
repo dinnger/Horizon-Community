@@ -48,7 +48,7 @@ export interface IProperty extends IPropertiesType {
 	responseBody: ICodeProperty
 }
 
-export default class implements IClassNode<IProperty> {
+export default class implements IClassNode {
 	// ===============================================
 	// Dependencias
 	// ===============================================

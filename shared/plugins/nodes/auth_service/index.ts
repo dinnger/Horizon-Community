@@ -40,7 +40,7 @@ interface IProperties extends IPropertiesType {
 	tokenName: IStringProperty
 }
 
-export default class AuthServiceNode implements IClassNode<IProperties> {
+export default class AuthServiceNode implements IClassNode {
 	constructor(
 		public accessSecrets: boolean,
 		public dependencies: string[],

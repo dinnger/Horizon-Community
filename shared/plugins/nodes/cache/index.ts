@@ -7,7 +7,7 @@ interface IProperties extends IPropertiesType {
 	checkperiod: INumberProperty
 }
 
-export default class implements IClassNode<IProperties> {
+export default class implements IClassNode {
 	private cacheInstance: any = null
 
 	constructor(

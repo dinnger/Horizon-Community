@@ -102,14 +102,9 @@ export interface infoInterface {
 
 /**
  * Interface representing a class node with configurable properties and credentials.
- *
- * @template P - The type of properties this node will have, defaults to IPropertiesType
- * @template C - The type of credentials this node will have, defaults to IPropertiesType
+ * The types of properties and credentials are inferred from the actual implementation.
  */
-export interface IClassNode<
-	P extends IPropertiesType = IPropertiesType,
-	C extends { properties: IPropertiesType } = { properties: IPropertiesType; required: string[] }
-> {
+export interface IClassNode {
 	/**
 	 * Determines if the node can access secrets
 	 */
@@ -129,12 +124,12 @@ export interface IClassNode<
 	 * Configuration properties for the node.
 	 * These define the node's behavior and settings.
 	 */
-	properties: P
+	properties: IPropertiesType
 
 	/**
 	 * Authentication credentials required by the node
 	 */
-	credentials?: C
+	credentials?: IPropertiesType
 
 	/**
 	 * Additional metadata for the node
@@ -157,7 +152,7 @@ export interface IClassNode<
 	 * Lifecycle method called when the node is updated
 	 * @param o - Execution context and parameters
 	 */
-	onUpdateProperties?(o: classOnUpdateInterface<P>): void
+	onUpdateProperties?(o: classOnUpdateInterface<this['properties']>): void
 
 	/**
 	 * Lifecycle method called when the node is executed
@@ -170,14 +165,14 @@ export interface IClassNode<
 	 * Lifecycle method called when the node is updated
 	 * @param o - Execution context and parameters
 	 */
-	onUpdateCredential?(o: classOnUpdateCredentialInterface<C['properties']>): void
+	onUpdateCredential?(o: classOnUpdateCredentialInterface<NonNullable<this['credentials']>>): void
 
 	/**
 	 * Lifecycle method called for credential handling
 	 * @param o - Credential context and parameters
 	 * @returns A promise that resolves with credential processing results
 	 */
-	onCredential?(o: classOnCredential): Promise<{ status: boolean; data: any }>
+	onCredential?(o: classOnCredential<NonNullable<this['credentials']>>): Promise<{ status: boolean; data: any }>
 
 	/**
 	 * Lifecycle method called when the node is destroyed

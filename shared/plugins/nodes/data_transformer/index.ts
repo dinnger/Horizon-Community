@@ -6,7 +6,7 @@ interface IProperties extends IPropertiesType {
 	helperFunctions: ICodeProperty
 }
 
-export default class implements IClassNode<IProperties> {
+export default class implements IClassNode {
 	constructor(
 		public dependencies: string[],
 		public info: infoInterface,

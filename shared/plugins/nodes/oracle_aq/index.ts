@@ -2,6 +2,7 @@
 import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
+	INumberProperty,
 	IOptionsProperty,
 	IPropertiesType,
 	ISecretProperty,
@@ -9,68 +10,43 @@ import type {
 	ISwitchProperty
 } from '@shared/interfaces/workflow.properties.interface.js'
 
-interface IProperties extends IPropertiesType {
-	connection: IOptionsProperty
-	config: ICodeProperty
-	configSecret: ISecretProperty
-	operation: IOptionsProperty
-	instantClientPath: IStringProperty
-	queueName: IStringProperty
-	message: ICodeProperty
-	keepAlive: ISwitchProperty
-	advancedOptions: ISwitchProperty
-	deliveryMode: IOptionsProperty
-}
+export default class OracleAQNode implements IClassNode {
+	accessSecrets = true
+	dependencies = ['oracledb']
+	info = {
+		name: 'Oracle AQ',
+		desc: 'Consumir o producir mensajes en Oracle Advanced Queuing',
+		icon: '󰘙',
+		group: 'Base de Datos',
+		color: '#F80000',
+		connectors: {
+			inputs: ['input'],
+			outputs: ['response', 'error']
+		},
+		isSingleton: true
+	}
 
-interface ICredentials extends IPropertiesType {
-	config: ICodeProperty
-}
-
-export default class OracleAQNode implements IClassNode<IProperties, ICredentials> {
-	constructor(
-		public accessSecrets: boolean,
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperties,
-		public credentials: ICredentials,
-		private connections: Map<string, { connection: any; queue: any }> = new Map()
-	) {
-		this.accessSecrets = true
-		this.dependencies = ['oracledb']
-		this.info = {
-			name: 'Oracle AQ',
-			desc: 'Consumir o producir mensajes en Oracle Advanced Queuing',
-			icon: '󰘙',
-			group: 'Base de Datos',
-			color: '#F80000',
-			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
-			},
-			isSingleton: true
-		}
-
-		this.properties = {
-			connection: {
-				name: 'Tipo de conexión',
-				type: 'options',
-				options: [
-					{
-						label: 'Manual',
-						value: 'manual'
-					},
-					{
-						label: 'Secreto',
-						value: 'secret'
-					}
-				],
-				value: 'manual'
-			},
-			config: {
-				name: 'Configuración',
-				type: 'code',
-				lang: 'json',
-				value: `{
+	properties = {
+		connection: {
+			name: 'Tipo de conexión',
+			type: 'options',
+			options: [
+				{
+					label: 'Manual',
+					value: 'manual'
+				},
+				{
+					label: 'Secreto',
+					value: 'secret'
+				}
+			],
+			value: 'manual'
+		} as IOptionsProperty,
+		config: {
+			name: 'Configuración',
+			type: 'code',
+			lang: 'json',
+			value: `{
   "host": "localhost",
   "username": "user",
   "password": "password",
@@ -78,102 +54,115 @@ export default class OracleAQNode implements IClassNode<IProperties, ICredential
   "port": 5432,
   "logging": false
 }`
-			},
-			configSecret: {
-				name: 'Configuración',
-				type: 'secret',
-				secretType: 'DATABASE',
-				options: [],
-				value: '',
-				show: false
-			},
-			operation: {
-				name: 'Operación',
-				type: 'options',
-				options: [
-					{
-						label: 'Enqueue (Producir mensaje)',
-						value: 'enqueue'
-					},
-					{
-						label: 'Dequeue (Consumir mensaje)',
-						value: 'dequeue'
-					}
-				],
-				value: 'enqueue'
-			},
-			instantClientPath: {
-				name: 'Directorio de instantclient',
-				type: 'string',
-				value: 'C:/instantclient_19_8',
-				description: 'Directorio donde se encuentra instantclient'
-			},
-			queueName: {
-				name: 'Nombre de la cola',
-				type: 'string',
-				value: 'MY_QUEUE',
-				description: 'Nombre de la cola AQ'
-			},
-			message: {
-				name: 'Mensaje',
-				type: 'code',
-				lang: 'json',
-				value:
-					'{\n  "P_TABLE_NAME": "EXAMPLE_TABLE",\n  "P_PROCEDURE_NAME": "EXAMPLE_PROCEDURE",\n  "P_INSTRUCTION": "SELECT * FROM DUAL"\n}',
-				description: 'Contenido del mensaje a enviar (solo para enqueue)'
-			},
-			keepAlive: {
-				name: 'Mantener conexión',
-				type: 'switch',
-				value: true
-			},
-			advancedOptions: {
-				name: 'Opciones avanzadas',
-				type: 'switch',
-				value: false
-			},
-			deliveryMode: {
-				name: 'Modo de entrega',
-				type: 'options',
-				options: [
-					{
-						label: 'Persistent (Persistente)',
-						value: 'PERSISTENT'
-					},
-					{
-						label: 'Buffered (En buffer)',
-						value: 'BUFFERED'
-					}
-				],
-				value: 'PERSISTENT',
-				show: false
-			}
-		}
+		} as ICodeProperty,
+		configSecret: {
+			name: 'Configuración',
+			type: 'secret',
+			secretType: 'DATABASE',
+			options: [],
+			value: '',
+			show: false
+		} as ISecretProperty,
+		operation: {
+			name: 'Operación',
+			type: 'options',
+			options: [
+				{
+					label: 'Enqueue (Producir mensaje)',
+					value: 'enqueue'
+				},
+				{
+					label: 'Dequeue (Consumir mensaje)',
+					value: 'dequeue'
+				}
+			],
+			value: 'enqueue'
+		} as IOptionsProperty,
+		instantClientPath: {
+			name: 'Directorio de instantclient',
+			type: 'string',
+			value: 'C:/instantclient_19_8',
+			description: 'Directorio donde se encuentra instantclient'
+		} as IStringProperty,
+		queueName: {
+			name: 'Nombre de la cola',
+			type: 'string',
+			value: 'MY_QUEUE',
+			description: 'Nombre de la cola AQ'
+		} as IStringProperty,
+		message: {
+			name: 'Mensaje',
+			type: 'code',
+			lang: 'json',
+			value:
+				'{\n  "P_TABLE_NAME": "EXAMPLE_TABLE",\n  "P_PROCEDURE_NAME": "EXAMPLE_PROCEDURE",\n  "P_INSTRUCTION": "SELECT * FROM DUAL"\n}',
+			description: 'Contenido del mensaje a enviar (solo para enqueue)'
+		} as ICodeProperty,
+		keepAlive: {
+			name: 'Mantener conexión',
+			type: 'switch',
+			value: true
+		} as ISwitchProperty,
+		advancedOptions: {
+			name: 'Opciones avanzadas',
+			type: 'switch',
+			value: false
+		} as ISwitchProperty,
+		deliveryMode: {
+			name: 'Modo de entrega',
+			type: 'options',
+			options: [
+				{
+					label: 'Persistent (Persistente)',
+					value: 'PERSISTENT'
+				},
+				{
+					label: 'Buffered (En buffer)',
+					value: 'BUFFERED'
+				}
+			],
+			value: 'PERSISTENT',
+			show: false
+		} as IOptionsProperty,
+		maxMessages: {
+			name: 'No. máximo de mensaje',
+			type: 'number',
+			value: 10,
+			show: false
+		} as INumberProperty,
+		timeout: {
+			name: 'Tiempo de espera',
+			type: 'number',
+			value: 10,
+			show: false
+		} as INumberProperty
+	}
 
-		this.credentials = {
-			config: {
-				name: 'Configuración de conexión',
-				type: 'code',
-				lang: 'json',
-				value: `{ 
+	credentials = {
+		config: {
+			name: 'Configuración de conexión',
+			type: 'code',
+			lang: 'json',
+			value: `{ 
     "database": "mydb",
     "user": "myuser",
     "password": "mypass",
     "host": "localhost"
 }
 `
-			}
-		}
+		} as ICodeProperty
 	}
+
+	connections: { [key: string]: any } = {}
 
 	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false
-			const secrets = await context.getSecrets(String(this.properties.dialect.value))
-			if (secrets) {
-				this.properties.configSecret.options = secrets
-			}
+			// const secrets = await context.getSecrets(String(this.properties.dialect.value))
+			// if (secrets) {
+			// 	this.properties.configSecret.options = secrets
+			// }
 		}
 		if (this.properties.connection.value === 'manual') {
 			this.properties.config.show = true
@@ -258,16 +247,16 @@ export default class OracleAQNode implements IClassNode<IProperties, ICredential
 				// Consumir mensaje
 				const timeout = this.properties.timeout.value as number
 				const maxMessages = this.properties.maxMessages.value as number
-				const condition = this.properties.condition.value as string
+				// const condition = this.properties.condition.value as string
 
 				const dequeueOptions: any = {
 					wait: timeout,
 					visibility: oracledb.AQ_VISIBILITY_IMMEDIATE
 				}
 
-				if (condition) {
-					dequeueOptions.condition = condition
-				}
+				// if (condition) {
+				// 	dequeueOptions.condition = condition
+				// }
 
 				const messages = []
 				for (let i = 0; i < maxMessages; i++) {

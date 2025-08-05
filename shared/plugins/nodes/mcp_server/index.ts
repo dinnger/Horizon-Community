@@ -23,7 +23,7 @@ interface IProperties extends IPropertiesType {
 	logLevel: IOptionsProperty
 }
 
-export default class implements IClassNode<IProperties> {
+export default class implements IClassNode {
 	// ===============================================
 	// Dependencias
 	// ===============================================
