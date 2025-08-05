@@ -17,7 +17,7 @@
     </div>
 
     <!-- Credentials -->
-    <template v-if="property.type === 'credential'">
+    <template v-else-if="property.type === 'credential'">
       <div class="flex gap-2">
         <select v-model="localValue" class="select select-bordered flex-1" :disabled="property.disabled || isReadOnly"
           :class="{ 'select-error': property.required && !property.value }">
@@ -75,9 +75,6 @@
       :disabled="property.disabled || isReadOnly" class="input input-bordered"
       :class="{ 'input-error': property.required && !property.value }" />
 
-
-
-
     <!-- Boolean switch -->
     <div v-else-if="property.type === 'switch'" class="form-control">
       <label class="label cursor-pointer justify-start space-x-3">
@@ -96,7 +93,45 @@
       </option>
     </select>
 
+    <!-- List property -->
+    <div v-else-if="property.type === 'list'" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium">Elementos de la lista</span>
+        <button @click="addListItem" :disabled="property.disabled || isReadOnly" class="btn btn-sm btn-primary">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Agregar
+        </button>
+      </div>
 
+      <div v-if="!listItems.length"
+        class="text-center py-8 text-base-content/60 border-2 border-dashed border-base-content/20 rounded-lg">
+        No hay elementos en la lista
+      </div>
+
+      <div v-else class="space-y-3">
+        <div v-for="(item, index) in listItems" :key="index"
+          class="p-4 border border-base-content/20 rounded-lg bg-base-100">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium">Elemento {{ index + 1 }}</span>
+            <button @click="removeListItem(index)" :disabled="property.disabled || isReadOnly"
+              class="btn btn-sm btn-ghost text-error hover:bg-error/10">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="grid gap-3">
+            <NodePropertyInput v-for="(propDef, propKey) of item" :key="`${index}-${propKey}`" :property="propDef"
+              :property-key="String(propKey)" :model-value="item[propKey].value" :is-read-only="isReadOnly"
+              :node-type="nodeType" @update:model-value="updateListItemProperty(index, propKey, $event)" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Default fallback -->
     <div v-else class="alert alert-warning">
@@ -220,6 +255,56 @@ watch(() => props.nodeType, () => {
     loadCredentials()
   }
 })
+
+// Lógica para propiedades de tipo list
+const listItems = computed({
+  get: () => {
+    if (props.property.type === 'list') {
+      return props.modelValue || []
+    }
+    return []
+  },
+  set: (value) => {
+    if (!props.isReadOnly && props.property.type === 'list') {
+      emit('update:modelValue', value)
+    }
+  }
+})
+
+// Computed para obtener el objeto de propiedades de la lista
+const listPropertyObject = computed(() => {
+  if (props.property.type === 'list') {
+    const listProperty = props.property as Extract<propertiesType, { type: 'list' }>
+    return listProperty.object
+  }
+  return {}
+})
+
+// Función para agregar un nuevo elemento a la lista
+const addListItem = () => {
+  if (props.property.type !== 'list' || props.isReadOnly) return
+  const listProperty = props.property as Extract<propertiesType, { type: 'list' }>
+  const currentItems = listItems.value
+  listItems.value = [...currentItems, JSON.parse(JSON.stringify(listProperty.object))]
+}
+
+// Función para eliminar un elemento de la lista
+const removeListItem = (index: number) => {
+  if (props.property.type !== 'list' || props.isReadOnly) return
+  const currentItems = listItems.value
+  const newItems = currentItems.filter((_: any, i: number) => i !== index)
+  listItems.value = newItems
+}
+
+// Función para actualizar una propiedad específica de un elemento de la lista
+const updateListItemProperty = (itemIndex: number, propertyKey: string | number, value: any) => {
+  if (props.property.type !== 'list' || props.isReadOnly) return
+  const currentItems = [...listItems.value]
+  if (currentItems[itemIndex]) {
+    currentItems[itemIndex][propertyKey].value = value
+    listItems.value = currentItems
+  }
+}
 
 </script>
 

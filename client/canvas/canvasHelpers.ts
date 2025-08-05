@@ -478,7 +478,7 @@ export function getPositionConnection(node: INodeCanvas, connectorName: string) 
 	let point = { x: 0, y: 0 }
 	let side: 'left' | 'right' | 'top' | 'bottom' = 'left'
 	for (const [connector, value] of Object.entries(node.info.connectors)) {
-		const index = value.findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f === connectorName))
+		const index = value.findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f) === connectorName)
 		if (index !== -1) {
 			if (connector === 'inputs') {
 				pos = 30 + index * 20

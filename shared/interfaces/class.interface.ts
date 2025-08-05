@@ -28,6 +28,7 @@ export interface classCredentialInterface {
 export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesType> {
 	context: IClientContext
 	properties: T
+	connectors: INodeConnectors
 }
 
 export interface classOnUpdateCredentialInterface<T extends IPropertiesType = IPropertiesType> {

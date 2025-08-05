@@ -50,6 +50,7 @@ import NodeMetaSection from './NodeProperties/NodeMetaSection.vue'
 import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 import { getClientContext } from '@/context'
+import type { classOnUpdateInterface } from '@shared/interfaces'
 
 interface Props {
   canvasComposable: IUseCanvasType
@@ -67,7 +68,7 @@ const nodesLibraryStore = useNodesLibraryStore()
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-let fnOnCreate: any = null
+let fnOnCreate: ((properties: any, connectors: any) => any) | null = null
 
 const activeSection = ref('properties')
 const isSaving = ref(false)
@@ -126,7 +127,7 @@ const updateProperty = (key: string, value: any) => {
   if (editableProperties.value[key]) {
     editableProperties.value[key].value = value
   }
-  if (fnOnCreate) fnOnCreate(editableProperties.value)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
 }
 
 const updateCredential = (key: string, value: any) => {
@@ -177,7 +178,7 @@ const initializeEditableData = async () => {
   originalMeta.value = JSON.parse(JSON.stringify(editableMeta.value))
 
   await importNodeOnCreate()
-  if (fnOnCreate) fnOnCreate(editableProperties.value)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
 }
 
 const resetChanges = () => {
@@ -214,8 +215,8 @@ const importNodeOnCreate = async () => {
       const onUpdateFunction = propertiesModule.onUpdateProperties
 
       if (typeof onUpdateFunction === 'function') {
-        fnOnCreate = (properties: any) => {
-          onUpdateFunction({ properties, context: getClientContext(props.canvasComposable.context.value) })
+        fnOnCreate = (properties: any, connectors: any) => {
+          onUpdateFunction({ properties, context: getClientContext(props.canvasComposable.context.value), connectors })
         }
       } else {
         console.warn('El script onUpdateProperties no exporta una función ejecutable')
