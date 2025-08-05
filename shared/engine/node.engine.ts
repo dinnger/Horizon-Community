@@ -1,17 +1,17 @@
-import fs from 'node:fs'
+import type { IClassNode, newClassInterface } from '../interfaces/class.interface.js'
+import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import { glob } from 'glob'
-import type { newClassInterface } from '../interfaces/class.interface.js'
-import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import path from 'node:path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const dirPath = path.join(__dirname, '../plugins/nodes/')
 const files = glob.sync('**/index.js', { cwd: dirPath })
-const filesOnCreate = glob.sync('**/onCreate.js', { cwd: dirPath })
 
 const nodesClass: { [key: string]: newClassInterface } = {}
-const nodeOnCreate: { [key: string]: any } = {}
+const nodeUpdateProperties: { [key: string]: any } = {}
+const nodeUpdateCredentials: { [key: string]: any } = {}
 
 for (const file of files) {
 	if (file && file.replace(/\\/g, '/').indexOf('/_') > -1) continue
@@ -26,7 +26,20 @@ for (const file of files) {
 	const model = module.default
 
 	try {
-		const data = new model()
+		const data = new model() as IClassNode
+
+		// Guardar la función onUpdate
+		if (data.onUpdateProperties) {
+			nodeUpdateProperties[type] =
+				`export ${data.onUpdateProperties.toString().replace('onUpdateProperties({', 'function onUpdateProperties({')}`
+		}
+
+		// Guardar la función onUpdateCredential
+		if (data.onUpdateCredential) {
+			nodeUpdateCredentials[type] =
+				`export ${data.onUpdateCredential.toString().replace('onUpdateCredential({', 'function onUpdateCredential({')}`
+		}
+
 		nodesClass[type] = {
 			type,
 			info: data.info,
@@ -34,7 +47,7 @@ for (const file of files) {
 			dependencies: data.dependencies,
 			properties: data.properties,
 			credentials: data.credentials,
-			credentialsActions: data.credentialsActions,
+			onCredential: data.onCredential,
 			class: model
 		}
 	} catch (error) {
@@ -42,22 +55,7 @@ for (const file of files) {
 	}
 }
 
-for (const file of filesOnCreate) {
-	const type = file
-		.replace(/\\/g, '/')
-		.toString()
-		.replace(`${dirPath.replace(/\\/g, '/')}/`, '')
-		.split('/')
-		.slice(0, -1)
-		.join('/')
-	try {
-		nodeOnCreate[type] = fs.readFileSync(path.resolve(dirPath, file), 'utf8')
-	} catch (error) {
-		console.log(`Error al cargar el nodo ${file}`, error)
-	}
-}
-
-export function getNodeClass() {
+export function getNodesInfo() {
 	return Object.fromEntries(
 		Object.entries(nodesClass).map(([key, value]) => [
 			key,
@@ -66,10 +64,10 @@ export function getNodeClass() {
 	)
 }
 
-export function getNodeClassDependencies(node: string): string[] | null {
-	return nodesClass[node]?.dependencies || null
-}
-
-export function getNodeOnCreate(node: string): string {
-	return nodeOnCreate[node]
+export function getNodeInfo(node: string) {
+	return {
+		...nodesClass[node],
+		onUpdateProperties: nodeUpdateProperties[node] || '',
+		onUpdateCredential: nodeUpdateCredentials[node] || ''
+	}
 }

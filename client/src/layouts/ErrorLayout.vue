@@ -6,12 +6,10 @@
       <div class="container mx-auto">
         <div class="flex items-center justify-between">
           <router-link to="/" class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
-              </svg>
-            </div>
+
+            <Logo class="w-7 h-7  inline"
+              :class="[settingsStore.currentTheme === 'dark' ? 'fill-white' : 'fill-primary']" />
+
             <span class="text-xl font-bold text-base-content">Horizon</span>
           </router-link>
 
@@ -73,25 +71,20 @@ import IconSun from '../components/icons/IconSun.vue'
 import IconMoon from '../components/icons/IconMoon.vue'
 import IconPalette from '../components/icons/IconPalette.vue'
 import { useSettingsStore } from '@/stores'
+import Logo from '@/components/icons/logo.vue'
 
 const settingsStore = useSettingsStore()
 
 const router = useRouter()
 
 const themes = [
-  { value: 'crystal', label: 'Crystal Light', icon: IconSun },
-  { value: 'crystal-dark', label: 'Crystal Dark', icon: IconMoon },
   { value: 'light', label: 'Light', icon: IconSun },
   { value: 'dark', label: 'Dark', icon: IconMoon },
-  { value: 'cyberpunk', label: 'Cyberpunk', icon: IconPalette },
-  { value: 'synthwave', label: 'Synthwave', icon: IconPalette },
-  { value: 'luxury', label: 'Luxury', icon: IconPalette },
-  { value: 'dracula', label: 'Dracula', icon: IconPalette }
 ]
 
 const themeIcon = computed(() => {
   if (settingsStore.currentTheme.includes('dark')) return IconMoon
-  if (settingsStore.currentTheme === 'light' || settingsStore.currentTheme === 'crystal') return IconSun
+  if (settingsStore.currentTheme === 'light') return IconSun
   return IconPalette
 })
 
@@ -103,8 +96,5 @@ const goBack = () => {
   router.back()
 }
 
-onMounted(() => {
-  const savedTheme = localStorage.getItem('theme') || 'crystal'
-  setTheme(savedTheme)
-})
+
 </script>

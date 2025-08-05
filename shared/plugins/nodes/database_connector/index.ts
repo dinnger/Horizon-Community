@@ -1,98 +1,82 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
-import type { ICodeProperty, IOptionsProperty, IPropertiesType, ISecretProperty } from '@shared/interfaces/workflow.properties.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type {
+	ICodeProperty,
+	IOptionsProperty,
+	IPropertiesType,
+	ISecretProperty,
+	ISwitchProperty
+} from '@shared/interfaces/workflow.properties.interface.js'
 
 type IDialect = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'oracle'
 
-interface IProperties extends IPropertiesType {
-	dialect: IOptionsProperty
-	connection: IOptionsProperty
-	config: ICodeProperty
-	configSecret: ISecretProperty
-	query: ICodeProperty
-	replacements: ICodeProperty
-}
+export default class DatabaseNode implements IClassNode {
+	accessSecrets = true
+	dependencies = ['sequelize']
+	info = {
+		name: 'Database',
+		desc: 'Interactúa con bases de datos usando Sequelize.',
+		icon: '󰆼',
+		group: 'Base de Datos',
+		color: '#52b0e7',
+		connectors: {
+			inputs: ['input'],
+			outputs: ['response', 'error']
+		},
+		isSingleton: true
+	}
 
-interface ICredentials extends IPropertiesType {
-	database: IOptionsProperty
-	config: ICodeProperty
-}
-
-export default class DatabaseNode implements IClassNode<IProperties, ICredentials> {
-	constructor(
-		public accessSecrets: boolean,
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperties,
-		public credentials: ICredentials,
-		private connections: Record<string, any> = {}
-	) {
-		this.accessSecrets = true
-		this.dependencies = ['sequelize']
-		this.info = {
-			name: 'Database',
-			desc: 'Interactúa con bases de datos usando Sequelize.',
-			icon: '󰆼',
-			group: 'Base de Datos',
-			color: '#52b0e7',
-			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
-			},
-			isSingleton: true
-		}
-
-		this.properties = {
-			dialect: {
-				name: 'Dialecto',
-				type: 'options',
-				options: [
-					{
-						label: 'Mysql',
-						value: 'mysql'
-					},
-					{
-						label: 'Postgres',
-						value: 'postgres'
-					},
-					{
-						label: 'SQLite',
-						value: 'sqlite'
-					},
-					{
-						label: 'MariaDB',
-						value: 'mariadb'
-					},
-					{
-						label: 'MSSQL',
-						value: 'mssql'
-					},
-					{
-						label: 'Oracle',
-						value: 'oracle'
-					}
-				],
-				value: 'postgres'
-			},
-			connection: {
-				name: 'Tipo de conexión',
-				type: 'options',
-				options: [
-					{
-						label: 'Manual',
-						value: 'manual'
-					},
-					{
-						label: 'Secreto',
-						value: 'secret'
-					}
-				],
-				value: 'manual'
-			},
-			config: {
-				name: 'Configuración',
-				type: 'code',
-				lang: 'json',
-				value: `{
+	properties = {
+		dialect: {
+			name: 'Dialecto',
+			type: 'options',
+			options: [
+				{
+					label: 'Mysql',
+					value: 'mysql'
+				},
+				{
+					label: 'Postgres',
+					value: 'postgres'
+				},
+				{
+					label: 'SQLite',
+					value: 'sqlite'
+				},
+				{
+					label: 'MariaDB',
+					value: 'mariadb'
+				},
+				{
+					label: 'MSSQL',
+					value: 'mssql'
+				},
+				{
+					label: 'Oracle',
+					value: 'oracle'
+				}
+			],
+			value: 'postgres'
+		} as IOptionsProperty,
+		connection: {
+			name: 'Tipo de conexión',
+			type: 'options',
+			options: [
+				{
+					label: 'Manual',
+					value: 'manual'
+				},
+				{
+					label: 'Secreto',
+					value: 'secret'
+				}
+			],
+			value: 'manual'
+		} as IOptionsProperty,
+		config: {
+			name: 'Configuración',
+			type: 'code',
+			lang: 'json',
+			value: `{
           "host": "localhost",
           "username": "user",
           "password": "password",
@@ -100,76 +84,77 @@ export default class DatabaseNode implements IClassNode<IProperties, ICredential
           "port": 5432,
           "logging": false
         }`
-			},
-			configSecret: {
-				name: 'Configuración',
-				type: 'secret',
-				secretType: 'DATABASE',
-				options: [],
-				value: '',
-				show: false
-			},
-			query: {
-				name: 'Query',
-				type: 'code',
-				lang: 'sql',
-				value: 'select * from users where id = :id'
-			},
-			replacements: {
-				name: 'Replacements',
-				type: 'code',
-				lang: 'json',
-				value: '{\n  "id": 1\n}'
-			},
-			keepAlive: {
-				name: 'Mantener conexión',
-				type: 'switch',
-				value: true
-			}
-		}
+		} as ICodeProperty,
+		configSecret: {
+			name: 'Configuración',
+			type: 'secret',
+			secretType: 'DATABASE',
+			options: [],
+			value: '',
+			show: false
+		} as ISecretProperty,
+		query: {
+			name: 'Query',
+			type: 'code',
+			lang: 'sql',
+			value: 'select * from users where id = :id'
+		} as ICodeProperty,
+		replacements: {
+			name: 'Replacements',
+			type: 'code',
+			lang: 'json',
+			value: '{\n  "id": 1\n}'
+		} as ICodeProperty,
+		keepAlive: {
+			name: 'Mantener conexión',
+			type: 'switch',
+			value: true
+		} as ISwitchProperty
+	}
 
-		this.credentials = {
-			database: {
-				name: 'Database',
-				type: 'options',
-				options: [
-					{
-						label: 'Postgres',
-						value: 'postgres'
-					},
-					{
-						label: 'MySQL',
-						value: 'mysql'
-					},
-					{
-						label: 'SQLite',
-						value: 'sqlite'
-					},
-					{
-						label: 'MariaDB',
-						value: 'mariadb'
-					},
-					{
-						label: 'Oracle',
-						value: 'oracle'
-					}
-				],
-				value: 'postgres'
-			},
-			config: {
-				name: 'Configuración de conexión',
-				type: 'code',
-				lang: 'json',
-				value: `{ 
+	credentials = {
+		database: {
+			name: 'Database',
+			type: 'options',
+			options: [
+				{
+					label: 'Postgres',
+					value: 'postgres'
+				},
+				{
+					label: 'MySQL',
+					value: 'mysql'
+				},
+				{
+					label: 'SQLite',
+					value: 'sqlite'
+				},
+				{
+					label: 'MariaDB',
+					value: 'mariadb'
+				},
+				{
+					label: 'Oracle',
+					value: 'oracle'
+				}
+			],
+			value: 'postgres'
+		} as IOptionsProperty,
+		config: {
+			name: 'Configuración de conexión',
+			type: 'code',
+			lang: 'json',
+			value: `{ 
     "database": "mydb",
     "user": "myuser",
     "password": "mypass",
     "host": "localhost"
 }
 `
-			}
-		}
+		} as ICodeProperty
 	}
+
+	connections: { [key: string]: any } = {}
 
 	async onDeploy() {
 		switch (this.properties.dialect.value) {
@@ -194,7 +179,7 @@ export default class DatabaseNode implements IClassNode<IProperties, ICredential
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		if (this.properties.connection.value === 'secret') {
 			this.properties.configSecret.show = true
 			this.properties.config.show = false

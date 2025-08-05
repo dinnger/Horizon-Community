@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 
 export default class implements IClassNode {
@@ -99,7 +99,7 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		// Mostrar u ocultar opciones avanzadas
 		const showAdvanced = this.properties.advancedOptions.value === true
 		this.properties.customErrorMessages.show = showAdvanced

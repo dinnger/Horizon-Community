@@ -181,7 +181,6 @@ onMounted(() => {
 
   eventUnsubscribers.push(
     canvasEvents.on('note:manager:open', () => {
-      // TODO: Obtener todas las notas del canvas
       canvasModals.openNotesManager([])
     })
   )

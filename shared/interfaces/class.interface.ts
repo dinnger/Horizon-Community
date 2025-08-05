@@ -1,7 +1,7 @@
 import type { Express } from 'express'
 import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
-import type { IWorkflowExecutionContextInterface } from './workflow.execute.interface.js'
+import type { IClientContext, IClientCredentialContext, IWorkerContext } from './context.interface.js'
 import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
 import type { INodeMeta } from './standardized.js'
 
@@ -25,8 +25,15 @@ export interface classCredentialInterface {
 	getCredential: (name: string) => any
 }
 
-export interface classOnCreateInterface {
-	context: IWorkflowExecutionContextInterface
+export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesType> {
+	context: IClientContext
+	properties: T
+	connectors: INodeConnectors
+}
+
+export interface classOnUpdateCredentialInterface<T extends IPropertiesType = IPropertiesType> {
+	context: IClientCredentialContext
+	properties: T
 }
 
 export interface classOnActionsInterface {
@@ -35,7 +42,7 @@ export interface classOnActionsInterface {
 
 export interface classOnExecuteInterface {
 	app: Express
-	context: IWorkflowExecutionContextInterface
+	context: IWorkerContext
 	execute: IWorkflowExecutionInterface
 	logger: {
 		info: (...args: unknown[]) => void
@@ -48,8 +55,9 @@ export interface classOnExecuteInterface {
 	credential: classCredentialInterface
 }
 
-export interface classOnCredential {
+export interface classOnCredential<T extends IPropertiesType = IPropertiesType> {
 	action: string
+	credentials: T
 	dependency: classDependencyInterface
 	client: IClientService
 }
@@ -95,11 +103,9 @@ export interface infoInterface {
 
 /**
  * Interface representing a class node with configurable properties and credentials.
- *
- * @template T - The type of properties this node will have, defaults to IPropertiesType
- * @template C - The type of credentials this node will have, defaults to IPropertiesType
+ * The types of properties and credentials are inferred from the actual implementation.
  */
-export interface IClassNode<T extends IPropertiesType = IPropertiesType, C extends IPropertiesType = IPropertiesType> {
+export interface IClassNode {
 	/**
 	 * Determines if the node can access secrets
 	 */
@@ -119,17 +125,12 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	 * Configuration properties for the node.
 	 * These define the node's behavior and settings.
 	 */
-	properties: T
+	properties: IPropertiesType
 
 	/**
 	 * Authentication credentials required by the node
 	 */
-	credentials?: C
-
-	/**
-	 * List of credential actions
-	 */
-	credentialsActions?: { name: string; label: string }[] | string[]
+	credentials?: IPropertiesType
 
 	/**
 	 * Additional metadata for the node
@@ -149,6 +150,12 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	onDeploy?(): void
 
 	/**
+	 * Lifecycle method called when the node is updated
+	 * @param o - Execution context and parameters
+	 */
+	onUpdateProperties?(o: classOnUpdateInterface<this['properties']>): void
+
+	/**
 	 * Lifecycle method called when the node is executed
 	 * @param o - Execution context and parameters
 	 * @returns A promise that resolves when execution is complete
@@ -156,11 +163,17 @@ export interface IClassNode<T extends IPropertiesType = IPropertiesType, C exten
 	onExecute(o: classOnExecuteInterface): Promise<void>
 
 	/**
+	 * Lifecycle method called when the node is updated
+	 * @param o - Execution context and parameters
+	 */
+	onUpdateCredential?(o: classOnUpdateCredentialInterface<NonNullable<this['credentials']>>): void
+
+	/**
 	 * Lifecycle method called for credential handling
 	 * @param o - Credential context and parameters
 	 * @returns A promise that resolves with credential processing results
 	 */
-	onCredential?(o: classOnCredential): IClassOnCredentialResponse
+	onCredential?(o: classOnCredential<NonNullable<this['credentials']>>): Promise<{ status: boolean; data: any }>
 
 	/**
 	 * Lifecycle method called when the node is destroyed

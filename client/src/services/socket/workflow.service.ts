@@ -1,6 +1,7 @@
 import type { Socket } from 'socket.io-client'
 import type { Workflow } from '../../types/socket'
 import { useWorkspaceStore } from '@/stores'
+import type { IWorkflowDataSave } from '@shared/interfaces/standardized'
 
 export function socketWorkflow(socket: Socket | null) {
 	const workspaceStore = useWorkspaceStore()
@@ -45,7 +46,7 @@ export function socketWorkflow(socket: Socket | null) {
 			})
 		},
 
-		updateWorkflow({ workflowId, updates }: { workflowId: string; updates: any }): Promise<Workflow> {
+		updateWorkflow({ workflowId, updates }: { workflowId: string; updates: IWorkflowDataSave }): Promise<Workflow> {
 			return new Promise((resolve, reject) => {
 				if (!socket) return reject(new Error('Socket not connected'))
 				socket.emit(

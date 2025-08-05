@@ -23,7 +23,7 @@ interface IProperties extends IPropertiesType {
 	logLevel: IOptionsProperty
 }
 
-export default class implements IClassNode<IProperties> {
+export default class implements IClassNode {
 	// ===============================================
 	// Dependencias
 	// ===============================================
@@ -182,7 +182,7 @@ export default class implements IClassNode<IProperties> {
 		}
 	}
 
-	async onCreate() {
+	async onUpdateProperties() {
 		// Mostrar/ocultar campos según el tipo de transporte
 		const isSSE = this.properties.transport.value === 'sse'
 		this.properties.host.show = isSSE

@@ -24,6 +24,7 @@ export function useCanvasSubscribersComposable() {
 			onMouseMove?: (position: { x: number; y: number }) => void
 			onZoomChange?: (zoom: { zoom: number }) => void
 			onChanges?: () => void
+			onError?: (error: string) => void
 		} = {}
 	) => {
 		if (!canvasInstance) return
@@ -131,6 +132,10 @@ export function useCanvasSubscribersComposable() {
 			nodesStore.showNodePanel()
 		})
 
+		canvasInstance.subscriber('msg_error', (e: { msg: string }) => {
+			callbacks.onError?.(e.msg)
+		})
+
 		// =============================================================================
 		// EVENTOS DE CAMBIOS (para tracking de modificaciones)
 		// =============================================================================
@@ -140,6 +145,8 @@ export function useCanvasSubscribersComposable() {
 				'node_removed',
 				'node_moved',
 				'node_update_properties',
+				'connection_added',
+				'connection_removed',
 				'group_moved',
 				'group_added',
 				'group_removed',

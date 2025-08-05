@@ -1,51 +1,40 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bottom-0 left-0 right-0"
-    @click.self="hidePanel">
+  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bottom-0 left-0 right-0">
 
     <!-- Overlay -->
     <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
 
     <!-- Panel de command palette centrado -->
     <div
-      class="relative w-full max-w-2xl mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+      class="relative w-[80vw] max-w-[1000px] mx-4 bg-base-100/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-base-300/70 flex flex-col max-h-[80vh] ">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-base-300/50">
         <div class="flex items-center gap-3">
-
           <div>
             <h2 class="text-lg font-bold text-base-content">{{ title }}</h2>
             <p class="text-sm text-base-content/60">{{ description }}</p>
           </div>
         </div>
-        <button @click="hidePanel" class="btn btn-ghost btn-circle btn-sm hover:bg-base-300/50">
+        <label @click="hidePanel" class="btn btn-ghost btn-circle btn-sm hover:bg-base-300/50">
           <span class="mdi mdi-close text-lg"></span>
-        </button>
+        </label>
       </div>
 
-      <div class="h-[60vh] overflow-auto flex flex-col">
+      <div :class="`h-[60vh] overflow-auto ${customClass} ${twoPanels ?
+        'flex flex-col md:gap-3 md:flex-row md:[&>*:first-child]:basis-[240px] md:[&>*:first-child]:bg-base-200  md:[&>*:first-child]:shrink-0 md:[&>*:last-child]:flex-1 md:[&>*]:overflow-auto [&>*]:p-4' :
+        'p-2'}`">
         <slot />
       </div>
 
       <!-- Footer con atajos de teclado -->
       <div class="p-4 border-t border-base-300/30 bg-base-50/50">
         <div class="flex items-center justify-between text-xs text-base-content/50">
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">↑↓</kbd>
-              <span>navegar</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">↵</kbd>
-              <span>seleccionar</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <kbd class="kbd kbd-xs">Tab</kbd>
-              <span>abrir</span>
-            </div>
-          </div>
           <div class="flex items-center gap-1">
             <kbd class="kbd kbd-xs">ESC</kbd>
             <span>cerrar</span>
+          </div>
+          <div>
+            <slot name="actions"></slot>
           </div>
         </div>
       </div>
@@ -54,21 +43,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { useNodesLibraryStore } from '@/stores/nodesLibrary'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
 
 const props = defineProps<{
   title?: string
   description?: string
-  isVisible: boolean
+  isVisible: boolean,
+  twoPanels?: boolean
+  customClass?: string
 }>()
 
 const emit = defineEmits<{
   nodeSelected: [node: INodeCanvas]
   close: []
 }>()
-const nodesStore = useNodesLibraryStore()
 
 const hidePanel = () => {
   emit('close')
@@ -77,41 +65,6 @@ const hidePanel = () => {
 </script>
 
 <style scoped>
-/* Animaciones de entrada */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-in {
-  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-.slide-in-from-bottom-4 {
-  animation: slideInFromBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Efecto de vidrio mejorado */
 .bg-base-100\/95 {
   background-color: hsl(var(--b1) / 0.95);
@@ -146,12 +99,6 @@ const hidePanel = () => {
   box-shadow: 0 0 0 2px hsl(var(--p) / 0.2);
 }
 
-/* Mejores transiciones */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
-}
 
 /* Hover personalizado para preservar las animaciones */
 .hover\:scale-\[1\.02\]:hover {

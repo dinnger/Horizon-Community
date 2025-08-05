@@ -4,7 +4,6 @@ import socketService from '../services/socket.js'
 import type { Workspace } from '@/types/socket.js'
 
 export const useWorkspaceStore = defineStore('workspace', () => {
-	const isInit = ref(false)
 	const workspaces = ref<Workspace[]>([])
 	const currentWorkspaceId = ref<string>('')
 	const currentWorkspace = computed(() => {
@@ -17,8 +16,6 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
 	// Inicializar workspaces con uno por defecto
 	const initWorkspaces = async () => {
-		if (isInit.value) return
-		isInit.value = true
 		const savedWorkspaces: Workspace[] | null = await socketService.workspace().getWorkspaces()
 		console.log('🌱 Iniciando workspaces...', savedWorkspaces)
 
@@ -65,39 +62,24 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 	}
 
 	const createWorkspace = async (data: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>) => {
-		const newWorkspace: Workspace = {
+		const newWorkspace: Omit<Workspace, 'id'> = {
 			...data,
-			id: generateId(),
 			createdAt: new Date(),
 			updatedAt: new Date()
 		}
 		await socketService.workspace().createWorkspace(newWorkspace)
+		initWorkspaces()
 		return newWorkspace
 	}
 
-	const updateWorkspace = (id: string, updates: Partial<Workspace>) => {
-		const index = workspaces.value.findIndex((w: Workspace) => w.id === id)
-		if (index !== -1) {
-			workspaces.value[index] = {
-				...workspaces.value[index],
-				...updates,
-				updatedAt: new Date()
-			}
-		}
+	const updateWorkspace = async (id: string, updates: Partial<Workspace>) => {
+		await socketService.workspace().updateWorkspace(id, updates)
+		initWorkspaces()
 	}
 
-	const deleteWorkspace = (id: string) => {
-		const workspace = workspaces.value.find((w: Workspace) => w.id === id)
-		if (workspace?.isDefault) {
-			throw new Error('No se puede eliminar el workspace por defecto')
-		}
-
-		workspaces.value = workspaces.value.filter((w: Workspace) => w.id !== id)
-
-		// Si estamos eliminando el workspace actual, cambiar al default
-		if (currentWorkspaceId.value === id) {
-			currentWorkspaceId.value = defaultWorkspace.value?.id || ''
-		}
+	const deleteWorkspace = async (id: string) => {
+		await socketService.workspace().deleteWorkspace(id)
+		initWorkspaces()
 	}
 
 	const switchWorkspace = (id: string) => {

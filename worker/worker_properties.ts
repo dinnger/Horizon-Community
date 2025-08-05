@@ -1,10 +1,9 @@
-import type { IWorkflowExecutionContextInterface } from '@shared/interfaces/workflow.execute.interface.js'
+import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
 import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import type { Worker } from './worker.js'
 import { proprietaryFunctions } from './worker_properties_proprietary.js'
 import { createRequire } from 'node:module'
-import { variablesValue } from '../shared/store/variables.store.js'
 const require = createRequire(import.meta.url)
 const Sandbox = require('@nyariv/sandboxjs')
 
@@ -16,7 +15,7 @@ export class initProperties {
 	node: INodeWorker
 	nodes: { [key: string]: INodeWorker }
 	input: object
-	context: IWorkflowExecutionContextInterface
+	context: IWorkerContext
 	executeData: Map<string, { data: object; meta?: object; time: number }>
 	regexInit: RegExp
 	currentObject: { [key: string]: any }
@@ -24,25 +23,21 @@ export class initProperties {
 	constructor({
 		el,
 		node,
-		nodes,
 		input,
-		context,
 		executeData,
 		variables = {}
 	}: {
 		el: Worker
 		node: INodeWorker
-		nodes: { [key: string]: INodeWorker }
 		input: object
-		context: IWorkflowExecutionContextInterface
 		executeData: Map<string, { data: object; meta?: object; time: number }>
 		variables?: object
 	}) {
 		this.el = el
 		this.node = node
-		this.nodes = nodes
+		this.nodes = this.el.nodeModule.nodes
 		this.input = input
-		this.context = context
+		this.context = this.el.context
 		this.executeData = executeData
 		this.regexInit = /\{\{((?:(?!\{\{|\}\}).)+)\}\}/g
 		this.currentObject = {}
@@ -51,9 +46,7 @@ export class initProperties {
 
 	init() {
 		this.currentObject = {
-			env: {
-				...variablesValue
-			},
+			env: {},
 			input: this.input
 		}
 		for (const key of this.executeData.keys()) {
@@ -93,8 +86,8 @@ export class initProperties {
 			// Procesar expresiones con doble punto antes de evaluar
 			let processedExpression = reg
 
-			// Buscar todas las expresiones con doble punto en la expresión
-			const doubleDotRegex = /(\w+)\.\.(\w+)/g
+			// Buscar todas las expresiones con doble punto en la expresión (mejorada para múltiples niveles)
+			const doubleDotRegex = /(\w+(?:\.\.\w+)+)/g
 			let match: RegExpExecArray | null
 			const replacements: { [key: string]: any } = {}
 
@@ -103,15 +96,13 @@ export class initProperties {
 				if (match === null) break
 
 				const fullMatch = match[0]
-				const rootPath = match[1]
-				const propertyName = match[2]
 
 				// Resolver la expresión con doble punto
 				const resolvedValue = this.resolveDoubleDotExpression(fullMatch)
 
 				if (resolvedValue !== undefined) {
 					// Crear una variable temporal única para este valor
-					const tempVarName = `__temp_${rootPath}_${propertyName}_${Object.keys(replacements).length}`
+					const tempVarName = `__temp_${fullMatch.replace(/\.\./g, '_')}_${Object.keys(replacements).length}`
 					replacements[tempVarName] = resolvedValue
 
 					// Reemplazar en la expresión
@@ -164,6 +155,16 @@ export class initProperties {
 			return obj[propertyName]
 		}
 
+		// Si es un array, buscar en cada elemento
+		if (Array.isArray(obj)) {
+			for (const item of obj) {
+				const result = this.findPropertyRecursive(item, propertyName)
+				if (result !== undefined) {
+					return result
+				}
+			}
+		}
+
 		// Buscar recursivamente en todas las propiedades del objeto
 		for (const key in obj) {
 			if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -177,14 +178,94 @@ export class initProperties {
 		return undefined
 	}
 
-	// Función para resolver expresiones con doble punto (..)
-	resolveDoubleDotExpression(expression: string): any {
-		const parts = expression.split('..')
-		if (parts.length !== 2) {
+	// Función mejorada para buscar múltiples propiedades recursivamente
+	findPropertyPath(obj: any, propertyPath: string[]): any {
+		if (obj === null || typeof obj !== 'object' || propertyPath.length === 0) {
 			return undefined
 		}
 
-		const [rootPath, propertyName] = parts
+		const [currentProperty, ...remainingPath] = propertyPath
+
+		// Si encontramos la propiedad directamente
+		if (Object.prototype.hasOwnProperty.call(obj, currentProperty)) {
+			if (remainingPath.length === 0) {
+				return obj[currentProperty]
+			}
+			return this.findPropertyPath(obj[currentProperty], remainingPath)
+		}
+
+		// Si es un array, buscar en cada elemento
+		if (Array.isArray(obj)) {
+			for (const item of obj) {
+				// Primero intentar encontrar la propiedad actual en este elemento
+				if (typeof item === 'object' && item !== null && Object.prototype.hasOwnProperty.call(item, currentProperty)) {
+					if (remainingPath.length === 0) {
+						return item[currentProperty]
+					}
+					const result = this.findPropertyPath(item[currentProperty], remainingPath)
+					if (result !== undefined) {
+						return result
+					}
+				}
+				// Si no la encontramos directamente, buscar recursivamente
+				const result = this.findPropertyPath(item, propertyPath)
+				if (result !== undefined) {
+					return result
+				}
+			}
+		}
+
+		// Buscar recursivamente en todas las propiedades del objeto
+		for (const key in obj) {
+			if (Object.prototype.hasOwnProperty.call(obj, key)) {
+				const result = this.findPropertyPath(obj[key], propertyPath)
+				if (result !== undefined) {
+					return result
+				}
+			}
+		}
+
+		return undefined
+	}
+
+	// Función para recopilar todos los valores de una propiedad en arrays y objetos
+	findAllPropertyValues(obj: any, propertyName: string): any[] {
+		const results: any[] = []
+
+		if (obj === null || typeof obj !== 'object') {
+			return results
+		}
+
+		// Si encontramos la propiedad directamente
+		if (Object.prototype.hasOwnProperty.call(obj, propertyName)) {
+			results.push(obj[propertyName])
+		}
+
+		// Si es un array, buscar en cada elemento
+		if (Array.isArray(obj)) {
+			for (const item of obj) {
+				results.push(...this.findAllPropertyValues(item, propertyName))
+			}
+		} else {
+			// Buscar recursivamente en todas las propiedades del objeto
+			for (const key in obj) {
+				if (Object.prototype.hasOwnProperty.call(obj, key)) {
+					results.push(...this.findAllPropertyValues(obj[key], propertyName))
+				}
+			}
+		}
+
+		return results
+	}
+
+	// Función para resolver expresiones con doble punto (..)
+	resolveDoubleDotExpression(expression: string): any {
+		const parts = expression.split('..')
+		if (parts.length < 2) {
+			return undefined
+		}
+
+		const [rootPath, ...propertyParts] = parts
 
 		// Obtener el objeto raíz
 		let rootObject: any
@@ -196,8 +277,40 @@ export class initProperties {
 			return undefined
 		}
 
-		// Buscar la propiedad recursivamente
-		return this.findPropertyRecursive(rootObject, propertyName.trim())
+		// Si solo hay una propiedad después del primer .., usar búsqueda recursiva
+		if (propertyParts.length === 1) {
+			const propertyName = propertyParts[0].trim()
+
+			// Primero intentar búsqueda recursiva simple
+			const simpleResult = this.findPropertyRecursive(rootObject, propertyName)
+			if (simpleResult !== undefined) {
+				return simpleResult
+			}
+
+			// Si no encuentra nada, intentar buscar todos los valores de esa propiedad
+			const allValues = this.findAllPropertyValues(rootObject, propertyName)
+			if (allValues.length === 1) {
+				return allValues[0]
+			}
+			if (allValues.length > 1) {
+				return allValues
+			}
+
+			return undefined
+		}
+
+		// Si hay múltiples propiedades, usar la nueva función de búsqueda por ruta
+		const cleanPropertyParts = propertyParts.map((part) => part.trim()).filter((part) => part.length > 0)
+
+		// Intentar búsqueda por ruta específica
+		const pathResult = this.findPropertyPath(rootObject, cleanPropertyParts)
+		if (pathResult !== undefined) {
+			return pathResult
+		}
+
+		// Si no encuentra por ruta específica, intentar buscar la última propiedad recursivamente
+		const lastProperty = cleanPropertyParts[cleanPropertyParts.length - 1]
+		return this.findPropertyRecursive(rootObject, lastProperty)
 	}
 
 	analizar(node: string, property: { [key: string]: any }, firstAnalizar: boolean) {
@@ -251,7 +364,7 @@ export class initProperties {
 						property[key] = valor
 					} else {
 						// Corrección de $ que automáticamente se borra un segundo $ si se agregaba
-						const fixedValue = (text: string) => text.replace(/\$/g, '$$$$')
+						const fixedValue = (text: string) => text.replace(/\$/g, '$$$$').replace(/\"/g, '\\"').replace(/\n/g, '\\n')
 						const val = typeof valor === 'object' ? JSON.stringify(valor) : typeof valor === 'string' ? fixedValue(valor) : valor
 						// console.log(properties[key] === match, key, properties, match)
 						property[key] = evalAll ? val : val === undefined ? val : property[key].replace(match, val)

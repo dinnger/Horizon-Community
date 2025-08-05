@@ -95,6 +95,15 @@ export interface INodeBase {
 	tags?: string[]
 }
 
+export interface INodeSave {
+	id: string
+	type: string
+	info: INodeInfo
+	properties: { [key: string]: { value: any } }
+	design: { x: number; y: number; width?: number; height?: number }
+	connections?: INodeConnection[]
+}
+
 /**
  * Interfaz para un nodo con información completa
  */
@@ -127,7 +136,8 @@ export interface INodeCanvas extends INodeBase {
 /**
  * Interfaz para un nodo de worker
  */
-export interface INodeWorker extends Omit<INodeFull, 'color' | 'icon' | 'width' | 'height' | 'inputs' | 'outputs' | 'connections'> {
+export interface INodeWorker
+	extends Omit<INodeFull, 'x' | 'y' | 'color' | 'icon' | 'width' | 'height' | 'inputs' | 'outputs' | 'connections'> {
 	color?: string
 	icon?: string
 	width?: number
@@ -200,13 +210,4 @@ export interface IConnection extends INodeConnection {
 	id_node_destiny: string
 	input: string
 	output: string
-}
-
-/**
- * Interfaz legacy para compatibilidad - será depreciada
- * @deprecated Usar INodeWorker en su lugar
- */
-export interface NodeClass extends INodeWorker {
-	typeDescription: string
-	credentialsActions?: any
 }

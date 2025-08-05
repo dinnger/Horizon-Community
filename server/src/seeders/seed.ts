@@ -1,23 +1,8 @@
 import bcrypt from 'bcrypt'
-import {
-	User,
-	Role,
-	Permission,
-	RolePermission,
-	Workspace,
-	Project,
-	Workflow,
-	UserSettings,
-	DeploymentInstance,
-	initDatabase
-} from '../models/index.js'
-import { seedDeployTypes } from './deployTypes.js'
+import { User, Role, Permission, RolePermission, Workspace, UserSettings, DeploymentInstance } from '../models/index.js'
 
 export const seedDatabase = async () => {
 	try {
-		// Initialize database first
-		await initDatabase()
-
 		// Create roles first
 		const superAdminRole = await Role.findOrCreate({
 			where: { name: 'SuperAdmin' },
@@ -204,7 +189,7 @@ export const seedDatabase = async () => {
 			},
 			{
 				module: 'settings',
-				action: 'list',
+				action: 'get',
 				scope: 'own' as const,
 				priority: 10,
 				description: 'Ver sus propias configuraciones',
@@ -274,6 +259,64 @@ export const seedDatabase = async () => {
 				scope: 'global' as const,
 				priority: 15,
 				description: 'Cambiar propiedades de nodos',
+				status: 'active' as const
+			},
+			// Permisos para storage
+			{
+				module: 'storage',
+				action: 'list',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Ver todos los nodos disponibles',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'get',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Obtener información de nodos específicos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'create',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Crear nodos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'update',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Modificar nodos',
+				status: 'active' as const
+			},
+			{
+				module: 'storage',
+				action: 'delete',
+				scope: 'global' as const,
+				priority: 15,
+				description: 'Eliminar nodos',
+				status: 'active' as const
+			},
+			// Permisos de credenciales
+			{
+				module: 'storage-credentials',
+				action: 'list',
+				scope: 'global' as const,
+				priority: 100,
+				description: 'Ver todos los nodos disponibles',
+				status: 'active' as const
+			},
+			{
+				module: 'storage-credentials',
+				action: 'get',
+				scope: 'global' as const,
+				priority: 100,
+				description: 'Obtener información de credenciales',
 				status: 'active' as const
 			},
 
@@ -525,40 +568,6 @@ export const seedDatabase = async () => {
 				priority: 42,
 				description: 'Ver estadísticas de cola de despliegues en sus workspaces',
 				status: 'active' as const
-			},
-
-			// Permisos de solo lectura para viewers
-			{
-				module: 'workspaces',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los workspaces',
-				status: 'active' as const
-			},
-			{
-				module: 'projects',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los proyectos',
-				status: 'active' as const
-			},
-			{
-				module: 'workflows',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los workflows',
-				status: 'active' as const
-			},
-			{
-				module: 'deployments',
-				action: 'list',
-				scope: 'global' as const,
-				priority: 5,
-				description: 'Ver todos los despliegues',
-				status: 'active' as const
 			}
 		]
 
@@ -616,6 +625,8 @@ export const seedDatabase = async () => {
 				[
 					'workspaces',
 					'projects',
+					'storage',
+					'storage-credentials',
 					'workflows',
 					'executions',
 					'dashboard',
@@ -700,8 +711,14 @@ export const seedDatabase = async () => {
 		}
 
 		// Create admin user
-		const adminPasswordHash = await bcrypt.hash('admin123', 10)
-		const adminUser = await User.findOrCreate({
+		// random password
+		const randomPassword = Array.from({ length: 8 }, () => {
+			const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+			return chars.charAt(Math.floor(Math.random() * chars.length))
+		}).join('')
+
+		const adminPasswordHash = await bcrypt.hash(randomPassword.toString(), 10)
+		const [adminUser, created] = await User.findOrCreate({
 			where: { email: 'admin@horizon.com' },
 			defaults: {
 				email: 'admin@horizon.com',
@@ -712,52 +729,15 @@ export const seedDatabase = async () => {
 				status: 'active'
 			}
 		})
-
-		// Create manager user
-		const managerPasswordHash = await bcrypt.hash('manager123', 10)
-		const managerUser = await User.findOrCreate({
-			where: { email: 'manager@horizon.com' },
-			defaults: {
-				email: 'manager@horizon.com',
-				name: 'Project Manager',
-				password: managerPasswordHash,
-				avatar: 'https://ui-avatars.com/api/?name=Project+Manager&background=f59e0b&color=fff',
-				roleId: managerRole[0].id,
-				status: 'active'
-			}
-		})
-
-		// Create regular user
-		const userPasswordHash = await bcrypt.hash('user123', 10)
-		const regularUser = await User.findOrCreate({
-			where: { email: 'user@horizon.com' },
-			defaults: {
-				email: 'user@horizon.com',
-				name: 'John Doe',
-				password: userPasswordHash,
-				avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=8b5cf6&color=fff',
-				roleId: userRole[0].id,
-				status: 'active'
-			}
-		})
-
-		// Create viewer user
-		const viewerPasswordHash = await bcrypt.hash('viewer123', 10)
-		const viewerUser = await User.findOrCreate({
-			where: { email: 'viewer@horizon.com' },
-			defaults: {
-				email: 'viewer@horizon.com',
-				name: 'Viewer User',
-				password: viewerPasswordHash,
-				avatar: 'https://ui-avatars.com/api/?name=Viewer+User&background=6b7280&color=fff',
-				roleId: viewerRole[0].id,
-				status: 'active'
-			}
-		})
+		// Si se crea mostrar la contraseña en consola
+		if (created) {
+			console.log('===============================================')
+			console.log('ℹ️  Contraseña administrador:', randomPassword)
+			console.log('===============================================')
+		}
 
 		// Create user settings for all users
 		const defaultSettings = {
-			theme: 'crystal',
 			fontSize: 16,
 			canvasRefreshRate: 33,
 			language: 'es',
@@ -770,7 +750,8 @@ export const seedDatabase = async () => {
 			},
 			performance: {
 				reducedAnimations: false,
-				autoSave: true
+				autoSave: true,
+				canvasRefreshRate: 25
 			},
 			privacy: {
 				telemetry: false,
@@ -780,9 +761,9 @@ export const seedDatabase = async () => {
 
 		// Admin settings (with system updates enabled)
 		await UserSettings.findOrCreate({
-			where: { userId: adminUser[0].id },
+			where: { userId: adminUser.id },
 			defaults: {
-				userId: adminUser[0].id,
+				userId: adminUser.id,
 				...defaultSettings,
 				notifications: {
 					...defaultSettings.notifications,
@@ -791,37 +772,10 @@ export const seedDatabase = async () => {
 			}
 		})
 
-		// Manager settings
-		await UserSettings.findOrCreate({
-			where: { userId: managerUser[0].id },
-			defaults: {
-				userId: managerUser[0].id,
-				...defaultSettings
-			}
-		})
-
-		// Regular user settings
-		await UserSettings.findOrCreate({
-			where: { userId: regularUser[0].id },
-			defaults: {
-				userId: regularUser[0].id,
-				...defaultSettings
-			}
-		})
-
-		// Viewer settings
-		await UserSettings.findOrCreate({
-			where: { userId: viewerUser[0].id },
-			defaults: {
-				userId: viewerUser[0].id,
-				...defaultSettings
-			}
-		})
-
 		// Create default workspaces
 		const adminWorkspace = await Workspace.findOrCreate({
 			where: {
-				userId: adminUser[0].id,
+				userId: adminUser.id,
 				isDefault: true
 			},
 			defaults: {
@@ -829,23 +783,7 @@ export const seedDatabase = async () => {
 				description: 'Workspace principal del administrador',
 				color: '#3b82f6',
 				icon: 'mdi-briefcase',
-				userId: adminUser[0].id,
-				isDefault: true,
-				status: 'active'
-			}
-		})
-
-		const userWorkspace = await Workspace.findOrCreate({
-			where: {
-				userId: regularUser[0].id,
-				isDefault: true
-			},
-			defaults: {
-				name: 'Default Workspace',
-				description: 'Workspace principal para tus proyectos',
-				color: '#8b5cf6',
-				icon: 'mdi-briefcase',
-				userId: regularUser[0].id,
+				userId: adminUser.id,
 				isDefault: true,
 				status: 'active'
 			}
@@ -939,103 +877,6 @@ export const seedDatabase = async () => {
 				predecessors: predecessorIds
 			})
 		}
-
-		console.log('✅ Instancias de despliegue base creadas exitosamente')
-
-		// // Create sample projects
-		// const webAppProject = await Project.findOrCreate({
-		// 	where: {
-		// 		workspaceId: userWorkspace[0].id,
-		// 		name: 'Web Application'
-		// 	},
-		// 	defaults: {
-		// 		name: 'Web Application',
-		// 		description: 'Una aplicación web moderna con Vue.js y TypeScript',
-		// 		workspaceId: userWorkspace[0].id,
-		// 		status: 'active'
-		// 	}
-		// })
-
-		// const mobileAppProject = await Project.findOrCreate({
-		// 	where: {
-		// 		workspaceId: userWorkspace[0].id,
-		// 		name: 'Mobile App'
-		// 	},
-		// 	defaults: {
-		// 		name: 'Mobile App',
-		// 		description: 'Aplicación móvil para iOS y Android',
-		// 		workspaceId: userWorkspace[0].id,
-		// 		status: 'inactive'
-		// 	}
-		// })
-
-		// const apiProject = await Project.findOrCreate({
-		// 	where: {
-		// 		workspaceId: userWorkspace[0].id,
-		// 		name: 'API Backend'
-		// 	},
-		// 	defaults: {
-		// 		name: 'API Backend',
-		// 		description: 'API REST con Node.js y Express',
-		// 		workspaceId: userWorkspace[0].id,
-		// 		status: 'active'
-		// 	}
-		// })
-
-		// // Create sample workflows
-		// const sampleWorkflows = [
-		// 	{
-		// 		name: 'Procesamiento de Datos',
-		// 		description: 'Workflow para procesamiento automático de datos',
-		// 		projectId: webAppProject[0].id,
-		// 		status: 'success' as const,
-		// 		lastRun: new Date('2024-12-25T10:30:00Z'),
-		// 		duration: '2m 15s',
-		// 		version: '1.0.0',
-		// 		isPublished: true
-		// 	},
-		// 	{
-		// 		name: 'Validación de Usuario',
-		// 		description: 'Workflow para validar y autenticar usuarios',
-		// 		projectId: webAppProject[0].id,
-		// 		status: 'running' as const,
-		// 		lastRun: new Date('2024-12-25T11:45:00Z'),
-		// 		duration: '45s',
-		// 		version: '0.8.3',
-		// 		isPublished: false
-		// 	},
-		// 	{
-		// 		name: 'Generación de Reportes',
-		// 		description: 'Workflow automático para generar reportes diarios',
-		// 		projectId: apiProject[0].id,
-		// 		status: 'failed' as const,
-		// 		lastRun: new Date('2024-12-25T09:15:00Z'),
-		// 		duration: '1m 30s',
-		// 		version: '1.2.1',
-		// 		isPublished: true
-		// 	},
-		// 	{
-		// 		name: 'Backup de Datos',
-		// 		description: 'Workflow para backup automático de la base de datos',
-		// 		projectId: apiProject[0].id,
-		// 		status: 'pending' as const,
-		// 		version: '0.5.0',
-		// 		isPublished: false
-		// 	}
-		// ]
-
-		// for (const workflowData of sampleWorkflows) {
-		// 	await Workflow.findOrCreate({
-		// 		where: {
-		// 			projectId: workflowData.projectId,
-		// 			name: workflowData.name
-		// 		},
-		// 		defaults: workflowData
-		// 	})
-		// }
-
-		// Seed deploy types
-		await seedDeployTypes()
 
 		console.log('Database seeded successfully!')
 	} catch (error) {

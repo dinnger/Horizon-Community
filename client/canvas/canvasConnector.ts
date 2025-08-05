@@ -652,11 +652,11 @@ function generateOptimalRoutingPoints(
 	// Add channels around obstacles with sufficient clearance
 	for (const obstacle of obstacles) {
 		// Add channels around each obstacle for routing
-		verticalChannels.add(obstacle.left - shapeMargin)
-		verticalChannels.add(obstacle.right + shapeMargin)
+		verticalChannels.add(obstacle.left - 2)
+		verticalChannels.add(obstacle.right + 2)
 
-		horizontalChannels.add(obstacle.top - shapeMargin)
-		horizontalChannels.add(obstacle.bottom + shapeMargin)
+		horizontalChannels.add(obstacle.top - 2)
+		horizontalChannels.add(obstacle.bottom + 2)
 	}
 
 	// Add channels for connection points with extensions

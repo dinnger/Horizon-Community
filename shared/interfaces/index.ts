@@ -13,11 +13,9 @@ export * from './class.interface.js'
 export * from './client.interface.js'
 export * from './connection.interface.js'
 export * from './socket.interface.js'
-export * from './workflow.execute.interface.js'
+export * from './context.interface.js'
 export * from './workflow.properties.interface.js'
-
-// Exportar solo las interfaces específicas de classDeploy para evitar conflictos
-export { classDeployInterface, newClassDeployInterface } from './deployment.interface.js'
+export * from './deployment.interface.js'
 
 // Entity interfaces
 export * from './entities/global.interface.js'

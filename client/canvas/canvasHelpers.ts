@@ -478,7 +478,7 @@ export function getPositionConnection(node: INodeCanvas, connectorName: string) 
 	let point = { x: 0, y: 0 }
 	let side: 'left' | 'right' | 'top' | 'bottom' = 'left'
 	for (const [connector, value] of Object.entries(node.info.connectors)) {
-		const index = value.findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f === connectorName))
+		const index = value.findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f) === connectorName)
 		if (index !== -1) {
 			if (connector === 'inputs') {
 				pos = 30 + index * 20
@@ -521,11 +521,13 @@ export function getPositionConnection(node: INodeCanvas, connectorName: string) 
 export function renderConnectionNodes({
 	ctx,
 	connection,
-	nodes
+	nodes,
+	shapeMargin = 10
 }: {
 	ctx: CanvasRenderingContext2D
 	connection: INodeConnections
 	nodes: { [key: string]: INodeCanvas }
+	shapeMargin?: number
 }) {
 	let connector: Point[] = []
 	if (connection.pointers) connector = connection.pointers
@@ -567,8 +569,8 @@ export function renderConnectionNodes({
 				side: shapeBPos.side,
 				distance: shapeBPos.pos
 			},
-			shapeMargin: 10,
-			globalBoundsMargin: 10,
+			shapeMargin,
+			globalBoundsMargin: 20,
 			globalBounds: {
 				left: Math.min(shapeA.left - 100, shapeB.left - 100),
 				top: Math.min(shapeA.top - 100, shapeB.top - 100),
@@ -608,7 +610,7 @@ export function renderConnectionNodes({
 
 	if (!connection.isFocused) {
 		ctx.moveTo(xPath, yPath)
-		ctx.lineWidth = 3
+		ctx.lineWidth = 1.5
 		ctx.strokeStyle = connection.colorGradient || '#3498DB'
 		for (const { x, y } of connector) {
 			ctx.lineTo(x, y)
@@ -617,15 +619,15 @@ export function renderConnectionNodes({
 		}
 		ctx.stroke()
 	} else {
-		ctx.shadowColor = connection.isFocused ? '#333' : '#fff'
-		ctx.shadowBlur = 20
+		ctx.shadowColor = connection.isFocused ? 'white' : '#fff'
+		ctx.shadowBlur = 2
 		ctx.shadowOffsetX = 0
 		ctx.shadowOffsetY = 0
-		ctx.lineWidth = 5
+		ctx.lineWidth = 3
 		ctx.strokeStyle = connection.colorGradient || '#3498DB'
 		for (const { x, y } of connector) {
 			ctx.lineTo(x, y)
-			ctx.setLineDash([0, 0]) /* dashes are 5px and spaces are 3px */
+			ctx.setLineDash([16, 2]) /* dashes are 5px and spaces are 3px */
 			ctx.lineDashOffset = Number.parseFloat((-indexTime / 3.3).toFixed(2))
 		}
 		ctx.stroke()

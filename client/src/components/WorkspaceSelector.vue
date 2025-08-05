@@ -31,8 +31,8 @@
         <span>Workspaces disponibles</span>
       </div>
       <div>
-        <router-link to="/settings" class="flex items-center space-x-3 p-3 text-primary"
-          @close="() => isVisible = false">
+        <router-link to="/settings?tab=workspaces" class="flex items-center space-x-3 p-3 text-primary"
+          @click="() => isVisible = false">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>

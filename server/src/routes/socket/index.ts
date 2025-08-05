@@ -1,5 +1,7 @@
 import type { Server } from 'socket.io'
-import type { AuthenticatedSocket } from '../../middleware/socketAuth.js'
+import type { Socket } from 'socket.io'
+import type { User, Role, Permission } from '../../models/index.js'
+import NodeCache from 'node-cache'
 import { envs } from '../../config/envs.js'
 import { setupAuthRoutes } from './auth.js'
 import { setupWorkspaceRoutes } from './workspaces.js'
@@ -9,7 +11,7 @@ import { setupWorkflowHistoryRoutes } from './workflowHistory.js'
 import { setupSettingsRoutes } from './settings.js'
 import { setupAdminRoutes } from './admin.js'
 import { setupNodeRoutes } from './nodes.js'
-import { setupWorkersRoutes } from './workers.js'
+import { setupWorkersListeners, setupWorkersRoutes } from './workers.js'
 import { setupWorkerRoutes } from './worker.js'
 import { setupDeploymentInstancesRoutes } from './deploymentsInstances.js'
 import { setupDeploymentTypesRoutes } from './deploymentsTypes.js'
@@ -17,7 +19,17 @@ import { setupDeploymentRoutes } from './deployments.js'
 import { setupDeploymentQueueRoutes } from './deploymentQueue.js'
 import { verifyPermission } from '../../middleware/permissions.js'
 import { setupSubscribersRoutes } from './subscribers.js'
-import { workerManager } from '@server/src/services/workerManager.js'
+import { setupStorageRoutes } from './storage.js'
+
+export interface AuthenticatedSocket extends Socket {
+	userId?: string
+	user?: User & {
+		roleId?: string
+		permissions?: Permission[]
+	}
+}
+
+export const cacheRouter = new NodeCache({ stdTTL: 100, checkperiod: 120 })
 
 export const serverRouter = {
 	...setupAuthRoutes,
@@ -34,8 +46,11 @@ export const serverRouter = {
 	...setupDeploymentQueueRoutes,
 	...setupDeploymentTypesRoutes,
 	...setupDeploymentInstancesRoutes,
-	...setupSubscribersRoutes
+	...setupSubscribersRoutes,
+	...setupStorageRoutes
 } as const
+
+export const serverListeners = [setupWorkersListeners]
 
 // Tipo dinámico que extrae todas las claves del serverRouter
 export type ServerRouterEvents = keyof typeof serverRouter
@@ -48,24 +63,10 @@ export type EventRouter = <T extends ServerRouterEvents>(
 	callback: (data: { success: boolean } & Record<string, any>) => void
 ) => void
 
-/**
- * Interfaz principal para los datos que reciben las rutas de Socket.IO
- *
- * @example
- * // En un archivo de rutas, cuando uses eventRouter tendrás autocompletado:
- * export const setupExampleRoutes = {
- *   'example:action': async ({ eventRouter, data, callback }: SocketData) => {
- *     // eventRouter ahora tiene tipado dinámico para todos los eventos disponibles
- *     eventRouter('auth:login', { email: 'test', password: 'test' }, callback)
- *     eventRouter('subscribe:join', { room: 'test' }, callback)
- *     // Y muchos más eventos con autocompletado...
- *   }
- * }
- */
-export interface SocketData {
+export interface SocketData<T = any> {
 	io: Server
 	socket: Required<AuthenticatedSocket>
-	data: any
+	data: T
 	callback: (data: { success: boolean } & Record<string, any>) => void
 	eventRouter: EventRouter
 }
@@ -76,55 +77,13 @@ export class SocketRoutes {
 	init(io: Server) {
 		this.io = io
 		this.setupRoutes()
-		this.listenToWorkerEvents()
+		this.setupListeners()
 	}
 
-	/**
-	 * Sets up Socket.IO event routes for handling client connections.
-	 *
-	 * - Registers a connection handler that logs when a client connects or disconnects.
-	 * - Applies middleware to each socket to validate the presence of a user ID and execute route logic.
-	 * - Handles errors during route execution and passes them to the next middleware.
-	 *
-	 * @private
-	 */
-	private listenToWorkerEvents() {
-		workerManager.on('worker:request', ({ route, data, callback }) => {
-			this.execRoute({ event: route as ServerRouterEvents, data, callback })
-		})
-		workerManager.on('worker:error', ({ workflowId }) => {
-			const event = `worker:status:${workflowId}`
-			this.execRoute({
-				event: 'subscribe:emit',
-				data: {
-					event,
-					eventData: { success: true, workers: [] }
-				},
-				callback: (data: any) => console.log(data)
-			})
-		})
-		workerManager.on('worker:exit', ({ workflowId }) => {
-			const event = `worker:status:${workflowId}`
-			this.execRoute({
-				event: 'subscribe:emit',
-				data: {
-					event,
-					eventData: { success: true, workers: [] }
-				},
-				callback: (data: any) => console.log(data)
-			})
-		})
-		workerManager.on('worker:ready', (workerInfo) => {
-			const event = `worker:status:${workerInfo.workflowId}`
-			this.execRoute({
-				event: 'subscribe:emit',
-				data: {
-					event,
-					eventData: { success: true, workers: [workerInfo] }
-				},
-				callback: (data: any) => console.log(data)
-			})
-		})
+	setupListeners() {
+		for (const listener of serverListeners) {
+			listener(this.execRoute.bind(this))
+		}
 	}
 
 	/**
@@ -191,6 +150,10 @@ export class SocketRoutes {
 		if (!this.io) return
 		this.io.on('connection', (socket: AuthenticatedSocket) => {
 			console.log('Cliente conectado:', socket.id)
+
+			const req = socket.request as any
+			socket.userId = req.session?.passport?.user?.userId
+			socket.user = req.session?.passport?.user
 
 			socket.use(([event, ...args], next) => {
 				const data = args.length >= 1 ? args[0] : {}

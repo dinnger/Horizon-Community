@@ -13,6 +13,7 @@ import WorkersView from '../views/WorkersView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import ServerErrorView from '../views/ServerErrorView.vue'
 import { authGuard } from '../guards/auth'
+import StorageView from '@/views/StorageView.vue'
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,14 +66,19 @@ const router = createRouter({
 					component: CanvasView
 				},
 				{
-					path: 'settings',
-					name: 'settings',
-					component: SettingsView
+					path: 'storage',
+					name: 'storage',
+					component: StorageView
 				},
 				{
 					path: 'workers',
 					name: 'workers',
 					component: WorkersView
+				},
+				{
+					path: 'settings',
+					name: 'settings',
+					component: SettingsView
 				}
 			]
 		},

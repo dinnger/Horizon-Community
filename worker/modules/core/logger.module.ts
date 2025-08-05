@@ -13,11 +13,11 @@ export class CoreLogger {
 			format: winston.format.json(),
 			transports: [
 				new winston.transports.File({
-					filename: `logs/${this.el.flow}/error.log`,
+					filename: `logs/${this.el.workflowId}/error.log`,
 					level: 'error'
 				}),
 				new winston.transports.File({
-					filename: `logs/${this.el.flow}/info.log`,
+					filename: `logs/${this.el.workflowId}/info.log`,
 					level: 'info'
 				}),
 				new winston.transports.Console({

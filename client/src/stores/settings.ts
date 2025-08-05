@@ -7,6 +7,7 @@ import type {
 	IUserPerformanceSettings,
 	IUserPrivacySettings
 } from '@shared/interfaces/standardized.js'
+import socketService from '@/services/socket'
 
 // Interfaces legacy para compatibilidad
 export interface Theme extends IUserTheme {}
@@ -18,9 +19,8 @@ export interface UserSettings extends IUserSettingsClient {}
 export const useSettingsStore = defineStore('settings', () => {
 	// Current settings
 
-	const currentTheme = ref('light')
+	const currentTheme = ref(localStorage.getItem('horizon-theme') || 'light')
 	const fontSize = ref(16)
-	const canvasRefreshRate = ref(33)
 	const language = ref('es')
 
 	const notifications = reactive<NotificationSettings>({
@@ -44,63 +44,46 @@ export const useSettingsStore = defineStore('settings', () => {
 
 	const setTheme = (theme: string) => {
 		currentTheme.value = theme
-		saveSettings()
+		localStorage.setItem('horizon-theme', theme)
 	}
 
 	const setFontSize = (size: number) => {
 		fontSize.value = size
 		document.documentElement.style.fontSize = `${size}px`
-		saveSettings()
-	}
-
-	const setCanvasRefreshRate = (rate: number) => {
-		canvasRefreshRate.value = rate
-		saveSettings()
 	}
 
 	const setLanguage = (lang: string) => {
 		language.value = lang
-		saveSettings()
 	}
 
 	const updateNotifications = (key: keyof NotificationSettings, value: boolean) => {
 		notifications[key] = value
-		saveSettings()
 	}
 
 	const updatePerformance = (key: keyof PerformanceSettings, value: never) => {
 		performance[key] = value
-		saveSettings()
 	}
 
 	const updatePrivacy = (key: keyof PrivacySettings, value: boolean) => {
 		privacy[key] = value
-		saveSettings()
 	}
 
-	const saveSettings = () => {
+	const saveSettings = async () => {
 		const settings: UserSettings = {
-			theme: currentTheme.value,
 			fontSize: fontSize.value,
-			canvasRefreshRate: canvasRefreshRate.value,
 			language: language.value,
 			notifications: { ...notifications },
 			performance: { ...performance },
 			privacy: { ...privacy }
 		}
-
-		localStorage.setItem('horizon-settings', JSON.stringify(settings))
+		return await socketService.settings().updateUserSettings(settings)
 	}
 
-	const loadSettings = () => {
-		const saved = localStorage.getItem('horizon-settings')
-		if (saved) {
+	const loadSettings = async () => {
+		const settings: UserSettings = await socketService.settings().getUserSettings()
+		if (settings) {
 			try {
-				const settings: UserSettings = JSON.parse(saved)
-
-				currentTheme.value = settings.theme || 'light'
 				fontSize.value = settings.fontSize || 16
-				canvasRefreshRate.value = settings.canvasRefreshRate || 33
 				language.value = settings.language || 'es'
 
 				if (settings.notifications) {
@@ -113,8 +96,6 @@ export const useSettingsStore = defineStore('settings', () => {
 					Object.assign(privacy, settings.privacy)
 				}
 
-				// Apply theme and font size
-				setTheme(currentTheme.value)
 				setFontSize(fontSize.value)
 			} catch (e) {
 				console.error('Error loading settings:', e)
@@ -127,7 +108,6 @@ export const useSettingsStore = defineStore('settings', () => {
 			settings: {
 				theme: currentTheme.value,
 				fontSize: fontSize.value,
-				canvasRefreshRate: canvasRefreshRate.value,
 				language: language.value,
 				notifications: notifications,
 				performance: performance,
@@ -153,7 +133,6 @@ export const useSettingsStore = defineStore('settings', () => {
 			// Reset to defaults
 			currentTheme.value = 'crystal'
 			fontSize.value = 16
-			canvasRefreshRate.value = 33
 			language.value = 'es'
 
 			Object.assign(notifications, {
@@ -180,9 +159,7 @@ export const useSettingsStore = defineStore('settings', () => {
 	}
 
 	const importSettings = (settingsData: UserSettings) => {
-		currentTheme.value = settingsData.theme || 'light'
 		fontSize.value = settingsData.fontSize || 16
-		canvasRefreshRate.value = settingsData.canvasRefreshRate || 33
 		language.value = settingsData.language || 'es'
 
 		if (settingsData.notifications) {
@@ -204,7 +181,6 @@ export const useSettingsStore = defineStore('settings', () => {
 		if (confirm('¿Estás seguro de que quieres restablecer todas las configuraciones a los valores por defecto?')) {
 			currentTheme.value = 'light'
 			fontSize.value = 16
-			canvasRefreshRate.value = 33
 			language.value = 'es'
 
 			Object.assign(notifications, {
@@ -217,7 +193,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
 			Object.assign(performance, {
 				reducedAnimations: false,
-				autoSave: true
+				autoSave: true,
+				canvasRefreshRate: 25
 			})
 
 			Object.assign(privacy, {
@@ -235,7 +212,6 @@ export const useSettingsStore = defineStore('settings', () => {
 		// State
 		currentTheme,
 		fontSize,
-		canvasRefreshRate,
 		language,
 		notifications,
 		performance,
@@ -244,7 +220,6 @@ export const useSettingsStore = defineStore('settings', () => {
 		// Actions
 		setTheme,
 		setFontSize,
-		setCanvasRefreshRate,
 		setLanguage,
 		updateNotifications,
 		updatePerformance,

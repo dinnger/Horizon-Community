@@ -4,23 +4,12 @@ import type { FileArray } from 'express-fileupload'
 interface Request extends ExpressRequest {
 	files?: FileArray | null
 }
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '../../../interfaces/class.interface.js'
-import { type IProperty, getProperties } from './properties.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface } from '../../../interfaces/class.interface.js'
+import { IBoxType, ICodeProperty, INumberProperty, IOptionsProperty, IStringProperty, ISwitchProperty } from '@shared/interfaces/workflow.properties.interface.js'
 
-export default class implements IClassNode<IProperty> {
-	// ===============================================
-	// Dependencias
-	// ===============================================
-	// #pk jsonwebtoken
-	// #pk axios
-	// ===============================================
-	constructor(
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperty
-	) {
-		this.dependencies = ['jsonwebtoken', 'axios']
-		this.info = {
+export default class implements IClassNode {
+		dependencies = ['jsonwebtoken', 'axios']
+		info = {
 			name: 'Webhook',
 			desc: 'Call webhook',
 			icon: '󰘯',
@@ -33,7 +22,304 @@ export default class implements IClassNode<IProperty> {
 			}
 		}
 
-		this.properties = getProperties()
+		properties = {
+			url: {
+				name: 'URL asignada:',
+				type: 'box'
+			} as IBoxType,
+			endpoint: {
+				name: 'Endpoint:',
+				type: 'string',
+				value: '/'
+			} as IStringProperty,
+			type: {
+				name: 'Tipo de llamada:',
+				type: 'options',
+				options: [
+					{
+						label: 'GET',
+						value: 'get'
+					},
+					{
+						label: 'POST',
+						value: 'post'
+					},
+					{
+						label: 'PATCH',
+						value: 'patch'
+					},
+					{
+						label: 'PUT',
+						value: 'put'
+					},
+					{
+						label: 'DELETE',
+						value: 'delete'
+					}
+				],
+				value: 'get'
+			} as IOptionsProperty,
+			timeout: {
+				name: 'Tiempo de espera (seg):',
+				type: 'number',
+				value: 50
+			} as INumberProperty,
+			security: {
+				name: 'Seguridad:',
+				type: 'options',
+				options: [
+					{
+						label: 'Ninguna',
+						value: 'null'
+					},
+					{
+						label: 'Básico',
+						value: 'basic'
+					},
+					{
+						label: 'JWT Bearer',
+						value: 'jwt'
+					},
+					{
+						label: 'Bearer Token',
+						value: 'bearer'
+					}
+				],
+				value: 'null'
+			} as IOptionsProperty,
+			securityBasicUser: {
+				name: 'Usuario',
+				type: 'string',
+				value: '',
+				show: false
+			} as IStringProperty,
+			securityBasicPass: {
+				name: 'Contraseña',
+				type: 'string',
+				value: '',
+				show: false
+			} as IStringProperty,
+			securityBearerToken: {
+				name: 'Token',
+				type: 'string',
+				value: '',
+				show: false
+			} as IStringProperty,
+			securityJWTSecret: {
+				name: 'Secreto',
+				type: 'string',
+				value: '',
+				show: false
+			} as IStringProperty,
+			// Opciones avanzadas
+			advancedOptions: {
+				name: 'Opciones avanzadas',
+				type: 'switch',
+				value: false
+			} as ISwitchProperty,
+			// Opciones de redirección
+			enableRedirect: {
+				name: 'Habilitar redirección',
+				type: 'switch',
+				value: false,
+				show: false
+			} as ISwitchProperty,
+			redirectUrl: {
+				name: 'URL de redirección',
+				type: 'string',
+				value: '',
+				description: 'URL a la que se redireccionará',
+				show: false
+			} as IStringProperty,
+			redirectStatusCode: {
+				name: 'Código de estado',
+				type: 'options',
+				options: [
+					{
+						label: '301 - Movido permanentemente',
+						value: 301
+					},
+					{
+						label: '302 - Encontrado (redirección temporal)',
+						value: 302
+					},
+					{
+						label: '303 - Ver otro',
+						value: 303
+					},
+					{
+						label: '307 - Redirección temporal',
+						value: 307
+					},
+					{
+						label: '308 - Redirección permanente',
+						value: 308
+					}
+				],
+				value: 302,
+				show: false
+			} as IOptionsProperty,
+			// Opciones de proxy
+			enableProxy: {
+				name: 'Habilitar proxy',
+				type: 'switch',
+				value: false,
+				show: false
+			} as ISwitchProperty,
+			proxyUrl: {
+				name: 'URL de destino del proxy',
+				type: 'string',
+				value: '',
+				description: 'URL a la que se reenviarán las peticiones',
+				show: false
+			} as IStringProperty,
+			proxyPreserveHeaders: {
+				name: 'Preservar cabeceras',
+				type: 'switch',
+				value: true,
+				show: false
+			} as ISwitchProperty,
+			// Opciones CORS
+			enableCors: {
+				name: 'Habilitar CORS',
+				type: 'switch',
+				value: false,
+				show: false
+			} as ISwitchProperty,
+			corsOrigin: {
+				name: 'Access-Control-Allow-Origin',
+				type: 'string',
+				value: '*',
+				show: false
+			} as IStringProperty,
+			corsMethods: {
+				name: 'Access-Control-Allow-Methods',
+				type: 'string',
+				value: 'GET,POST,PUT,DELETE,OPTIONS',
+				show: false
+			} as IStringProperty,
+			corsHeaders: {
+				name: 'Access-Control-Allow-Headers',
+				type: 'string',
+				value: 'Content-Type,Authorization',
+				show: false
+			} as IStringProperty,
+			// Respuesta personalizada
+			customResponse: {
+				name: 'Habilitar respuesta personalizada',
+				type: 'switch',
+				value: false,
+				show: false
+			} as ISwitchProperty,
+			responseStatusCode: {
+				name: 'Código de estado',
+				type: 'number',
+				value: 200,
+				show: false
+			} as INumberProperty,
+			responseContentType: {
+				name: 'Content-Type',
+				type: 'options',
+				options: [
+					{
+						label: 'application/json',
+						value: 'application/json'
+					},
+					{
+						label: 'text/html',
+						value: 'text/html'
+					},
+					{
+						label: 'text/plain',
+						value: 'text/plain'
+					},
+					{
+						label: 'application/xml',
+						value: 'application/xml'
+					}
+				],
+				value: 'application/json',
+				show: false
+			} as IOptionsProperty,
+			responseBody: {
+				name: 'Cuerpo de respuesta',
+				type: 'code',
+				lang: 'json',
+				value: '{\n  "success": true\n}',
+				show: false
+			} as ICodeProperty
+		}
+	
+
+	async onUpdateProperties({ context, properties }: classOnUpdateInterface<this['properties']>) {
+		// Configuración de seguridad
+		properties.securityBasicUser.show = false
+		properties.securityBasicPass.show = false
+		properties.securityBearerToken.show = false
+		properties.securityJWTSecret.show = false
+
+		if (properties.security.value === 'basic') {
+			properties.securityBasicUser.show = true
+			properties.securityBasicPass.show = true
+		}
+		if (properties.security.value === 'bearer') {
+			properties.securityBearerToken.show = true
+		}
+		if (properties.security.value === 'jwt') {
+			properties.securityJWTSecret.show = true
+		}
+
+		// Configuración de opciones avanzadas
+		const showAdvanced = properties.advancedOptions.value === true
+
+		// Redirección
+		properties.enableRedirect.show = showAdvanced
+		properties.redirectUrl.show = showAdvanced && properties.enableRedirect.value === true
+		properties.redirectStatusCode.show = showAdvanced && properties.enableRedirect.value === true
+
+		// Proxy
+		properties.enableProxy.show = showAdvanced
+		properties.proxyUrl.show = showAdvanced && properties.enableProxy.value === true
+		properties.proxyPreserveHeaders.show = showAdvanced && properties.enableProxy.value === true
+
+		// CORS
+		properties.enableCors.show = showAdvanced
+		properties.corsOrigin.show = showAdvanced && properties.enableCors.value === true
+		properties.corsMethods.show = showAdvanced && properties.enableCors.value === true
+		properties.corsHeaders.show = showAdvanced && properties.enableCors.value === true
+
+		// Respuesta personalizada
+		properties.customResponse.show = showAdvanced
+		properties.responseStatusCode.show = showAdvanced && properties.customResponse.value === true
+		properties.responseContentType.show = showAdvanced && properties.customResponse.value === true
+		properties.responseBody.show = showAdvanced && properties.customResponse.value === true
+
+		// Generar URL
+		const base = context.properties.basic?.router || ''
+		const prefix = `/f_${context.info.uid}/api`
+
+		let endpoint: string = String(properties.endpoint.value).toString() || ''
+		if (endpoint[0] === '/') endpoint = endpoint.slice(1)
+		const serverUrl =
+			context.getEnvironment('serverUrl').slice(-1) !== '/'
+				? context.getEnvironment('serverUrl')
+				: context.getEnvironment('serverUrl').slice(0, -1)
+		const baseUrl =
+			context.getEnvironment('baseUrl').slice(-1) !== '/' ? `${context.getEnvironment('baseUrl')}/` : context.getEnvironment('baseUrl')
+		const url = `${serverUrl}${prefix}${baseUrl}${endpoint}`
+		const urlProd = `( HOST )${base}/${endpoint}`
+		properties.url.value = [
+			{
+				label: 'Desarrollo:',
+				value: url,
+				isCopy: true
+			},
+			{
+				label: 'Producción:',
+				value: urlProd,
+				isCopy: true
+			}
+		]
 	}
 
 	async onExecute({ app, context, execute, logger, environment, dependency, outputData }: classOnExecuteInterface) {

@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
 	IOptionsProperty,
@@ -40,7 +40,7 @@ interface IProperties extends IPropertiesType {
 	tokenName: IStringProperty
 }
 
-export default class AuthServiceNode implements IClassNode<IProperties> {
+export default class AuthServiceNode implements IClassNode {
 	constructor(
 		public accessSecrets: boolean,
 		public dependencies: string[],
@@ -223,7 +223,7 @@ export default class AuthServiceNode implements IClassNode<IProperties> {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface): Promise<void> {
+	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
 		// Mostrar/ocultar campos según el método de autenticación seleccionado
 		this.hideAllAuthFields()
 

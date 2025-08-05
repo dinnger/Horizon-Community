@@ -1,4 +1,5 @@
 import socketService from '@/services/socket'
+import type { IWorkflowDataSave } from '@shared/interfaces/standardized'
 
 export function useWorkflowComposable({ workflowId }: { workflowId: string }) {
 	const getVersions = async () => {
@@ -11,7 +12,7 @@ export function useWorkflowComposable({ workflowId }: { workflowId: string }) {
 		}
 	}
 
-	const saveWorkflow = async ({ updates }: { updates: any }) => {
+	const saveWorkflow = async ({ updates }: { updates: IWorkflowDataSave }) => {
 		try {
 			return await socketService.workflow().updateWorkflow({ workflowId, updates })
 		} catch (error: any) {

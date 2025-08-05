@@ -1,4 +1,13 @@
-import { INodeFull } from "@shared/interfaces/standardized"
+import type { INodeFull, IWorkflowSaveFull } from '@shared/interfaces/standardized'
+import fs from 'node:fs'
+
+export function loadWorkflowFile(path: string): IWorkflowSaveFull {
+	const data = fs.readFileSync(path, 'utf8')
+	if (!data) {
+		throw new Error('No se encontro el archivo de workflow')
+	}
+	return convertJson(data)
+}
 
 export function convertJson(json: string | object) {
 	try {

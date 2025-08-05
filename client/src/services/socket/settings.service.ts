@@ -26,7 +26,7 @@ export function socketSettings(socket: Socket | null) {
 				}
 				socket.emit('settings:update', settings, (response: any) => {
 					if (response.success) {
-						resolve(response.settings)
+						resolve(response)
 					} else {
 						reject(new Error(response.message || 'Failed to update settings'))
 					}

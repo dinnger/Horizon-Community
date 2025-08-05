@@ -144,7 +144,9 @@ const settingsStore = useSettingsStore()
 const workspaceStore = useWorkspaceStore()
 const roleStore = useRoleStore()
 const { availableMenuItems } = useNavigation()
-settingsStore.loadSettings()
+
+socketService.connect()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -174,13 +176,12 @@ const setTheme = (theme: string) => {
 
 const isConnected = computed(() => socketService.isConnected)
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   router.push('/auth/login')
 }
 
 const editProfile = () => {
-  // TODO: Implementar modal o redirección para editar perfil
   console.log('Editar perfil - por implementar')
 }
 
@@ -193,6 +194,7 @@ watch(() => workspaceStore.currentWorkspaceId, () => {
 
 // Cargar permisos del usuario cuando se monta el componente
 onMounted(async () => {
+  settingsStore.loadSettings()
   await roleStore.fetchUserPermissions()
 })
 

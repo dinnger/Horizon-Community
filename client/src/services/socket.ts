@@ -10,6 +10,7 @@ import { socketRoles } from './socket/roles.service'
 import { socketNodes } from './socket/nodes.service'
 import { socketDeployments } from './socket/deployments.service'
 import { socketWorkers } from './socket/workers.service'
+import { socketStorage } from './socket/storage.service'
 
 let socket: Socket | null = null
 
@@ -25,8 +26,8 @@ function SocketService() {
 			const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
 
 			socket = io(serverUrl, {
-				auth: userId ? { userId, previousSocket } : {},
-				autoConnect: true
+				autoConnect: true,
+				withCredentials: true
 			})
 
 			console.log('socket1', socket)
@@ -160,7 +161,9 @@ export const socketService = {
 	// Deployments methods
 	deployments: () => socketDeployments(socket),
 	// Workers methods
-	workers: () => socketWorkers(socket)
+	workers: () => socketWorkers(socket),
+	// Storage methods
+	storage: () => socketStorage(socket)
 }
 
 export default socketService

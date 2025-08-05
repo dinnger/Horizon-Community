@@ -218,8 +218,6 @@ export function useCanvasActionsComposable({
 	// ACCIONES DEL ADMINISTRADOR DE NOTAS
 	// =============================================================================
 	const handleNotesManagerSelectNote = (note: INoteCanvas) => {
-		// TODO: Implementar función para centrar vista en la nota
-		console.log('Focusing note:', note.id)
 		canvasEvents.emit('note:manager:close', undefined)
 	}
 
@@ -235,8 +233,6 @@ export function useCanvasActionsComposable({
 		canvasInstance.actionDeleteNote(noteId)
 		canvasStore.changes = true
 
-		// Actualizar la lista de notas en el administrador
-		// TODO: Implementar método para obtener todas las notas
 		canvasModals.notesManager.notes = []
 	}
 

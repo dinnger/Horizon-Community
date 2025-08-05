@@ -42,8 +42,8 @@ export class CommunicationModule {
 			// Enviar las animaciones como un lote
 			const animations = this.el.coreModule.stats.get('animations')
 			const consoles = this.el.coreModule.stats.get('console')
-			if (animations) this.server.subscribeFromServer({ event: 'workflow:animations', params: [this.el.flow], eventData: animations })
-			if (consoles) this.server.subscribeFromServer({ event: 'workflow:console', params: [this.el.flow], eventData: consoles })
+			if (animations) this.server.subscribeFromServer({ event: 'workflow:animations', params: [this.el.workflowId], eventData: animations })
+			if (consoles) this.server.subscribeFromServer({ event: 'workflow:console', params: [this.el.workflowId], eventData: consoles })
 		}, 500)
 	}
 
@@ -199,8 +199,6 @@ export class CommunicationModule {
 	// 		return Promise.resolve({
 	// 			data: {
 	// 				info: this.el.flow,
-	// 				properties: this.el.context.properties,
-	// 				variables: this.el.context.variables,
 	// 				nodes: JSON.parse(JSON.stringify(this.el.nodeModule.nodes))
 	// 			}
 	// 		})

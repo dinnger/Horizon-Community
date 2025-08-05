@@ -78,7 +78,7 @@ const selectVersion = (version: string) => {
 
 const executeSelectedVersion = async () => {
   if (!selectedVersion.value) {
-    toast.error('Por favor selecciona una versión') // TODO: Traducir                 
+    toast.error('Por favor selecciona una versión')
     return
   }
   workerComposable.executeWorkflow({ workflowId: props.workflowId, version: selectedVersion.value })

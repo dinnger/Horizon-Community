@@ -2,19 +2,27 @@ import { envs } from './config/envs.js'
 import { Server } from 'socket.io'
 import { initDatabase } from './models/index.js'
 import { seedDatabase } from './seeders/seed.js'
-import { socketAuthMiddleware } from './middleware/socketAuth.js'
 import { socketRoutes } from './routes/socket/index.js'
-import { nodeRestRoutes } from './routes/nodeRest.js'
 import { workerManager } from './services/workerManager.js'
 import { deploymentQueueService } from './services/deploy.service.js'
 import express from 'express'
 import cors from 'cors'
-import session from 'express-session'
+
 // import authGoogleRouter from './routes/authGoogle.js'
 import auth from './routes/api/auth.js'
+import external from './routes/api/external.js'
 import http from 'node:http'
 import https from 'node:https'
 import fs from 'node:fs'
+import { sessionMiddleware } from './middleware/session.js'
+import passport from 'passport'
+
+declare module 'express-session' {
+	interface SessionData {
+		credentials: any
+		user: any
+	}
+}
 
 const app = express()
 let PORT = envs.PORT || 3001
@@ -31,20 +39,23 @@ if (envs.SERVER_SSL_MODE) {
 	server = http.createServer(app)
 }
 
+const corsOptions = {
+	origin: [envs.CLIENT_URL || 'http://localhost:5173'],
+	credentials: true
+}
+
 const io = new Server(server, {
-	cors: {
-		origin: envs.CLIENT_URL || 'http://localhost:5173',
-		methods: ['GET', 'POST']
-	}
+	cors: corsOptions
 })
 
 // Middleware
-app.use(cors())
+
+app.use(cors(corsOptions))
 app.use(express.json())
-app.use(session({ secret: envs.SECURITY_TOKEN || Math.random().toString(36).slice(2), resave: false, saveUninitialized: true }))
+app.use(sessionMiddleware)
 
 // Socket.IO authentication middleware
-io.use(socketAuthMiddleware)
+io.engine.use(sessionMiddleware)
 
 // Setup all socket routes
 socketRoutes.init(io)
@@ -57,11 +68,14 @@ app.get('/health', (req, res) => {
 	res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
 
+app.use(passport.initialize())
+app.use(passport.session())
+
 // Google Auth endpoint
 app.use('/api/auth', auth({ app, server }))
 
 // Node REST routes
-app.use('/api/nodes', nodeRestRoutes)
+app.use('/api/external', external({ app, server }))
 
 // Initialize database and start server
 const startServer = async () => {

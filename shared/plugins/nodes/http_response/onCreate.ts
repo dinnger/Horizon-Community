@@ -1,7 +1,7 @@
-import type { classOnCreateInterface } from '@shared/interfaces'
+import type { classOnUpdateInterface } from '@shared/interfaces'
 import type { IProperty } from './properties'
 
-export default function (properties: IProperty, { context }: classOnCreateInterface) {
+export default function (properties: IProperty, { context }: classOnUpdateInterface) {
 	properties.nameFile.show = false
 	properties.header.show = true
 	properties.contentType.disabled = false

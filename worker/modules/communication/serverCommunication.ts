@@ -22,7 +22,7 @@ class WorkerServerComm {
 	> = new Map()
 
 	constructor(el: Worker) {
-		this.workflowId = el.flow
+		this.workflowId = el.workflowId
 		this.setupMessageHandling()
 	}
 
@@ -262,18 +262,6 @@ export class ServerCommunication extends WorkerServerComm {
 			})
 		} catch (error) {
 			console.warn('Failed to send metrics to server:', error)
-		}
-	}
-
-	/**
-	 * Request credentials from server (secure credential management)
-	 */
-	async getCredentialsFromServer(credentialId: string): Promise<any> {
-		try {
-			return await this.requestFromServer('credentials:get', { id: credentialId })
-		} catch (error) {
-			console.error(`Error getting credentials ${credentialId} from server:`, error)
-			throw error
 		}
 	}
 

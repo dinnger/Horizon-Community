@@ -10,8 +10,63 @@
  * - workers:send-message - Send message to specific worker
  */
 
-import type { SocketData } from './index.js'
+import type { AuthenticatedSocket, ServerRouterEvents, SocketData } from './index.js'
 import { workerManager } from '../../services/workerManager.js'
+
+/**
+ * Sets up Socket.IO event routes for handling client connections.
+ *
+ * - Registers a connection handler that logs when a client connects or disconnects.
+ * - Applies middleware to each socket to validate the presence of a user ID and execute route logic.
+ * - Handles errors during route execution and passes them to the next middleware.
+ *
+ * @private
+ */
+export function setupWorkersListeners(
+	execRoute: (data: {
+		socket?: AuthenticatedSocket
+		event: ServerRouterEvents
+		data: any
+		callback: (data: { success: boolean } & Record<string, any>) => void
+	}) => void
+) {
+	workerManager.on('worker:request', ({ route, data, callback }) => {
+		execRoute({ event: route as ServerRouterEvents, data, callback })
+	})
+	workerManager.on('worker:error', ({ workflowId }) => {
+		const event = `worker:status:${workflowId}`
+		execRoute({
+			event: 'subscribe:emit',
+			data: {
+				event,
+				eventData: { success: true, workers: [] }
+			},
+			callback: (data: any) => console.log(data)
+		})
+	})
+	workerManager.on('worker:exit', ({ workflowId }) => {
+		const event = `worker:status:${workflowId}`
+		execRoute({
+			event: 'subscribe:emit',
+			data: {
+				event,
+				eventData: { success: true, workers: [] }
+			},
+			callback: (data: any) => console.log(data)
+		})
+	})
+	workerManager.on('worker:ready', (workerInfo) => {
+		const event = `worker:status:${workerInfo.workflowId}`
+		execRoute({
+			event: 'subscribe:emit',
+			data: {
+				event,
+				eventData: { success: true, workers: [workerInfo] }
+			},
+			callback: (data: any) => console.log(data)
+		})
+	})
+}
 
 export const setupWorkersRoutes = {
 	// List all active workers - requires admin permission

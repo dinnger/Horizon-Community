@@ -1,4 +1,4 @@
-import type { IClassNode, classOnCreateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { IPropertiesType, IStringProperty, INumberProperty } from '@shared/interfaces/workflow.properties.interface.js'
 
 interface IProperties extends IPropertiesType {
@@ -7,7 +7,7 @@ interface IProperties extends IPropertiesType {
 	checkperiod: INumberProperty
 }
 
-export default class implements IClassNode<IProperties> {
+export default class implements IClassNode {
 	private cacheInstance: any = null
 
 	constructor(
@@ -51,7 +51,7 @@ export default class implements IClassNode<IProperties> {
 		}
 	}
 
-	async onCreate({ context }: classOnCreateInterface) {
+	async onUpdateProperties() {
 		// No hay configuraciones dinámicas por el momento
 	}
 

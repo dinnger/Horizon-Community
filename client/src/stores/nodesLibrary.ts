@@ -82,29 +82,6 @@ export const useNodesLibraryStore = defineStore('nodesLibrary', () => {
 		tempProperties.value = { ...node, properties: JSON.parse(JSON.stringify(node.properties || {})) }
 	}
 
-	// const propertiesChanged = (properties: INodeCanvas['properties']): Promise<any> => {
-	// 	return new Promise((resolve, reject) => {
-	// 		if (!tempProperties.value?.id) return reject(new Error('No node selected'))
-	// 		const entries = Object.entries(properties).map(([_, prop]) => [_, { value: prop.value }])
-
-	// 		// Obtener contexto del workflow
-	// 		const context = workflowStore.getWorkflowContext()
-	// 		if (!context) return reject(new Error('No workflow context found'))
-
-	// 		// Enviar cambio de propiedad
-	// 		socketService.nodes()
-	// 			.changeNodeProperty(tempProperties.value?.id, context, Object.fromEntries(entries))
-	// 			.then((response: any) => {
-	// 				console.log(response)
-	// 				// tempProperties.value = { ...node, properties: JSON.parse(JSON.stringify(node.properties || {})) }
-	// 				resolve(response)
-	// 			})
-	// 			.catch((err: any) => {
-	// 				reject(err)
-	// 			})
-	// 	})
-	// }
-
 	// Fallback para agrupar nodos manualmente
 	const fallbackGroupNodes = () => {
 		const groupedNodes: Record<string, NodeGroup> = {}

@@ -1,4 +1,4 @@
-import { getDeploysClass } from '@shared/store/deploy.store.js'
+import { getDeploysClass } from '@shared/engine/deploy.engine.js'
 import type { SocketData } from './index.js'
 
 export const setupDeploymentTypesRoutes = {

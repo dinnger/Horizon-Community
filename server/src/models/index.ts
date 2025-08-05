@@ -14,8 +14,8 @@ import Deployment from './Deployment.js'
 import DeploymentInstance from './DeploymentInstance.js'
 import DeploymentInstanceAssignment from './DeploymentInstanceAssignment.js'
 import DeploymentInstanceAssignmentRole from './DeploymentInstanceAssignmentRole.js'
-import DeployType from './DeployType.js'
 import DeploymentQueue from './DeploymentQueue.js'
+import Storage from './Storage.js'
 import { sequelize } from '../config/database.js'
 
 // Initialize database
@@ -51,8 +51,8 @@ export {
 	DeploymentInstance,
 	DeploymentInstanceAssignment,
 	DeploymentInstanceAssignmentRole,
-	DeployType,
 	DeploymentQueue,
+	Storage,
 	sequelize
 }
 
@@ -123,11 +123,6 @@ export type {
 } from './DeploymentInstance'
 
 export type {
-	DeployTypeAttributes,
-	DeployTypeCreationAttributes
-} from './DeployType'
-
-export type {
 	DeploymentInstanceAssignmentAttributes,
 	DeploymentInstanceAssignmentCreationAttributes
 } from './DeploymentInstanceAssignment'
@@ -141,3 +136,8 @@ export type {
 	DeploymentQueueAttributes,
 	DeploymentQueueCreationAttributes
 } from './DeploymentQueue'
+
+export type {
+	StorageAttributes,
+	StorageCreationAttributes
+} from './Storage'

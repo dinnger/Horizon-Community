@@ -1,4 +1,4 @@
-import type { INodeFull, INodeConnection, INodeWorker } from '../node/node.interface.js'
+import type { INodeFull, INodeConnection, INodeWorker, INodeCanvas, INodeSave } from '../node/node.interface.js'
 import type { IProjectBase } from '../standardized.js'
 import type { IPropertiesType } from '../workflow.properties.interface.js'
 
@@ -29,14 +29,13 @@ export interface IWorkflowDependencies {
 	secrets: Set<{
 		idNode: string
 		type: string
-		name: string
+		value: string
 		secret: string
 	}>
 	credentials: Set<{
 		idNode: string
 		type: string
-		name: string
-		credentials: string[]
+		value: string
 	}>
 }
 
@@ -74,7 +73,19 @@ export interface IWorkflowData {
 		createdAt: string
 		updatedAt: string
 	}[]
+	credentials?: {
+		id: string
+		name?: string
+		items?: string[]
+	}[]
 }
+
+export type IWorkflowDataSave = Omit<IWorkflowData, 'nodes'> & { nodes: { [key: string]: INodeSave } }
+
+/**
+ * Interfaz para workflow completo guardada
+ */
+export interface IWorkflowSaveFull extends IWorkflowBase, IWorkflowDataSave {}
 
 /**
  * Interfaz para workflow completo
@@ -95,24 +106,6 @@ export interface IWorkflowWorker extends IWorkflowBase {
 export interface IWorkflowClient extends IWorkflowBase {
 	nodes: { [key: string]: INodeFull }
 	connections: INodeConnection[]
-}
-
-/**
- * Interfaz para contexto de ejecución de workflow
- */
-export interface IWorkflowExecutionContext {
-	project?: IProjectBase
-	info: IWorkflowInfo
-	properties: IWorkflowProperties
-	variables?: string[]
-	secrets?: string[]
-	currentNode: {
-		id: string
-		name: string
-		type: string
-		meta?: object
-	} | null
-	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
 }
 
 /**
@@ -172,12 +165,6 @@ export interface IWorkflowUpdate extends Partial<Omit<IWorkflowServer, 'id' | 'c
  * @deprecated Usar IWorkflowFull en su lugar
  */
 export interface IWorkflow extends IWorkflowFull {}
-
-/**
- * Interfaz legacy para compatibilidad - será depreciada
- * @deprecated Usar IWorkflowExecutionContext en su lugar
- */
-export interface IWorkflowExecutionContextInterface extends IWorkflowExecutionContext {}
 
 /**
  * Interfaz legacy para compatibilidad - será depreciada

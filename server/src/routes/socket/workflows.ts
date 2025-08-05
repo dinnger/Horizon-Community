@@ -1,26 +1,23 @@
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
-import type { SocketData } from './index.js'
+import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
+import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
-import { Project, Workflow, WorkflowExecution, WorkflowHistory } from '../../models/index.js'
-import { getNodeClass } from '@shared/store/node.store.js'
+import { Project, Workflow, WorkflowHistory, Storage } from '../../models/index.js'
+import { getNodesInfo } from '@shared/engine/node.engine.js'
 import { workerManager } from '../../services/workerManager.js'
+import { fileURLToPath } from 'node:url'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import NodeCache from 'node-cache'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const nodeClass = getNodeClass()
-
-const myCache = new NodeCache({ stdTTL: 100, checkperiod: 120 })
+const nodeClass = getNodesInfo()
 
 export const setupWorkflowRoutes = {
 	'workflows:validate': async ({ socket, data, callback }: SocketData) => {
 		try {
 			const { workspaceId, projectId, workflowId } = data
 			const cacheKey = `workflow:${workspaceId}:${projectId}:${workflowId}`
-			const cached = myCache.get(cacheKey)
+			const cached = cacheRouter.get(cacheKey)
 			if (cached) {
 				callback({ success: true, workflow: cached })
 				return
@@ -58,7 +55,7 @@ export const setupWorkflowRoutes = {
 					}
 				})
 			}
-			myCache.set(cacheKey, exist)
+			cacheRouter.set(cacheKey, exist)
 			if (!exist) return callback({ success: false, message: 'Workflow no encontrado' })
 			return callback({ success: true, workflow: exist })
 		} catch (error) {
@@ -214,16 +211,37 @@ export const setupWorkflowRoutes = {
 	// Update workflow - requires update permission
 	'workflows:update': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workspaceId, id, connections, nodes, notes, groups } = data
+			const { workspaceId, id, connections, nodes, notes, groups, credentials } = data as IWorkflowDataSave & {
+				workspaceId: string
+				id: string
+			}
 
 			eventRouter('workflows:validate', { workspaceId, workflowId: id }, async (data) => {
 				if (!data.success) return callback(data)
-				const updates = {
+
+				// Obtener storega para las credenciales
+				if (credentials && credentials.length > 0) {
+					const list = credentials.map((cred: any) => cred.id)
+					const store = await Storage.findAll({ where: { workspaceId, type: 'credential', id: { [Op.in]: list } } })
+					if (!store) {
+						return callback({ success: false, message: 'No se encontraron credenciales' })
+					}
+					for (const cred of credentials) {
+						const found = store.find((s) => s.id === cred.id)
+						if (found) {
+							cred.name = found.name
+							cred.items = found.returnedValues
+						}
+					}
+				}
+				// Datos para actualizar
+				const updates: { workflowData: IWorkflowDataSave; updatedAt: Date } = {
 					workflowData: {
 						nodes,
 						connections,
 						notes,
-						groups
+						groups,
+						credentials
 					},
 					updatedAt: new Date()
 				}
@@ -297,9 +315,9 @@ export const setupWorkflowRoutes = {
 
 	// Execute workflow - requires authentication and project access
 	// Execute workflow - requires execute permission
-	'workflows:execute': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
+	'workflows:execute': async ({ data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workspaceId, workflowId, trigger = 'manual', version } = data
+			const { workspaceId, workflowId, version } = data
 
 			eventRouter('workflows:validate', { workspaceId, workflowId }, async (data) => {
 				if (!data.success) return callback(data)
@@ -474,7 +492,7 @@ export const setupWorkflowRoutes = {
 				fs.mkdirSync(dataDir, { recursive: true })
 			}
 
-			const flowData: IWorkflowFull = {
+			const flowData: IWorkflowSaveFull = {
 				info: {
 					name: workflow.name,
 					uid: workflow.id

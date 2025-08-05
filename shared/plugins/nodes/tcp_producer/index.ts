@@ -16,7 +16,7 @@ interface IProperties extends IPropertiesType {
 	retries: INumberProperty // Nueva propiedad para reintentos
 }
 
-export default class TcpProducer implements IClassNode<IProperties> {
+export default class TcpProducer implements IClassNode {
 	constructor(
 		public info: infoInterface,
 		public properties: IProperties,

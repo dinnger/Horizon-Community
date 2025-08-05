@@ -1,3 +1,6 @@
+import type { IWorkflowFull } from './standardized.js'
+import type { IPropertiesType } from './workflow.properties.interface.js'
+import type { classOnExecuteInterface, infoInterface, IWorkerDeployContext } from './index.js'
 import type { IRole } from './standardized'
 import type { StatusType } from './status.interface'
 
@@ -83,28 +86,15 @@ export interface IDeploymentQueue {
 	}
 }
 
-import type { IWorkflowFull } from './standardized.js'
-
-import type { IPropertiesType } from './workflow.properties.interface.js'
-
-export interface classOnExecuteInterface {
-	context: {
-		path: string
-		flow: string
-	}
-}
-
-export interface infoInterface {
-	title: string
-	desc: string
-	icon: string
+interface onExecuteDeployInterface {
+	context: IWorkerDeployContext
 }
 
 export interface classDeployInterface {
 	info: infoInterface
 	properties: IPropertiesType
 	meta?: { [key: string]: any }
-	onExecute(o: classOnExecuteInterface): Promise<void>
+	onExecute(o: onExecuteDeployInterface): Promise<void>
 }
 
 export interface newClassDeployInterface extends Omit<classDeployInterface, 'onExecute'> {

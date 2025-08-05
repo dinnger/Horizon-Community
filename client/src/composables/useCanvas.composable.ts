@@ -1,4 +1,4 @@
-import type { IWorkflowExecutionContextInterface } from '@shared/interfaces'
+import type { IWorkerContext } from '@shared/interfaces'
 import type { INodeCanvasAdd } from '@canvas/interfaz/node.interface.migrated'
 import type { IStatsAnimations, IPanelConsole, IPanelTrace, WorkflowData } from '@/types/canvas'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
@@ -10,6 +10,7 @@ import { useCanvasSubscribersComposable } from './useCanvasSubscribers.composabl
 import { useDeploymentComposable } from './useDeployment.composable'
 import { useCanvasActionsComposable, type IUseCanvasActionsType } from './useCanvasActions.composable'
 import { useWorkflowComposable } from './useWorkflow.composable'
+import { toast } from 'vue-sonner'
 
 export type IUseCanvasType = ReturnType<typeof useCanvasComposable>
 
@@ -34,7 +35,7 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const showDeploymentSelector = ref(false)
 	const autoDeploymentInfo = ref<{ workflowName: string; deploymentName: string } | null>(null)
 	const actions = ref<IUseCanvasActionsType | undefined>()
-	const context = ref<Omit<IWorkflowExecutionContextInterface, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
+	const context = ref<Omit<IWorkerContext, 'currentNode' | 'getEnvironment' | 'getSecrets'>>()
 
 	const canvasInstance = ref<Canvas | undefined>()
 
@@ -64,7 +65,7 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 			if (!canvasInstance.value) return
 
 			// Valors de configuración de usuario
-			canvasInstance.value.updateProperty({ property: 'canvasFps', value: settingsStore.canvasRefreshRate })
+			canvasInstance.value.updateProperty({ property: 'canvasFps', value: settingsStore.performance.canvasRefreshRate })
 
 			actions.value = useCanvasActionsComposable({ canvasInstance: canvasInstance.value, currentMousePosition, nodeOrigin })
 
@@ -102,6 +103,9 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 				},
 				onChanges: () => {
 					changes.value = true
+				},
+				onError: (msg: string) => {
+					toast.error(msg)
 				}
 			})
 

@@ -1,13 +1,14 @@
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { Worker } from '../../worker.js'
-import { getNodeClass } from '../../../shared/store/node.store.js'
+import { getNodesInfo } from '../../../shared/engine/node.engine.js'
 import { v4 as uuidv4 } from 'uuid'
 import type {
 	INodeWorker,
 	INodeConnection,
 	IWorkflowFull,
 	IWorkflowExecution,
-	IWorkflowDependencies
+	IWorkflowDependencies,
+	INodeSave
 } from '@shared/interfaces/standardized.js'
 
 // Interfaces legacy - usar las nuevas interfaces estandarizadas
@@ -22,7 +23,7 @@ export class NodeModule {
 	nodesInit: INodeWorker | null = null
 	nodes: { [key: string]: INodeWorker } = {}
 	nodesType = new Map<string, Set<string>>()
-	nodesClass = getNodeClass()
+	nodesClass = getNodesInfo()
 	connections: {
 		[key: string]: {
 			[key: string]: { idNodeDestiny: string; connectorDestinyName: string }[]
@@ -30,11 +31,6 @@ export class NodeModule {
 	} = {}
 	connectionsInputs: { [key: string]: Set<string> } = {}
 	connectionsOutputs: { [key: string]: Set<string> } = {}
-
-	dependencies: IWorkflowDependencies = {
-		secrets: new Set(),
-		credentials: new Set()
-	}
 
 	constructor(el: Worker) {
 		this.el = el
@@ -55,7 +51,7 @@ export class NodeModule {
 	 * @returns {INode} The newly added node.
 	 * @throws {Error} If the class name does not exist in nodesClass.
 	 */
-	addNode(data: Omit<INodeWorker, 'class'>) {
+	addNode(data: INodeSave) {
 		if (!this.el) return null
 		if (!this.nodesClass[data.type]) {
 			console.error(`No existe el nodo ${data.type}`)
@@ -66,7 +62,6 @@ export class NodeModule {
 		if (this.nodesClass[data.type]?.properties) {
 			for (const [key, value] of Object.entries(this.nodesClass[data.type].properties) as [string, any][]) {
 				prop[key] = JSON.parse(JSON.stringify(value))
-				if (value.onTransform) prop[key].onTransform = value.onTransform
 				if (value.type === 'list') {
 					prop[key].object = value.object
 				}
@@ -77,31 +72,23 @@ export class NodeModule {
 		}
 
 		// Determinando si la propiedad secret o credencial
-		for (const [key, value] of Object.entries(prop)) {
-			if (!value.value || value?.value.toString().trim() === '') continue
+		// for (const [key, value] of Object.entries(prop)) {
+		// 	if (!value.value || value?.value.toString().trim() === '') continue
 
-			// Secrets
-			if (value.type === 'secret') {
-				this.dependencies.secrets.add({
-					idNode: data.id,
-					name: value.value,
-					type: data.type,
-					secret: value.value
-				})
-			}
-			// Credentials
-			if (value.type === 'credential') {
-				this.dependencies.credentials.add({
-					idNode: data.id,
-					type: data.type,
-					name: value.value,
-					credentials: Array.isArray(data.credentials) ? data.credentials : []
-				})
-			}
-		}
+		// 	// Secrets
+		// 	if (value.type === 'secret') {
+		// 		this.dependencies.secrets.add({
+		// 			idNode: data.id,
+		// 			value: value.value,
+		// 			type: data.type,
+		// 			secret: value.value
+		// 		})
+		// 	}
+		// }
 
 		this.nodes[data.id] = {
 			...data,
+			name: data.info.name,
 			properties: prop,
 			class: this.nodesClass[data.type]?.class
 		}

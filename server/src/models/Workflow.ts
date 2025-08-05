@@ -1,6 +1,6 @@
 import { DataTypes, Model, type Optional } from 'sequelize'
 import { sequelize } from '../config/database.js'
-import type { IWorkflowData, IWorkflowProperties } from '@shared/interfaces/standardized.js'
+import type { IWorkflowDataSave, IWorkflowProperties } from '@shared/interfaces/standardized.js'
 import { type StatusType, type IStatusEntity, EnumStatus } from '@shared/interfaces/status.interface.js'
 import Project from './Project.js'
 
@@ -12,7 +12,7 @@ export interface WorkflowAttributes extends IStatusEntity {
 	status: StatusType
 	lastRun?: Date
 	duration?: string
-	workflowData: IWorkflowData // JSON para almacenar los nodos y conexiones del canvas
+	workflowData: IWorkflowDataSave // JSON para almacenar los nodos y conexiones del canvas
 	properties?: IWorkflowProperties
 	version: string
 	isPublished: boolean
@@ -31,7 +31,7 @@ export class Workflow extends Model<WorkflowAttributes, WorkflowCreationAttribut
 	public status!: StatusType
 	public lastRun?: Date
 	public duration?: string
-	public workflowData!: IWorkflowData
+	public workflowData!: IWorkflowDataSave
 	public properties!: IWorkflowProperties
 	public version!: string
 	public isPublished!: boolean
@@ -136,17 +136,10 @@ Workflow.init(
 				// Registrar la creación en el historial
 				try {
 					const { recordCreation } = await import('../services/WorkflowHistoryService.js')
-					await recordCreation(
-						workflow.projectId,
-						workflow.id,
-						undefined, // userId se puede obtener del contexto si está disponible
-						workflow.toJSON(),
-						workflow.version,
-						{
-							userAgent: 'system',
-							action: 'auto-created'
-						}
-					)
+					await recordCreation(workflow.projectId, workflow.id, undefined, workflow.toJSON(), workflow.version, {
+						userAgent: 'system',
+						action: 'auto-created'
+					})
 				} catch (error) {
 					console.error('Error registrando creación en historial:', error)
 				}
@@ -200,17 +193,10 @@ Workflow.init(
 				// Registrar la eliminación en el historial
 				try {
 					const { recordDeletion } = await import('../services/WorkflowHistoryService.js')
-					await recordDeletion(
-						workflow.projectId,
-						workflow.id,
-						undefined, // userId se puede obtener del contexto si está disponible
-						workflow.toJSON(),
-						workflow.version,
-						{
-							userAgent: 'system',
-							action: 'auto-deleted'
-						}
-					)
+					await recordDeletion(workflow.projectId, workflow.id, undefined, workflow.toJSON(), workflow.version, {
+						userAgent: 'system',
+						action: 'auto-deleted'
+					})
 				} catch (error) {
 					console.error('Error registrando eliminación en historial:', error)
 				}

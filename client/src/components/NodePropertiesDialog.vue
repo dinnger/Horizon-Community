@@ -17,7 +17,7 @@
         <!-- Main content -->
         <div class="flex-1 overflow-y-auto p-6">
           <NodePropertiesSection v-if="activeSection === 'properties'" :properties="editableProperties"
-            :is-read-only="props.isReadOnly" @update:property="updateProperty" />
+            :is-read-only="props.isReadOnly" :node-type="props.nodeData?.type" @update:property="updateProperty" />
 
           <NodeCredentialsSection v-else-if="activeSection === 'credentials'" :credentials="editableCredentials"
             :is-read-only="props.isReadOnly" @update:credential="updateCredential" />
@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import type { INodeCanvas } from '@canvas/interfaz/node.interface'
-import type { INodePropertiesType } from '@canvas/interfaz/node.properties.interface'
+import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface'
 import { useNodesLibraryStore } from '@/stores'
 import socketService from '@/services/socket'
 
@@ -49,6 +49,8 @@ import NodeCredentialsSection from './NodeProperties/NodeCredentialsSection.vue'
 import NodeMetaSection from './NodeProperties/NodeMetaSection.vue'
 import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
+import { getClientContext } from '@/context'
+import type { classOnUpdateInterface } from '@shared/interfaces'
 
 interface Props {
   canvasComposable: IUseCanvasType
@@ -63,18 +65,17 @@ interface Emits {
 }
 
 const nodesLibraryStore = useNodesLibraryStore()
-
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-let fnOnCreate: any = null
+let fnOnCreate: ((properties: any, connectors: any) => any) | null = null
 
 const activeSection = ref('properties')
 const isSaving = ref(false)
 
 // Estados editables - se inicializan cuando se abre el diálogo
-const editableProperties = ref<INodePropertiesType>({})
-const editableCredentials = ref<INodePropertiesType>({})
+const editableProperties = ref<IPropertiesType>({})
+const editableCredentials = ref<IPropertiesType>({})
 const editableMeta = ref({
   id: '',
   type: '',
@@ -82,9 +83,9 @@ const editableMeta = ref({
 })
 
 // Estados originales para comparar cambios
-const originalProperties = ref<INodePropertiesType>({})
-const tempProperties = ref<INodePropertiesType>({})
-const originalCredentials = ref<INodePropertiesType>({})
+const originalProperties = ref<IPropertiesType>({})
+const tempProperties = ref<IPropertiesType>({})
+const originalCredentials = ref<IPropertiesType>({})
 const originalMeta = ref({
   id: '',
   type: '',
@@ -111,7 +112,7 @@ const sections = computed(() => [
 
 const properties = computed(() => {
   const entries = Object.entries(editableProperties.value)
-    .filter(([_, prop]) => prop.show !== false)
+    .filter(([_, prop]) => (prop as any).show !== false)
   return Object.fromEntries(entries)
 })
 
@@ -126,7 +127,7 @@ const updateProperty = (key: string, value: any) => {
   if (editableProperties.value[key]) {
     editableProperties.value[key].value = value
   }
-  if (fnOnCreate) fnOnCreate(editableProperties.value)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
 }
 
 const updateCredential = (key: string, value: any) => {
@@ -177,7 +178,7 @@ const initializeEditableData = async () => {
   originalMeta.value = JSON.parse(JSON.stringify(editableMeta.value))
 
   await importNodeOnCreate()
-  if (fnOnCreate) fnOnCreate(editableProperties.value)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
 }
 
 const resetChanges = () => {
@@ -200,62 +201,34 @@ const importNodeOnCreate = async () => {
     const socket = socketService.getSocket()
     if (!socket) return console.error('No hay socket conectado para importar nodos')
 
-
-    const socketId = socket.id
     const nodeType = props.nodeData.type
 
     // Construir las URLs del endpoint REST
     const serverUrl = import.meta.env.VITE_SERVER_URL
-    const validateUrl = `${serverUrl}/api/nodes/${socketId}/${encodeURIComponent(nodeType)}/validate`
-    const scriptUrl = `${serverUrl}/api/nodes/${socketId}/${encodeURIComponent(nodeType)}`
+    const propertiesScriptUrl = `${serverUrl}/api/external/nodes/properties/${encodeURIComponent(nodeType)}`
 
-    // Primero validar que tenemos acceso al script
-    const validateResponse = await fetch(validateUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
 
-    if (!validateResponse.ok) {
-      if (validateResponse.status === 404) {
-        console.log(`No se encontró script onCreate para el tipo de nodo: ${nodeType}`)
-      } else if (validateResponse.status === 401) {
-        console.log('Socket no autenticado o inactivo')
-      }
-      return
-    }
-    // Crear un contexto mock para la función onCreate
-    const mockContext = {
-      ...props.canvasComposable.context.value,
-      getEnvironment: (key: string) => {
-        const envMap: Record<string, string> = {
-          serverUrl: import.meta.env.VITE_SERVER_URL || '',
-          baseUrl: '/'
+    // Importar script de propiedades
+    try {
+
+      const propertiesModule = await import(/* @vite-ignore */  propertiesScriptUrl)
+      const onUpdateFunction = propertiesModule.onUpdateProperties
+
+      if (typeof onUpdateFunction === 'function') {
+        fnOnCreate = (properties: any, connectors: any) => {
+          onUpdateFunction({ properties, context: getClientContext(props.canvasComposable.context.value), connectors })
         }
-        return envMap[key] || ''
+      } else {
+        console.warn('El script onUpdateProperties no exporta una función ejecutable')
       }
-    }
-    console.log('mockContext', mockContext)
-    const module = await import(scriptUrl)
-    const onCreateFunction = module.default
-
-    // Ejecutar la función con las propiedades actuales y el contexto mock
-    if (typeof onCreateFunction === 'function') {
-      console.log('Ejecutando función onCreate con propiedades actuales...')
-
-      fnOnCreate = (properties: any) => {
-        onCreateFunction(properties, { context: mockContext })
-      }
-      // Ejecutar la función onCreate
-    } else {
-      console.warn('El script onCreate no exporta una función default ejecutable')
+    } catch (error) {
+      console.warn('No se pudo cargar el script onUpdateProperties:', error)
     }
 
 
 
   } catch (error) {
-    console.error('Error de red al importar nodo:', error)
+    console.error('Error de red al importar nodos:', error)
   }
 }
 
