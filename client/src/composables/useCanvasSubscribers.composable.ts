@@ -53,8 +53,9 @@ export function useCanvasSubscribersComposable() {
 			(e: {
 				canvasTranslate: { x: number; y: number }
 				selected: INodeCanvas[]
+				position: { x: number; y: number }
 			}) => {
-				canvasEvents.emit('node:context:open', { nodes: e.selected })
+				canvasEvents.emit('node:context:open', { nodes: e.selected, position: e.position })
 			}
 		)
 
@@ -69,6 +70,7 @@ export function useCanvasSubscribersComposable() {
 				nodeDestiny: INodeCanvas
 				input: string
 				output: string
+				position: { x: number; y: number }
 			}) => {
 				canvasEvents.emit('connection:context:open', { connectionInfo })
 			}
@@ -112,7 +114,7 @@ export function useCanvasSubscribersComposable() {
 				group: INodeGroupCanvas
 				position: { x: number; y: number }
 			}) => {
-				canvasEvents.emit('group:context:open', { group: e.group })
+				canvasEvents.emit('group:context:open', { group: e.group, position: e.position })
 			}
 		)
 

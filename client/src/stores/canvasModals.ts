@@ -20,6 +20,7 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 
 	const nodeContextMenu = ref({
 		isVisible: false,
+		position: { x: 0, y: 0 },
 		selectedNodes: [] as INodeCanvas[]
 	})
 
@@ -34,6 +35,7 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 			nodeDestiny: INodeCanvas
 			input: string
 			output: string
+			position: { x: number; y: number }
 		} | null
 	})
 
@@ -70,7 +72,8 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 	// =============================================================================
 	const groupContextMenu = ref({
 		isVisible: false,
-		group: null as INodeGroupCanvas | null
+		group: null as INodeGroupCanvas | null,
+		position: { x: 0, y: 0 }
 	})
 
 	const groupPropertiesDialog = ref({
@@ -99,17 +102,19 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 		}
 	}
 
-	const openNodeContextMenu = (nodes: INodeCanvas[]) => {
+	const openNodeContextMenu = (nodes: INodeCanvas[], position: { x: number; y: number }) => {
 		nodeContextMenu.value = {
 			isVisible: true,
-			selectedNodes: nodes
+			selectedNodes: nodes,
+			position
 		}
 	}
 
 	const closeNodeContextMenu = () => {
 		nodeContextMenu.value = {
 			isVisible: false,
-			selectedNodes: []
+			selectedNodes: [],
+			position: { x: 0, y: 0 }
 		}
 	}
 
@@ -122,6 +127,7 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 		nodeDestiny: INodeCanvas
 		input: string
 		output: string
+		position: { x: number; y: number }
 	}) => {
 		connectionContextMenu.value = {
 			isVisible: true,
@@ -205,17 +211,19 @@ export const useCanvasModals = defineStore('canvasModals', () => {
 	// =============================================================================
 	// MÉTODOS PARA GRUPOS
 	// =============================================================================
-	const openGroupContextMenu = (group: INodeGroupCanvas) => {
+	const openGroupContextMenu = (group: INodeGroupCanvas, position: { x: number; y: number }) => {
 		groupContextMenu.value = {
 			isVisible: true,
-			group
+			group,
+			position
 		}
 	}
 
 	const closeGroupContextMenu = () => {
 		groupContextMenu.value = {
 			isVisible: false,
-			group: null
+			group: null,
+			position: { x: 0, y: 0 }
 		}
 	}
 

@@ -33,12 +33,15 @@ export function useCanvasActionsComposable({
 				y: currentMousePosition.value.y || 100
 			}
 		}
-		console.log('nodeToAdd', nodeToAdd)
 
 		// Añadir el nodo
 		const connectorOriginName =
-			typeof nodeOrigin.value?.connection === 'string' ? nodeOrigin.value.connection : nodeOrigin?.value.connection.name || ''
-		console.log('connectorOriginName', connectorOriginName)
+			typeof nodeOrigin.value?.connection === 'string'
+				? nodeOrigin.value.connection
+				: typeof nodeOrigin.value?.connection.name === 'string'
+					? nodeOrigin?.value.connection.name
+					: nodeOrigin?.value.connection.name?.name
+		console.log('connectorOriginName', connectorOriginName, nodeOrigin.value)
 		const nodeId = canvasInstance.actionAddNode({
 			origin: {
 				idNode: nodeOrigin?.value.node.id as string,
@@ -61,23 +64,20 @@ export function useCanvasActionsComposable({
 	}
 
 	const handleNodeDelete = (nodes: INodeCanvas[]) => {
-		const confirmMessage =
-			nodes.length === 1
-				? '¿Estás seguro de que quieres eliminar este nodo?'
-				: `¿Estás seguro de que quieres eliminar ${nodes.length} nodos?`
-
-		if (confirm(confirmMessage)) {
-			const nodeIds = nodes.map((node) => node.id).filter((id): id is string => Boolean(id))
-			canvasInstance.actionDeleteNodes({ ids: nodeIds })
-			canvasStore.changes = true
-		}
+		const nodeIds = nodes.map((node) => node.id).filter((id): id is string => Boolean(id))
+		canvasInstance.actionDeleteNodes({ ids: nodeIds })
+		canvasStore.changes = true
 		canvasEvents.emit('node:context:close', undefined)
 	}
 
-	const handleNodeDuplicate = (node: INodeCanvas) => {
-		if (!node.id) return
+	const handleNodeDuplicate = (node: INodeCanvas[]) => {
+		if (node.length === 1) {
+			if (!node[0].id) return
+			canvasInstance.nodes.duplicateNode({ id: node[0].id })
+		} else {
+			canvasInstance.nodes.duplicateMultiple()
+		}
 
-		canvasInstance.nodes.duplicateNode({ id: node.id })
 		canvasEvents.emit('node:context:close', undefined)
 	}
 
@@ -195,22 +195,15 @@ export function useCanvasActionsComposable({
 	const handleGroupUngroup = (group: INodeGroupCanvas) => {
 		if (!group.id) return
 
-		const confirmMessage = '¿Estás seguro de que quieres desagrupar estos nodos?'
-		if (confirm(confirmMessage)) {
-			canvasInstance.actionUngroup(group.id)
-			canvasStore.changes = true
-		}
+		canvasInstance.actionUngroup(group.id)
+		canvasStore.changes = true
 		canvasEvents.emit('group:context:close', undefined)
 	}
 
 	const handleGroupDelete = (group: INodeGroupCanvas) => {
 		if (!group.id) return
-
-		const confirmMessage = '¿Estás seguro de que quieres eliminar este grupo?'
-		if (confirm(confirmMessage)) {
-			canvasInstance.actionDeleteGroup(group.id)
-			canvasStore.changes = true
-		}
+		canvasInstance.actionDeleteGroup(group.id)
+		canvasStore.changes = true
 		canvasEvents.emit('group:context:close', undefined)
 	}
 

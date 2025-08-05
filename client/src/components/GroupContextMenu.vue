@@ -1,7 +1,15 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20" @click="closeMenu">
-    <div class="bg-base-200 border border-base-300 rounded-lg shadow-lg py-2 min-w-[160px]" @click.stop>
+  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20" @click="closeMenu"
+    @contextmenu.stop.prevent="() => false" @keydown.escape="closeMenu">
+    <div class="bg-base-200 border border-base-300 rounded-lg shadow-lg  w-[250px] absolute overflow-hidden" @click.stop
+      :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }" p>
       <!-- Opción: Editar grupo -->
+
+      <div v-if="selectedGroup" class="p-3 border-b" :style="{ backgroundColor: selectedGroup.color }">
+        <span class="mdi mdi-selection-multiple text-base-content/80"></span>
+        {{ selectedGroup?.label }}
+      </div>
+
       <button @click="handleEditGroup" class="w-full px-4 py-2 text-left hover:bg-base-300 flex items-center gap-2">
         <span class="mdi mdi-pencil text-sm"></span>
         Editar grupo
@@ -27,11 +35,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { INodeGroupCanvas } from '../../canvas/interfaz/group.interface'
 
 interface Props {
   isVisible: boolean
   selectedGroup: INodeGroupCanvas | null
+  position: { x: number; y: number }
 }
 
 interface Emits {
@@ -43,6 +53,25 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const menuPosition = computed(() => {
+  // Ajustar posición para que no salga de la pantalla
+  const menuWidth = 150
+  const menuHeight = 100
+
+  let x = props.position.x
+  let y = props.position.y
+
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 10
+  }
+
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 10
+  }
+
+  return { x, y }
+})
 
 const closeMenu = () => {
   emit('close')

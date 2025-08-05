@@ -65,6 +65,12 @@ export class NewNode {
 	// }
 
 	addConnection(element: INodeConnections): boolean {
+		if (element.idNodeDestiny === this.id) {
+			this.isMove = false
+			this.isSelected = false
+			this.connections.push(element)
+			return true
+		}
 		let { id, idNodeDestiny } = element
 
 		// Verificar si el nodo destino ya tiene una conexión
@@ -98,6 +104,11 @@ export class NewNode {
 		this.connections.map((f) => {
 			f.pointers = undefined
 		})
+
+		if (connection.idNodeOrigin === this.id) {
+			this.el.nodes[idNodeDestiny].addConnection(connection)
+			this.isMove = true
+		}
 
 		return true
 	}
@@ -239,6 +250,44 @@ export class NewNode {
 		return this.isSelected
 	}
 
+	// Verifica que nodos se encuentran en la misma conexion y los que se encuentran entre los nodos conectados
+	private hasIntermediateNodes(): { [key: string]: INodeCanvas } {
+		const nodes: { [key: string]: INodeCanvas } = {}
+		const x = [this.design.x]
+		const y = [this.design.y]
+		const x2 = [this.design.x + this.design.width]
+		const y2 = [this.design.y + this.design.height]
+
+		nodes[this.id] = this.get()
+
+		for (const connection of Object.values(this.connections)) {
+			const node = this.el.nodes[connection.idNodeDestiny]
+			nodes[connection.idNodeDestiny] = node.get()
+			x.push(node.design.x)
+			y.push(node.design.y)
+			x2.push(node.design.x + node.design.width)
+			y2.push(node.design.y + node.design.height)
+		}
+
+		const minX = Math.min(...x) - 200
+		const maxX = Math.max(...x2) + 200
+		const minY = Math.min(...y) - 200
+		const maxY = Math.max(...y2) + 200
+
+		for (const node of Object.values(this.el.nodes)) {
+			// Ignorar nodos seleccionados y los nodos origen/destino
+			if (node.id === this.id) continue
+
+			const { x, y, width, height } = node.design
+
+			if (x + width >= minX && x <= maxX && y + height >= minY && y <= maxY) {
+				nodes[node.id] = node.get()
+			}
+		}
+
+		return nodes
+	}
+
 	move({ relative }: { relative: { x: number; y: number } }) {
 		if (!this.isMove) return
 		let x = relative.x - this.relativePos.x
@@ -250,8 +299,8 @@ export class NewNode {
 		this.design.x = x
 		this.design.y = y
 
-		for (const node of Object.values(this.el.nodes)) {
-			for (const connection of node.connections) {
+		for (const node of Object.values(this.hasIntermediateNodes())) {
+			for (const connection of node.connections || []) {
 				connection.pointers = undefined
 			}
 		}
@@ -304,10 +353,11 @@ export class NewNode {
 			// Si es el nodo origen, renderizar los nodos destino
 			if (nodeOrigin !== this.id) continue
 			shapeMargin += 5
+
 			renderConnectionNodes({
 				ctx,
 				connection,
-				nodes,
+				nodes: this.hasIntermediateNodes(),
 				shapeMargin
 			})
 		}

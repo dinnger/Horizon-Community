@@ -184,7 +184,7 @@ export class Canvas {
 		}
 		for (const connection of connections) {
 			const exist = this.nodes.addConnection(connection)
-			if (!exist) delete this.nodes[connection.idNodeDestiny]
+			if (!exist) this.nodes.removeNode(connection.idNodeDestiny)
 		}
 	}
 
@@ -616,12 +616,19 @@ export class Canvas {
 			return
 		}
 
+		this.eventMouseMove(_e)
+		this.eventMouseDown(_e)
+
 		// PRIMERO: Verificar si hay nodos seleccionados (mayor prioridad)
 		const selected = this.nodes.getSelected()
 		if (selected.length > 0) {
 			this.emit('node_context', {
 				selected,
-				canvasTranslate: this.nodes.canvasTranslate
+				canvasTranslate: this.nodes.canvasTranslate,
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -638,7 +645,11 @@ export class Canvas {
 				nodeOrigin: connectionAtPosition.nodeOrigin.get(),
 				nodeDestiny: connectionAtPosition.nodeDestiny.get(),
 				input: connectionAtPosition.connection.connectorDestinyName,
-				output: connectionAtPosition.connection.connectorOriginName
+				output: connectionAtPosition.connection.connectorOriginName,
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -649,7 +660,10 @@ export class Canvas {
 		if (noteAtPosition) {
 			this.emit('note_context', {
 				note: noteAtPosition,
-				position: { x: this.canvasPosition.x, y: this.canvasPosition.y }
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -659,14 +673,21 @@ export class Canvas {
 		if (groupAtPosition) {
 			this.emit('group_context', {
 				group: groupAtPosition,
-				position: { x: this.canvasPosition.x, y: this.canvasPosition.y }
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
 
 		// QUINTO: Menú contextual del canvas vacío
+		// Agregar posición top y left del canvas
 		this.emit('canvas_context', {
-			position: { x: this.canvasPosition.x, y: this.canvasPosition.y },
+			position: {
+				x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+				y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+			},
 			canvasPosition: { x: this.canvasRelativePos.x, y: this.canvasRelativePos.y }
 		})
 	}
@@ -692,7 +713,7 @@ export class Canvas {
 				})
 				const connectorOriginName =
 					typeof this.newConnectionNode.value === 'string' ? this.newConnectionNode.value : this.newConnectionNode.value.name || ''
-				const isAdded = originNode.addConnection({
+				const isAdded = originNode?.addConnection({
 					connectorOriginName,
 					idNodeDestiny: targetInput.node.id,
 					connectorDestinyName: targetInput.connectorOriginName,
@@ -825,7 +846,7 @@ export class Canvas {
 		if (origin) {
 			const inputs = nodeDestiny.info.connectors.inputs[0]
 			const connectorDestinyName = typeof inputs === 'string' ? inputs : inputs.name || ''
-			this.nodes.getNode({ id: origin.idNode }).addConnection({
+			this.nodes.getNode({ id: origin.idNode })?.addConnection({
 				connectorOriginName: origin.connectorOriginName,
 				idNodeDestiny: nodeDestiny.id,
 				connectorDestinyName,
@@ -1071,10 +1092,10 @@ export class Canvas {
 			.map((id) => this.nodes.getNode({ id }))
 			.filter(Boolean)
 			.map((node) => ({
-				x: node.design.x,
-				y: node.design.y,
-				width: node.design.width || 200,
-				height: node.design.height || 100
+				x: node?.design.x || 0,
+				y: node?.design.y || 0,
+				width: node?.design.width || 200,
+				height: node?.design.height || 100
 			}))
 
 		const bounds = this.groups.calculateGroupBounds(nodePositions)
