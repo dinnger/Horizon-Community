@@ -32,11 +32,6 @@ export class NodeModule {
 	connectionsInputs: { [key: string]: Set<string> } = {}
 	connectionsOutputs: { [key: string]: Set<string> } = {}
 
-	dependencies: IWorkflowDependencies = {
-		secrets: new Set(),
-		credentials: new Set()
-	}
-
 	constructor(el: Worker) {
 		this.el = el
 	}
@@ -77,27 +72,19 @@ export class NodeModule {
 		}
 
 		// Determinando si la propiedad secret o credencial
-		for (const [key, value] of Object.entries(prop)) {
-			if (!value.value || value?.value.toString().trim() === '') continue
+		// for (const [key, value] of Object.entries(prop)) {
+		// 	if (!value.value || value?.value.toString().trim() === '') continue
 
-			// Secrets
-			if (value.type === 'secret') {
-				this.dependencies.secrets.add({
-					idNode: data.id,
-					value: value.value,
-					type: data.type,
-					secret: value.value
-				})
-			}
-			// Credentials
-			if (value.type === 'credential') {
-				this.dependencies.credentials.add({
-					idNode: data.id,
-					type: data.type,
-					value: value.value
-				})
-			}
-		}
+		// 	// Secrets
+		// 	if (value.type === 'secret') {
+		// 		this.dependencies.secrets.add({
+		// 			idNode: data.id,
+		// 			value: value.value,
+		// 			type: data.type,
+		// 			secret: value.value
+		// 		})
+		// 	}
+		// }
 
 		this.nodes[data.id] = {
 			...data,

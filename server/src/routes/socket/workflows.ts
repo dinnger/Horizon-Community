@@ -1,7 +1,7 @@
 import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { cacheRouter, type SocketData } from './index.js'
 import { Op } from 'sequelize'
-import { Project, Workflow, WorkflowHistory } from '../../models/index.js'
+import { Project, Workflow, WorkflowHistory, Storage } from '../../models/index.js'
 import { getNodesInfo } from '@shared/engine/node.engine.js'
 import { workerManager } from '../../services/workerManager.js'
 import { fileURLToPath } from 'node:url'
@@ -211,10 +211,30 @@ export const setupWorkflowRoutes = {
 	// Update workflow - requires update permission
 	'workflows:update': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
-			const { workspaceId, id, connections, nodes, notes, groups, credentials } = data
+			const { workspaceId, id, connections, nodes, notes, groups, credentials } = data as IWorkflowDataSave & {
+				workspaceId: string
+				id: string
+			}
 
 			eventRouter('workflows:validate', { workspaceId, workflowId: id }, async (data) => {
 				if (!data.success) return callback(data)
+
+				// Obtener storega para las credenciales
+				if (credentials && credentials.length > 0) {
+					const list = credentials.map((cred: any) => cred.id)
+					const store = await Storage.findAll({ where: { workspaceId, type: 'credential', id: { [Op.in]: list } } })
+					if (!store) {
+						return callback({ success: false, message: 'No se encontraron credenciales' })
+					}
+					for (const cred of credentials) {
+						const found = store.find((s) => s.id === cred.id)
+						if (found) {
+							cred.name = found.name
+							cred.items = found.returnedValues
+						}
+					}
+				}
+				// Datos para actualizar
 				const updates: { workflowData: IWorkflowDataSave; updatedAt: Date } = {
 					workflowData: {
 						nodes,

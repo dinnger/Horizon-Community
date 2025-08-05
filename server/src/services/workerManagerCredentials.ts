@@ -8,8 +8,7 @@ export async function getCreditialsByWorkflow(workflowId: string) {
 	if (!data?.credentials) return {}
 	let list: { [key: string]: any } = {}
 	for (const credential of data.credentials) {
-		const [id, ...name] = credential.split('::')
-		const listCredentials = await getCredentialsById(id)
+		const listCredentials = await getCredentialsById(credential.id)
 		list = { ...list, ...listCredentials }
 	}
 	return list

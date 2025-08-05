@@ -12,6 +12,7 @@ export interface StorageAttributes {
 	nodeType?: string // Ej: 'local', 'aws', 'gcp', 'azure', etc.
 	properties: any // Propiedades adicionales del storage
 	data: any // Ruta o identificador del recurso
+	returnedValues?: string[]
 	workspaceId: string
 	status: StatusType
 	createdAt: Date
@@ -31,6 +32,7 @@ class Storage extends Model<StorageAttributes, StorageCreationAttributes> implem
 	public nodeType!: string
 	public properties!: any
 	public data: any // Puede ser string o Buffer
+	public returnedValues?: string[]
 	public workspaceId!: string
 	public status!: StatusType
 	public readonly createdAt!: Date
@@ -72,6 +74,11 @@ Storage.init(
 			type: DataTypes.BLOB,
 			allowNull: false
 		},
+		returnedValues: {
+			type: DataTypes.JSONB,
+			allowNull: false,
+			defaultValue: []
+		},
 		workspaceId: {
 			type: DataTypes.UUID,
 			allowNull: false,
@@ -87,6 +94,7 @@ Storage.init(
 			allowNull: false,
 			defaultValue: 'active'
 		},
+
 		createdAt: {
 			type: DataTypes.DATE,
 			allowNull: false,

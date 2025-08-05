@@ -32,12 +32,12 @@ const OPERATIONS = [
 const SPOTIFY_SCOPES =
 	'playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing'
 
-export default class SpotifySimple implements IClassNode {
+export default class Spotify implements IClassNode {
 	accessSecrets = true
 	dependencies = ['axios']
 
 	info = {
-		name: 'Spotify Simple',
+		name: 'Spotify',
 		desc: 'Nodo simplificado para conectar con Spotify',
 		icon: '󰓇',
 		group: 'Servicios',

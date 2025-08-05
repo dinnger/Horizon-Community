@@ -1,6 +1,10 @@
 import fs from 'node:fs'
 import type { IWorkerContext } from '@shared/interfaces/context.interface.js'
-import type { classBaseEnvironmentInterface, classDependencyInterface } from '@shared/interfaces/class.interface.js'
+import type {
+	classBaseEnvironmentInterface,
+	classCredentialInterface,
+	classDependencyInterface
+} from '@shared/interfaces/class.interface.js'
 import type { Express } from 'express'
 import type { IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { VariableModule } from './modules/variables/index.js'
@@ -22,6 +26,7 @@ export class Worker {
 	flow: IWorkflowSaveFull
 	context: IWorkerContext
 	dependencies: classDependencyInterface
+	credential: classCredentialInterface
 	environment: classBaseEnvironmentInterface
 
 	index: number | null
@@ -54,6 +59,7 @@ export class Worker {
 
 		this.context = new ContextModule(this).getContext()
 		this.dependencies = new ContextModule(this).getDependencies()
+		this.credential = new ContextModule(this).getCredential()
 		this.environment = {
 			baseUrl: this.context.properties?.basic?.router || '',
 			serverUrl: envs.SERVER_URL,
@@ -93,9 +99,6 @@ export class Worker {
 		// =========================================================================
 		// ENVS
 		// =========================================================================
-		if (this.isDev) {
-			await this.variableModule.initVariable({ uidFlow: this.workflowId })
-		}
 		await this.variableModule.checkWorkflowEnvironment({ flow: this.flow })
 		// =========================================================================
 	}

@@ -73,7 +73,11 @@ export interface IWorkflowData {
 		createdAt: string
 		updatedAt: string
 	}[]
-	credentials?: string[]
+	credentials?: {
+		id: string
+		name?: string
+		items?: string[]
+	}[]
 }
 
 export type IWorkflowDataSave = Omit<IWorkflowData, 'nodes'> & { nodes: { [key: string]: INodeSave } }

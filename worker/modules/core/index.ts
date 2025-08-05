@@ -6,7 +6,6 @@ import { getMemoryUsage, getTime } from '../../shared/functions/utils.js'
 import { initProperties } from '../../worker_properties.js'
 import { CoreStats } from './stats.module.js'
 import { v4 as uid } from 'uuid'
-import { CoreCredential } from './credential.module.js'
 import { CoreDebug } from './debug.module.js'
 import { CoreGlobalStore } from './store.module.js'
 import { convertJson } from '../../../shared/utils/utilities.js'
@@ -303,6 +302,8 @@ export class CoreModule {
 				currentNode
 			},
 			logger: this.coreLogger.logger,
+			dependency: this.el.dependencies,
+			credential: this.el.credential,
 			inputData,
 			outputData: (connectorName, data, meta) => {
 				// Si es trigger, generar uuid
@@ -378,9 +379,7 @@ export class CoreModule {
 						data
 					})
 				}
-			},
-			dependency: this.el.dependencies,
-			credential: CoreCredential.apply(classExecute)
+			}
 		})
 	}
 

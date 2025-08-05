@@ -90,6 +90,7 @@ export const setupStorageRoutes = {
 				)
 			)
 			let dataResult = ''
+			const dataReturnedValues: string[] = []
 
 			// =======================================================================
 			// Credenciales
@@ -110,6 +111,10 @@ export const setupStorageRoutes = {
 							return callback({ success: false, message: 'No se pudieron obtener las credenciales del nodo' })
 						}
 						dataResult = JSON.stringify(credentialResult.data)
+						// Extraer keys de los valores devueltos
+						if (credentialResult.data && typeof credentialResult.data === 'object') {
+							dataReturnedValues.push(...Object.keys(credentialResult.data))
+						}
 					} catch (credentialError) {
 						console.error('Error ejecutando onCredential:', credentialError)
 						return callback({
@@ -125,7 +130,7 @@ export const setupStorageRoutes = {
 			// =======================================================================
 			// Crear storage
 			// =======================================================================
-			const storage = await Storage.create({ ...data, properties: dataProperties, data: dataResult })
+			const storage = await Storage.create({ ...data, properties: dataProperties, data: dataResult, returnedValues: dataReturnedValues })
 			callback({ success: true, storage })
 		} catch (error) {
 			console.error('Error creando storage:', error)

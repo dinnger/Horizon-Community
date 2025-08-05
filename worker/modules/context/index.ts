@@ -45,4 +45,14 @@ export class ContextModule {
 			listSecrets: ({ type, subType }: { type: string; subType?: string }) => Promise.resolve(listSecrets({ type, subType }))
 		}
 	}
+
+	getCredential() {
+		return {
+			getCredential: (id: string) => {
+				const credential = this.el.variableModule.variablesValue.get(id)
+				if (!credential) return null
+				return credential.values
+			}
+		}
+	}
 }

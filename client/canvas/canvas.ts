@@ -887,7 +887,7 @@ export class Canvas {
 		const notes = this.notes.exportNotes()
 		const groups = this.groups.exportGroups()
 		const plainNodes: { [key: string]: INodeSave } = {}
-		const credentials: string[] = []
+		const credentials: IWorkflowDataSave['credentials'] = []
 
 		for (const node of Object.values(nodes)) {
 			const nodeData = node.get()
@@ -898,7 +898,7 @@ export class Canvas {
 			}
 			// Extraer credenciales si existen
 			for (const [key, value] of Object.entries(nodeData.properties) as [string, propertiesType][]) {
-				if (value.type === 'credential' && value.value) credentials.push((value as any).value)
+				if (value.type === 'credential' && value.value) credentials.push({ id: String(value.value) })
 			}
 
 			if (node.connections) {
