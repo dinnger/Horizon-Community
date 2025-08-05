@@ -239,6 +239,13 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 				await handleDeploymentPublish(deploymentData)
 			} else {
 				// Despliegue manual
+        const deploymentData = {
+					workflowId,
+					priority: 3, // Prioridad normal por defecto
+					description: `Despliegue automático de ${validationResult.workflowInfo.name}`,
+					scheduledAt: undefined // Inmediato
+				}
+        	await handleDeploymentPublish(deploymentData)
 				currentWorkflowInfo.value = validationResult.workflowInfo
 				showDeploymentSelector.value = true
 			}
@@ -262,13 +269,24 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	// Función para manejar la publicación en el despliegue seleccionado
 	const handleDeploymentPublish = async (deploymentData: {
 		workflowId: string
-		deploymentId: string
+		deploymentId?: string
 		priority: number
 		description: string
 		scheduledAt?: Date
 	}) => {
 		try {
-			const result = await deployComposable.publishWorkflowToDeployment(deploymentData)
+			const result = await deployComposable.publishWorkflowToDeployment(deploymentData) as any
+			if (typeof result === 'boolean' && result) {
+				toast.success('Workflow agregado a la cola de despliegue exitosamente')
+			} else if (typeof result === 'object' && result?.base64) {
+				toast.success('Workflow generado exitosamente.')
+				const link = document.createElement('a')
+				link.href = result?.base64
+				link.download = `${deploymentData.workflowId}.zip` || '' // Nombre del archivo que se descargará
+				document.body.appendChild(link)
+				link.click()
+				document.body.removeChild(link)
+			}
 			closeDeploymentSelector()
 		} catch (error: any) {
 			throw new Error(error)

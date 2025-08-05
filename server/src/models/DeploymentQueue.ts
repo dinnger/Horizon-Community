@@ -5,16 +5,15 @@ import Deployment from './Deployment.js'
 import DeploymentInstance from './DeploymentInstance.js'
 import Workflow from './Workflow.js'
 import User from './User.js'
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
+import type { IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 
 export interface DeploymentQueueAttributes extends IStatusEntity {
 	id: string
-	deploymentId: string
 	instanceId?: string // ID de la instancia específica donde se desplegará
 	workflowId: string
 	workflowVersionId?: string // ID del historial del workflow si es una versión específica
 	description: string
-	flow: IWorkflowFull // El workflow completo tal como será desplegado
+	flow: IWorkflowSaveFull // El workflow completo tal como será desplegado
 	meta: {
 		path?: string
 		version?: string
@@ -54,12 +53,11 @@ export class DeploymentQueue
 	implements DeploymentQueueAttributes
 {
 	public id!: string
-	public deploymentId!: string
 	public instanceId?: string
 	public workflowId!: string
 	public workflowVersionId?: string
 	public description!: string
-	public flow!: IWorkflowFull
+	public flow!: IWorkflowSaveFull
 	public meta!: {
 		path?: string
 		version?: string
@@ -87,16 +85,7 @@ DeploymentQueue.init(
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true
 		},
-		deploymentId: {
-			type: DataTypes.UUID,
-			allowNull: false,
-			references: {
-				model: Deployment,
-				key: 'id'
-			},
-			onUpdate: 'CASCADE',
-			onDelete: 'CASCADE'
-		},
+
 		instanceId: {
 			type: DataTypes.UUID,
 			allowNull: true,

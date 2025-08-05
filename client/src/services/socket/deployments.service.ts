@@ -41,7 +41,7 @@ export function socketDeployments(socket: Socket | null) {
 
 		createDeploymentQueueItem(queueItem: {
 			workspaceId: string
-			deploymentId: string
+			deploymentId?: string
 			workflowId: string
 			workflowVersionId?: string
 			description?: string
@@ -55,8 +55,9 @@ export function socketDeployments(socket: Socket | null) {
 					return
 				}
 				socket.emit('deployment-queue:create', queueItem, (response: any) => {
-					if (response.success && response.queueItem) {
-						resolve(response.queueItem)
+					if (response.success && response.base64) {
+            response.base64 =  `data:application/zip;base64,${response.base64}` 
+						resolve(response)
 					} else {
 						reject(new Error(response.message || 'Failed to create deployment queue item'))
 					}

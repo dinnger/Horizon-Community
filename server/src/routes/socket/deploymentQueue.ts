@@ -9,7 +9,7 @@ import {
 	WorkflowHistory
 } from '../../models/index.js'
 import { Op } from 'sequelize'
-import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
+import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
 import { deploymentQueueService } from '../../services/deploy.service.js'
 import { compressPathToBase64 } from '@server/src/services/deployDownload.service.js'
 import { setupWorkflowRoutes } from './workflows.js'
@@ -21,13 +21,6 @@ export const setupDeploymentQueueRoutes = {
 			const { workspaceId, deploymentId, workflowId, workflowVersionId, description, meta = {}, scheduledAt } = data
 			const { userId } = socket
 
-			// Validar que el deployment y workflow existan
-			const deployment = await Deployment.findByPk(deploymentId)
-			if (!deployment) {
-				callback({ success: false, message: 'Deployment no encontrado' })
-				return
-			}
-
 			const workflow = await Workflow.findByPk(workflowId)
 			if (!workflow) {
 				callback({ success: false, message: 'Workflow no encontrado' })
@@ -35,31 +28,38 @@ export const setupDeploymentQueueRoutes = {
 			}
 
 			// Obtener las instancias asignadas al deployment ordenadas por executionOrder
-			const deploymentInstances = await DeploymentInstanceAssignment.findAll({
-				where: {
-					deploymentId,
-					status: 'active'
+			// const deploymentInstances = await DeploymentInstanceAssignment.findAll({
+			// 	where: {
+			// 		deploymentId,
+			// 		status: 'active'
+			// 	},
+			// 	include: [
+			// 		{
+			// 			model: DeploymentInstance,
+			// 			as: 'instance',
+			// 			required: true
+			// 		}
+			// 	],
+			// 	order: [['executionOrder', 'ASC']]
+			// })
+
+			const flowData: IWorkflowSaveFull = {
+				info: {
+					name: workflow.name,
+					uid: workflow.id
 				},
-				include: [
-					{
-						model: DeploymentInstance,
-						as: 'instance',
-						required: true
-					}
-				],
-				order: [['executionOrder', 'ASC']]
-			})
-
-			const flowData: IWorkflowFull = await new Promise((resolve) =>
-				eventRouter('workers:get', { workspaceId, id: workflowId, hidratation: false }, (data) => resolve(data.workflow))
-			)
-
+				version: workflow.version,
+				properties: workflow.properties,
+				...workflow.workflowData,
+				environment: [],
+				secrets: []
+			}
+			
 			// Si no hay instancias, crear un elemento genérico
 			const queueItem = await DeploymentQueue.create({
-				deploymentId,
 				workflowId,
 				workflowVersionId,
-				description: description || `Despliegue de ${workflow.name} en ${deployment.name}`,
+				description: description || `Despliegue de ${workflow.name}`,
 				flow: flowData,
 				meta: {
 					...meta,

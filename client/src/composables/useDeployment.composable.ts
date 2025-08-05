@@ -92,7 +92,7 @@ export function useDeploymentComposable() {
 	// Publicar workflow en un despliegue
 	const publishWorkflowToDeployment = async (deploymentData: {
 		workflowId: string
-		deploymentId: string
+		deploymentId?: string
 		priority: number
 		description: string
 		scheduledAt?: Date
@@ -108,7 +108,7 @@ export function useDeploymentComposable() {
 				scheduledAt: deploymentData.scheduledAt
 			}
 
-			const result = await createDeploymentQueue(queueItem)
+      const result = await createDeploymentQueue(queueItem)
 			return result
 		} catch (err: any) {
 			deploymentStore.error = err.message || 'Error al publicar workflow en despliegue'
@@ -119,7 +119,7 @@ export function useDeploymentComposable() {
 	}
 
 	const createDeploymentQueue = async (queueItem: {
-		deploymentId: string
+		deploymentId?: string
 		workflowId: string
 		workflowVersionId?: string
 		description?: string
