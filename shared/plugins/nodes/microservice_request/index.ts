@@ -1,69 +1,60 @@
-import { validate } from './valid.js'
 import type { IClassNode, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import type { IPropertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 
 export default class implements IClassNode {
 	constructor(
+		public dependencies: string[],
 		public info: infoInterface,
 		public properties: IPropertiesType,
 		public meta: { [key: string]: any } = {}
 	) {
+		this.dependencies = ['uuid']
 		this.info = {
-			name: 'Message',
+			name: 'Microservice Request',
 			desc: 'Send and receive messages',
-			icon: '󱋵',
-			group: 'Project',
+			icon: '󱧐',
+			group: 'Microservice',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['init'],
-				outputs: ['message', 'error']
+				inputs: ['init', 'send'],
+				outputs: ['response', 'error', 'timeout']
 			}
 		}
+
 		this.properties = {
 			name: {
 				name: 'Nombre:',
 				value: '',
-				type: 'string',
-				description: 'Nombre de la función'
+				type: 'string'
 			},
-			validationSchema: {
-				name: 'Esquema de validación (AJV):',
+			timeout: {
+				name: 'Timeout (ms):',
+				value: 5000,
+				type: 'number',
+				description: 'Tiempo máximo de espera para la respuesta (en milisegundos)',
+				size: 2
+			},
+			message: {
+				name: 'Mensaje:',
+				value: JSON.stringify({ action: 'request' }, null, ' '),
 				type: 'code',
 				lang: 'json',
-				value: `{
-  "nombre":"string",
-  "valor":"number"
-}`,
-				description: 'Esquema JSON para validación de datos con AJV'
+				description: 'Datos a enviar como mensaje',
+				size: 4
 			},
-			autoAck: {
-				name: 'Auto Ack',
+			// solo enviar sin esperar respuesta
+			wait: {
+				name: 'Esperar respuesta',
 				type: 'switch',
 				value: true,
-				description: 'Si se activa, se confirmará automáticamente la recepción de mensajes'
-			},
-			validateButton: {
-				name: 'Validar esquema',
-				type: 'button',
-				value: 'Validar esquema',
-				action: {
-					click: 'validateSchema'
-				},
-				buttonClass: 'btn-info'
+				description: 'Espera la respuesta del servicio'
 			}
 		}
 	}
 
-	async onAction() {
-		return {
-			validateSchema: async () => {
-				return validate(this.properties.validationSchema.value)
-			}
-		}
-	}
-
-	async onExecute({ outputData, execute, dependency, context }: classOnExecuteInterface): Promise<void> {
+	async onExecute({ outputData, dependency, execute, context }: classOnExecuteInterface): Promise<void> {
 		try {
+			const { v4 } = await dependency.getRequire('uuid')
 			if (!context.project) return
 			const projectType = Object.keys(context.project)[0]
 
@@ -76,10 +67,12 @@ export default class implements IClassNode {
 				execute,
 				outputData
 			})
-			module.connection({
-				autoAck: this.properties.autoAck.value,
+			const wait = this.properties.wait.value
+			module.request({
+				wait,
 				name: this.properties.name.value,
-				schema: this.properties.validationSchema.value
+				timeout: this.properties.timeout.value,
+				message: this.properties.message.value
 			})
 		} catch (error) {
 			let message = 'Error'
