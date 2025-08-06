@@ -25,17 +25,16 @@ export async function getProjectByWokflow(workflowId: string) {
 		include: [
 			{
 				model: Workflow,
-				as: 'storage',
-				attributes: ['id', 'name', 'description', 'data'],
+				as: 'workflows',
+				attributes: ['id', 'name', 'description',],
 				where: {
-					type: 'credential',
-					workflowId
+					id:workflowId
 				}
 			}
 		]
 	})
 
-	if (!projectData) throw new Error(`No project found for ID: ${id}`)
+	if (!projectData) throw new Error(`No project found for ID: ${workflowId}`)
 
 	return projectData
 }
@@ -51,11 +50,13 @@ export async function getCreditialsByWorkflow(workflowId: string) {
 	return list
 }
 
-export async function getProjectsById(id: string) {
-	const projectData = await getProjectById(id)
+export async function getProjectsByWorkflow(workflowId: string) {
+	const projectData = await getProjectByWokflow(workflowId)
+  if (!projectData) return 
+
 	const list: { [key: string]: any } = {}
 	for (const [project, value] of Object.entries(projectData?.transportConfig || {})) {
-		list[project] = value
+		list[`PROJECT_${(projectData?.transportType ?? 'UNKNOWN').toUpperCase()}_${project.toUpperCase()}`] = value
 	}
 	return list
 }

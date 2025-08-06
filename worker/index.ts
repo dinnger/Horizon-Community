@@ -20,7 +20,7 @@ const SERVER_CLUSTER = envs.WORKER_CLUSTER
 
 // Set .env variables WORKFLOW_*
 for (const key of Object.keys(workerData)) {
-	if (!key.startsWith('WORKFLOW_')) continue
+	if (!key.startsWith('WORKFLOW_') && !key.startsWith('PROJECT_')) continue
 	process.env[key.toUpperCase()] = workerData[key]
 }
 

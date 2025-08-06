@@ -18,7 +18,7 @@ import { Worker } from 'node:worker_threads'
 import { EventEmitter } from 'node:events'
 import { v4 as uuidv4 } from 'uuid'
 import { createProxyMiddleware } from 'http-proxy-middleware'
-import { getCreditialsByWorkflow } from './workerManagerAddons.js'
+import { getCreditialsByWorkflow, getProjectsByWorkflow } from './workerManagerAddons.js'
 import path from 'node:path'
 import WorkflowExecution from '../models/WorkflowExecution.js'
 
@@ -307,6 +307,7 @@ class WorkerManager extends EventEmitter {
 		const workerPath = path.join(process.cwd(), 'dist', 'worker', 'index.js')
 
 		try {
+      const project = await getProjectsByWorkflow(workflowId)
 			const credentials = await getCreditialsByWorkflow(workflowId)
 
 			const worker = new Worker(workerPath, {
@@ -316,6 +317,8 @@ class WorkerManager extends EventEmitter {
 					port,
 					serverPort: process.env.SERVER_PORT || '3000',
 					nodeEnv: process.env.NODE_ENV || 'development',
+          // Project
+          ...project,
 					// Credentials
 					...credentials
 				}
