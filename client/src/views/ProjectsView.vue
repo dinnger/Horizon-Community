@@ -101,9 +101,9 @@
                   </td>
                   <td>
                     <div class="flex space-x-2" @click.stop>
-                      <button @click="editProject(project)" class="btn btn-xs btn-ghost">Editar</button>
+                      <button @click="editProject(project)" class="btn btn-sm btn-outline btn-ghost">Editar</button>
                       <button @click="deleteProject(project.id)"
-                        class="btn btn-xs btn-error btn-outline">Eliminar</button>
+                        class="btn btn-sm btn-outline btn-error ">Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -117,7 +117,7 @@
       <ProjectModal :is-open="showCreateModal" @close="showCreateModal = false" @submit="createProject" />
 
       <!-- Edit Project Modal -->
-      <ProjectModal :is-open="showEditModal" :is-edit="true" :project="editingProject" @close="showEditModal = false"
+      <ProjectModal :is-open="showEditModal" :is-edit="true" :project="editingProject" @close="closeModal"
         @submit="updateProject" />
     </div>
   </div>
@@ -127,27 +127,29 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjectComposable } from '@/composables/useProjects.composable'
-import type { Project, ProjectTransportConfig } from '@/stores'
 
 // Import new components
 import {
-  ProjectsHeader,
-  ProjectCard,
   ProjectsEmptyState,
   ProjectModal
 } from '@/components/projects'
+import type { IProjectClient, IProjectTransportConfig } from '@shared/interfaces/standardized'
+import { toast } from 'vue-sonner'
 
 const router = useRouter()
 const projectComposable = useProjectComposable()
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
-const editingProject = ref<Project | null>(null)
+const editingProject = ref<IProjectClient | null>(null)
 
 // Obtener proyectos con información de workflows
 const projectsWithWorkflows = projectComposable.getProjectsWithWorkflows
 
 const totalWorkflows = computed(() =>
-  projectsWithWorkflows.value.reduce((acc, p) => acc + (p.workflows?.length || 0), 0)
+  projectsWithWorkflows.value.reduce((acc, p) => {
+    const workflows = Array.isArray(p.workflows) ? p.workflows : []
+    return acc + workflows.length
+  }, 0)
 )
 const activeProjects = computed(() =>
   projectsWithWorkflows.value.filter(p => p.status === 'active').length
@@ -161,7 +163,7 @@ const createProject = (data: {
   name: string
   description: string
   transportType?: 'none' | 'tcp' | 'rabbitmq' | 'kafka' | 'nats' | 'http' | 'websocket' | 'mqtt'
-  transportConfig: ProjectTransportConfig
+  transportConfig: IProjectTransportConfig
   deploymentId?: string | null
   deploymentConfiguration?: Record<string, any>
 }) => {
@@ -178,7 +180,7 @@ const createProject = (data: {
   showCreateModal.value = false
 }
 
-const editProject = (project: Project) => {
+const editProject = (project: IProjectClient) => {
   editingProject.value = project
   showEditModal.value = true
 }
@@ -187,7 +189,7 @@ const updateProject = (data: {
   name: string
   description: string
   transportType?: 'none' | 'tcp' | 'rabbitmq' | 'kafka' | 'nats' | 'http' | 'websocket' | 'mqtt'
-  transportConfig: ProjectTransportConfig
+  transportConfig: IProjectTransportConfig
   deploymentId?: string | null
   deploymentConfiguration?: Record<string, any>
 }) => {
@@ -201,6 +203,14 @@ const updateProject = (data: {
     deploymentId: data.deploymentId,
     deploymentConfiguration: data.deploymentConfiguration
   } as any)
+    .then(() => {
+      toast.success('Proyecto actualizado correctamente')
+      closeModal()
+    })
+    .catch(error => {
+      toast.error(`Error al actualizar proyecto: ${error}`)
+      console.error('Error updating project:', error)
+    })
 
   editingProject.value = null
   showEditModal.value = false
@@ -210,6 +220,12 @@ const deleteProject = async (projectId: string) => {
   if (confirm('¿Estás seguro de que quieres eliminar este proyecto y todos sus workflows?')) {
     await projectComposable.deleteProject(projectId)
   }
+}
+
+const closeModal = () => {
+  editingProject.value = null
+  showCreateModal.value = false
+  showEditModal.value = false
 }
 
 onMounted(() => {

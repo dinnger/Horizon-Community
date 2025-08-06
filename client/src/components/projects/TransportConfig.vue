@@ -21,97 +21,18 @@
     </div>
 
     <!-- Configuración específica por tipo de transporte -->
-    <div v-if="transportType && transportType !== 'none'" class="space-y-3">
-      <h5 class="text-sm font-medium text-base-content/80">Configuración Específica</h5>
+    <div v-if="transportType && transportType !== 'none'" class="space-y-3 p-4">
+      <h5 class="text-sm font-medium text-base-content/80">Configuración</h5>
 
-      <!-- TCP -->
-      <div v-if="transportType === 'tcp'" class="space-y-3">
-        <div class="grid grid-cols-2 gap-2">
-          <div class="form-control">
-            <input :value="transportConfig.host || ''"
-              @input="updateConfig('host', ($event.target as HTMLInputElement).value)" type="text"
-              placeholder="Host (ej: localhost)" class="input input-bordered input-sm" />
-          </div>
-          <div class="form-control">
-            <input :value="transportConfig.port || ''"
-              @input="updateConfig('port', Number(($event.target as HTMLInputElement).value))" type="number"
-              placeholder="Puerto (ej: 8080)" class="input input-bordered input-sm" />
-          </div>
+      <div class="grid grid-cols-1 gap-2">
+        <div class="form-control" v-for="(item, key) in config" :key="key">
+          <label class="text-sm opacity-65"> {{ item.label }}</label>
+          <input v-model="item.value" @input="updateConfig(key, ($event.target as HTMLInputElement).value)" type="text"
+            :placeholder="item.placeholder" class="input input-bordered w-full" />
+
         </div>
-      </div>
 
-      <!-- RabbitMQ -->
-      <div v-if="transportType === 'rabbitmq'" class="space-y-3">
-        <input :value="transportConfig.amqpUrl || ''"
-          @input="updateConfig('amqpUrl', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="AMQP URL (ej: amqp://localhost:5672)" class="input input-bordered input-sm w-full" />
-        <div class="grid grid-cols-2 gap-2">
-          <input :value="transportConfig.exchange || ''"
-            @input="updateConfig('exchange', ($event.target as HTMLInputElement).value)" type="text"
-            placeholder="Exchange" class="input input-bordered input-sm" />
-          <input :value="transportConfig.queue || ''"
-            @input="updateConfig('queue', ($event.target as HTMLInputElement).value)" type="text" placeholder="Queue"
-            class="input input-bordered input-sm" />
-        </div>
-        <input :value="transportConfig.routingKey || ''"
-          @input="updateConfig('routingKey', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="Routing Key" class="input input-bordered input-sm w-full" />
       </div>
-
-      <!-- Kafka -->
-      <div v-if="transportType === 'kafka'" class="space-y-3">
-        <input
-          :value="Array.isArray(transportConfig.brokers) ? transportConfig.brokers.join(',') : (transportConfig.brokers || '')"
-          @input="updateConfig('brokers', ($event.target as HTMLInputElement).value.split(',').map(b => b.trim()))"
-          type="text" placeholder="Brokers (ej: localhost:9092)" class="input input-bordered input-sm w-full" />
-        <div class="grid grid-cols-2 gap-2">
-          <input :value="transportConfig.clientId || ''"
-            @input="updateConfig('clientId', ($event.target as HTMLInputElement).value)" type="text"
-            placeholder="Client ID" class="input input-bordered input-sm" />
-          <input :value="transportConfig.groupId || ''"
-            @input="updateConfig('groupId', ($event.target as HTMLInputElement).value)" type="text"
-            placeholder="Group ID" class="input input-bordered input-sm" />
-        </div>
-        <input :value="transportConfig.topic || ''"
-          @input="updateConfig('topic', ($event.target as HTMLInputElement).value)" type="text" placeholder="Topic"
-          class="input input-bordered input-sm w-full" />
-      </div>
-
-      <!-- NATS -->
-      <div v-if="transportType === 'nats'" class="space-y-3">
-        <input :value="transportConfig.natsUrl || ''"
-          @input="updateConfig('natsUrl', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="NATS URL (ej: nats://localhost:4222)" class="input input-bordered input-sm w-full" />
-        <input :value="transportConfig.subject || ''"
-          @input="updateConfig('subject', ($event.target as HTMLInputElement).value)" type="text" placeholder="Subject"
-          class="input input-bordered input-sm w-full" />
-      </div>
-
-      <!-- HTTP -->
-      <div v-if="transportType === 'http'" class="space-y-3">
-        <input :value="transportConfig.baseUrl || ''"
-          @input="updateConfig('baseUrl', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="Base URL (ej: https://api.example.com)" class="input input-bordered input-sm w-full" />
-        <input :value="transportConfig.timeout || ''"
-          @input="updateConfig('timeout', Number(($event.target as HTMLInputElement).value))" type="number"
-          placeholder="Timeout (ms)" class="input input-bordered input-sm w-full" />
-      </div>
-
-      <!-- WebSocket -->
-      <div v-if="transportType === 'websocket'" class="space-y-3">
-        <input :value="transportConfig.wsUrl || ''"
-          @input="updateConfig('wsUrl', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="WebSocket URL (ej: ws://localhost:8080)" class="input input-bordered input-sm w-full" />
-      </div>
-
-      <!-- MQTT -->
-      <div v-if="transportType === 'mqtt'" class="space-y-3">
-        <input :value="transportConfig.mqttUrl || ''"
-          @input="updateConfig('mqttUrl', ($event.target as HTMLInputElement).value)" type="text"
-          placeholder="MQTT URL (ej: mqtt://localhost:1883)" class="input input-bordered input-sm w-full" />
-      </div>
-
-      <!-- Configuración común -->
 
     </div>
   </div>
@@ -119,6 +40,7 @@
 
 <script setup lang="ts">
 import type { IProjectTransportConfig, IProjectTransportConfigByType, IProjectTransportType } from '@shared/interfaces/standardized';
+import { onMounted, ref, watch } from 'vue';
 
 interface Props {
   transportType: IProjectTransportType
@@ -132,10 +54,75 @@ const emit = defineEmits<{
 
 const props = defineProps<Props>()
 
+const config = ref<Record<string, { label: string; placeholder: string; value: any }>>({})
+const loadConfig = () => {
+  switch (props.transportType) {
+    case 'tcp':
+      config.value = {
+        host: { label: 'Host', placeholder: 'Host (ej: localhost)', value: props.transportConfig.host || '' },
+        port: { label: 'Puerto', placeholder: 'Puerto (ej: 8080)', value: props.transportConfig.port || 8080 },
+      }
+      break
+    case 'rabbitmq':
+      config.value = {
+        url: { label: 'AMQP URL', placeholder: 'AMQP URL (ej: amqp://localhost:5672)', value: props.transportConfig.url || '' },
+        exchange: { label: 'Exchange', placeholder: 'Exchange', value: props.transportConfig.exchange || '' },
+        queue: { label: 'Queue', placeholder: 'Queue', value: props.transportConfig.queue || '' },
+        routingKey: { label: 'Routing Key', placeholder: 'Routing Key', value: props.transportConfig.routingKey || '' },
+      }
+      break
+    case 'kafka':
+      config.value = {
+        brokers: { label: 'Brokers', placeholder: 'Brokers (ej: localhost:9092)', value: props.transportConfig.brokers || '' },
+        clientId: { label: 'Client ID', placeholder: 'Client ID', value: props.transportConfig.clientId || '' },
+        groupId: { label: 'Group ID', placeholder: 'Group ID', value: props.transportConfig.groupId || '' },
+        topic: { label: 'Topic', placeholder: 'Topic', value: props.transportConfig.topic || '' },
+      }
+      break
+    case 'nats':
+      config.value = {
+        url: { label: 'NATS URL', placeholder: 'NATS URL (ej: nats://localhost:4222)', value: props.transportConfig.url || '' },
+        subject: { label: 'Subject', placeholder: 'Subject', value: props.transportConfig.subject || '' },
+      }
+      break
+    case 'http':
+      config.value = {
+        url: { label: 'Base URL', placeholder: 'Base URL (ej: https://api.example.com)', value: props.transportConfig.url || '' },
+        timeout: { label: 'Timeout', placeholder: 'Timeout (ms)', value: props.transportConfig.timeout || 10000 },
+      }
+      break
+    case 'websocket':
+      config.value = {
+        url: { label: 'WebSocket URL', placeholder: 'WebSocket URL (ej: ws://localhost:8080)', value: props.transportConfig.url || '' },
+      }
+      break
+    case 'mqtt':
+      config.value = {
+        url: { label: 'MQTT URL', placeholder: 'MQTT URL (ej: mqtt://localhost:1883)', value: props.transportConfig.url || '' },
+      }
+      break
+  }
+}
+
+
+watch(() => props.transportType, () => {
+  loadConfig()
+  const conf: Record<string, any> = {}
+  for (const [k, v] of Object.entries(config.value)) {
+    conf[k] = v.value
+  }
+  emit('update:transportConfig', conf)
+})
 
 const updateConfig = (key: string, value: any) => {
-  const config = { ...props.transportConfig }
-  config[key as keyof IProjectTransportConfig] = value
-  emit('update:transportConfig', config)
+  const conf: Record<string, any> = {}
+  for (const [k, v] of Object.entries(config.value)) {
+    conf[k] = v.value
+  }
+  emit('update:transportConfig', conf)
 }
+
+onMounted(() => {
+  loadConfig()
+})
 </script>

@@ -378,7 +378,12 @@ export const setupWorkflowRoutes = {
 					}
 
 					// Save flow.json with version info
-					const flowData: IWorkflowFull = {
+					const flowData: IWorkflowSaveFull = {
+						project: {
+							name: workflowInfo.project?.name,
+							transportType: workflowInfo.project?.transportType,
+							transportConfig: Object.keys(workflowInfo.project?.transportConfig || {})
+						},
 						info: {
 							name: workflowInfo.name,
 							description: workflowInfo.description,

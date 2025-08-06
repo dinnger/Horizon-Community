@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="handleSubmit" class="flex-1 overflow-auto">
-    <Modal :isVisible="isOpen" @close="$emit('close')" :title="isEdit ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'"
+    <Modal :isVisible="isOpen" @close="close" :title="isEdit ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'"
       description="Información básica del proyecto" two-panels>
 
       <!-- Información básica -->
@@ -33,7 +33,7 @@
 
 
       <template #actions>
-        <button type="button" @click="$emit('close')" class="btn">
+        <button type="button" @click="close" class="btn mr-2">
           Cancelar
         </button>
         <button type="submit" class="btn btn-primary">
@@ -134,5 +134,10 @@ const handleSubmit = () => {
   if (!props.isEdit) {
     resetForm()
   }
+}
+
+const close = () => {
+  resetForm()
+  emit('close')
 }
 </script>
