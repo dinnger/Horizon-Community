@@ -150,8 +150,8 @@ export const setupAuthRoutes = {
 			}
 			if (!socket.user?.userId) return callback({ success: false, message: 'No se encontró el usuario' })
 			callback({ success: true, user: userResponse })
-		} catch (error) {
-			console.error('Error obteniendo usuario actual:', error)
+		} catch (error:any) {
+			console.error('Error obteniendo usuario actual:', error.toString())
 			callback({ success: false, message: 'Error interno del servidor' })
 		}
 	}
