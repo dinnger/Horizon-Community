@@ -23,12 +23,6 @@ interface IMetaNode {
 	[key: string]: any
 }
 
-export interface INodeConnectors {
-	inputs: { name: string; nextNodeTag?: string | string[] }[]
-	outputs: { name: string; nextNodeTag?: string | string[] }[]
-	callbacks?: { name: string; nextNodeTag?: string | string[] }[]
-}
-
 export interface INodeConnections {
 	id?: string
 	connectorOriginName: string

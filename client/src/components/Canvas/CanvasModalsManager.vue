@@ -11,7 +11,7 @@ Usa el patrón Observer para comunicación entre componentes
     <NodePropertiesDialog :is-visible="canvasModals.nodePropertiesDialog.isVisible"
       :node-data="canvasModals.nodePropertiesDialog.node" :is-read-only="canvasModals.nodePropertiesDialog.isReadOnly"
       @close="canvasModals.closeNodePropertiesDialog" @save="canvasActions.handleNodePropertiesSave"
-      :canvas-composable="canvasComposable" />
+      @save-connectors="canvasActions.handleConnectorSave" :canvas-composable="canvasComposable" />
 
     <!-- Menú contextual del nodo -->
     <NodeContextMenu :is-visible="canvasModals.nodeContextMenu.isVisible"

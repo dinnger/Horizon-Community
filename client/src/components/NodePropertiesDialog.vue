@@ -51,6 +51,7 @@ import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
 import { getClientContext } from '@/context'
 import type { classOnUpdateInterface } from '@shared/interfaces'
+import type { INodeConnectors } from '@shared/interfaces/standardized'
 
 interface Props {
   canvasComposable: IUseCanvasType
@@ -62,6 +63,7 @@ interface Props {
 interface Emits {
   close: []
   save: [nodeData: INodeCanvas]
+  saveConnectors: [id: string, connectors: INodeConnectors]
 }
 
 const nodesLibraryStore = useNodesLibraryStore()
@@ -76,6 +78,7 @@ const isSaving = ref(false)
 // Estados editables - se inicializan cuando se abre el diálogo
 const editableProperties = ref<IPropertiesType>({})
 const editableCredentials = ref<IPropertiesType>({})
+const editableConnectors = ref<INodeConnectors>()
 const editableMeta = ref({
   id: '',
   type: '',
@@ -127,7 +130,7 @@ const updateProperty = (key: string, value: any) => {
   if (editableProperties.value[key]) {
     editableProperties.value[key].value = value
   }
-  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, editableConnectors.value)
 }
 
 const updateCredential = (key: string, value: any) => {
@@ -162,6 +165,10 @@ const initializeEditableData = async () => {
   originalProperties.value = JSON.parse(JSON.stringify(props.nodeData.properties || {}))
   tempProperties.value = JSON.parse(JSON.stringify(props.nodeData.properties || {}))
 
+  // Clonar conectores
+  editableConnectors.value = JSON.parse(JSON.stringify(props.nodeData?.info.connectors))
+
+
   // Inicializar propiedades en el store
   nodesLibraryStore.propertiesInitialized(props.nodeData)
 
@@ -178,7 +185,7 @@ const initializeEditableData = async () => {
   originalMeta.value = JSON.parse(JSON.stringify(editableMeta.value))
 
   await importNodeOnCreate()
-  if (fnOnCreate) fnOnCreate(editableProperties.value, props.nodeData?.info.connectors)
+  if (fnOnCreate) fnOnCreate(editableProperties.value, editableConnectors.value)
 }
 
 const resetChanges = () => {
@@ -254,6 +261,10 @@ const saveChanges = async () => {
 
     // Emitir evento de guardado
     emit('save', updatedNode)
+
+    if (editableConnectors.value && props.nodeData.id) {
+      emit('saveConnectors', props.nodeData.id, editableConnectors.value)
+    }
 
     // Actualizar estados originales
     originalProperties.value = JSON.parse(JSON.stringify(editableProperties.value))

@@ -111,11 +111,24 @@
       </div>
 
       <div v-else class="space-y-3">
-        <div v-for="(item, index) in listItems" :key="index"
-          class="p-4 border border-base-content/20 rounded-lg bg-base-100">
+        <div class="flex overflow-auto p-1 bg-base-200 rounded-md">
+          <div v-for="(item, index) in listItems" :key="index"
+            class="px-2 py-2 text-sm cursor-pointer border-b-2 border-b-base-200 rounded-sm" @click="listActive = index"
+            :class="listActive === index ? 'bg-base-300 border-b-primary' : ''">
+            <span v-if="!property.tabLabel">
+              Item {{ index + 1 }}
+            </span>
+            <span v-else>
+              {{ item[property.tabLabel]?.value || 'Item' + (index + 1) }}
+            </span>
+          </div>
+        </div>
+
+
+        <div class="p-4 border border-base-content/20 rounded-lg bg-base-100">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-medium">Elemento {{ index + 1 }}</span>
-            <button @click="removeListItem(index)" :disabled="property.disabled || isReadOnly"
+            <span class="text-sm font-medium">Elemento {{ listActive + 1 }}</span>
+            <button @click="removeListItem(listActive)" :disabled="property.disabled || isReadOnly"
               class="btn btn-sm btn-ghost text-error hover:bg-error/10">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -125,9 +138,10 @@
           </div>
 
           <div class="grid gap-3">
-            <NodePropertyInput v-for="(propDef, propKey) of item" :key="`${index}-${propKey}`" :property="propDef"
-              :property-key="String(propKey)" :model-value="item[propKey].value" :is-read-only="isReadOnly"
-              :node-type="nodeType" @update:model-value="updateListItemProperty(index, propKey, $event)" />
+            <NodePropertyInput v-for="(propDef, propKey) of listItems[listActive]" :key="`${listActive}-${propKey}`"
+              :property="propDef" :property-key="String(propKey)" :model-value="listItems[listActive][propKey].value"
+              :is-read-only="isReadOnly" :node-type="nodeType"
+              @update:model-value="updateListItemProperty(listActive, propKey, $event)" />
           </div>
         </div>
       </div>
@@ -179,6 +193,7 @@ const workspaceStore = useWorkspaceStore()
 // Estados para credentials
 const availableCredentials = ref<any[]>([])
 const isLoadingCredentials = ref(false)
+const listActive = ref(0)
 
 const localValue = computed({
   get: () => props.modelValue,
@@ -211,9 +226,7 @@ const loadCredentials = async () => {
     // Filtrar por tipo de nodo si está especificado
     let filteredCredentials = credentials
     if (props.nodeType) {
-      filteredCredentials = credentials.filter((cred: any) =>
-        cred.nodeType === props.nodeType
-      )
+      filteredCredentials = credentials.filter((cred: any) => cred.nodeType === props.nodeType)
     }
 
     availableCredentials.value = filteredCredentials.map((cred: any) => ({
@@ -243,18 +256,24 @@ onMounted(() => {
 })
 
 // Observar cambios en el workspace para recargar credenciales
-watch(() => workspaceStore.currentWorkspaceId, () => {
-  if (props.property.type === 'credential') {
-    loadCredentials()
+watch(
+  () => workspaceStore.currentWorkspaceId,
+  () => {
+    if (props.property.type === 'credential') {
+      loadCredentials()
+    }
   }
-})
+)
 
 // Observar cambios en el tipo de nodo
-watch(() => props.nodeType, () => {
-  if (props.property.type === 'credential') {
-    loadCredentials()
+watch(
+  () => props.nodeType,
+  () => {
+    if (props.property.type === 'credential') {
+      loadCredentials()
+    }
   }
-})
+)
 
 // Lógica para propiedades de tipo list
 const listItems = computed({
@@ -286,6 +305,7 @@ const addListItem = () => {
   const listProperty = props.property as Extract<propertiesType, { type: 'list' }>
   const currentItems = listItems.value
   listItems.value = [...currentItems, JSON.parse(JSON.stringify(listProperty.object))]
+  listActive.value = listItems.value.length
 }
 
 // Función para eliminar un elemento de la lista
@@ -294,6 +314,8 @@ const removeListItem = (index: number) => {
   const currentItems = listItems.value
   const newItems = currentItems.filter((_: any, i: number) => i !== index)
   listItems.value = newItems
+  if (listActive.value === index) listActive.value = listActive.value - 1
+  if (listActive.value === -1 && listItems.value.length > 0) listActive.value = 0
 }
 
 // Función para actualizar una propiedad específica de un elemento de la lista
@@ -305,7 +327,6 @@ const updateListItemProperty = (itemIndex: number, propertyKey: string | number,
     listItems.value = currentItems
   }
 }
-
 </script>
 
 <style scoped>

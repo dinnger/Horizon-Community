@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "2.0.6",
     "@types/amqplib": "^0.10.7",
     "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^6.0.0",

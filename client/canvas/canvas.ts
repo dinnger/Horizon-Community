@@ -9,6 +9,7 @@ import { CanvasGroups } from './canvasGroups'
 import type { INodeCanvas, INodeConnections } from './interfaz/node.interface.js'
 import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { INodeSave, IWorkflowDataSave } from '@shared/interfaces/standardized.js'
+import type { INodeConnectors } from './interfaz/node.interface.migrated.js'
 
 export interface ILog {
 	logs?: object
@@ -172,13 +173,7 @@ export class Canvas {
 	 * @param nodes - Diccionario de nodos indexados por ID
 	 * @param connections - Array de conexiones entre nodos
 	 */
-	private load({
-		nodes,
-		connections
-	}: {
-		nodes: { [key: string]: INodeCanvas }
-		connections: INodeConnections[]
-	}) {
+	private load({ nodes, connections }: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[] }) {
 		for (const [key, node] of Object.entries(nodes)) {
 			this.nodes.addNode({ ...node, id: key })
 		}
@@ -912,6 +907,13 @@ export class Canvas {
 		}
 	}
 
+	actionUpdateNodeConnector({ id, connector }: { id: string; connector: INodeConnectors }) {
+		const node = this.nodes.getNode({ id })
+		if (node) {
+			node.info.connectors = connector
+		}
+	}
+
 	/**
 	 * Get the current workflow data.
 	 * @returns A workflow data object with nodes, connections, notes, and groups.
@@ -958,12 +960,7 @@ export class Canvas {
 	 * Carga datos de workflow en el canvas, limpiando el contenido actual.
 	 * @param data - Nodos, conexiones, notas y grupos a cargar.
 	 */
-	loadWorkflowData(data: {
-		nodes: { [key: string]: INodeCanvas }
-		connections: INodeConnections[]
-		notes?: any[]
-		groups?: any[]
-	}) {
+	loadWorkflowData(data: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[]; notes?: any[]; groups?: any[] }) {
 		// Limpiar nodos existentes
 		this.nodes.clear()
 		this.selectedNode = []
@@ -1082,11 +1079,7 @@ export class Canvas {
 	/**
 	 * Crea un nuevo grupo de nodos
 	 */
-	actionCreateGroup(options: {
-		label: string
-		color: string
-		nodeIds: string[]
-	}): string {
+	actionCreateGroup(options: { label: string; color: string; nodeIds: string[] }): string {
 		// Calcular bounds basado en los nodos seleccionados
 		const nodePositions = options.nodeIds
 			.map((id) => this.nodes.getNode({ id }))

@@ -7,6 +7,7 @@ import type { INodeGroupCanvas } from '@canvas/interfaz/group.interface'
 import type { INoteCanvas } from '@canvas/interfaz/note.interface'
 import { useCanvas, useCanvasEvents, useCanvasModals } from '@/stores'
 import type { Canvas } from '@canvas/canvas'
+import type { INodeConnectors } from '@canvas/interfaz/node.interface.migrated'
 
 export type IUseCanvasActionsType = ReturnType<typeof useCanvasActionsComposable>
 
@@ -14,7 +15,11 @@ export function useCanvasActionsComposable({
 	canvasInstance,
 	currentMousePosition,
 	nodeOrigin
-}: { canvasInstance: Canvas | null; currentMousePosition: any; nodeOrigin: any }) {
+}: {
+	canvasInstance: Canvas | null
+	currentMousePosition: any
+	nodeOrigin: any
+}) {
 	const canvasStore = useCanvas()
 	const canvasEvents = useCanvasEvents()
 	const canvasModals = useCanvasModals()
@@ -93,6 +98,18 @@ export function useCanvasActionsComposable({
 	}
 
 	// =============================================================================
+	// CONNECTORS
+	// =============================================================================
+	const handleConnectorSave = (id: string, connector: INodeConnectors) => {
+		if (connector) {
+			canvasInstance.actionUpdateNodeConnector({
+				id,
+				connector
+			})
+		}
+	}
+
+	// =============================================================================
 	// ACCIONES DE CONEXIONES
 	// =============================================================================
 	const handleConnectionDelete = (connectionId: string) => {
@@ -163,12 +180,7 @@ export function useCanvasActionsComposable({
 		})
 	}
 
-	const handleGroupSave = (data: {
-		label: string
-		color: string
-		nodeIds?: string[]
-		groupId?: string
-	}) => {
+	const handleGroupSave = (data: { label: string; color: string; nodeIds?: string[]; groupId?: string }) => {
 		if (data.groupId) {
 			// Actualizar grupo existente
 			canvasInstance.actionUpdateGroup(data.groupId, {
@@ -236,6 +248,9 @@ export function useCanvasActionsComposable({
 		handleNodeDelete,
 		handleNodeDuplicate,
 		handleNodeRename,
+
+		// Accion de conector
+		handleConnectorSave,
 
 		// Acciones de conexiones
 		handleConnectionDelete,

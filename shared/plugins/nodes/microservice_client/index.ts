@@ -1,6 +1,5 @@
-import { validate } from './valid.js'
-import type { IClassNode, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
-import type { IButtonProperty, ICodeProperty, IStringProperty, ISwitchProperty } from '@shared/interfaces/workflow.properties.interface.js'
+import type { IClassNode, classOnExecuteInterface, classOnUpdateInterface } from '@shared/interfaces/class.interface.js'
+import type { ICodeProperty, IListProperty, IStringProperty } from '@shared/interfaces/workflow.properties.interface.js'
 
 export default class implements IClassNode {
 	public meta: { [key: string]: any } = {}
@@ -11,50 +10,60 @@ export default class implements IClassNode {
 		group: 'Microservice',
 		color: '#3498DB',
 		connectors: {
-			inputs: ['init'],
-			outputs: [{ name: 'message', type: 'callback' }, 'error']
+			inputs: ['input'],
+			outputs: [{ name: 'client:get', type: 'callback' }, 'error']
 		}
 	}
 	properties = {
-		name: {
-			name: 'Nombre:',
-			value: '',
-			type: 'string',
-			description: 'Nombre de la función'
-		} as IStringProperty,
-		validationSchema: {
-			name: 'Esquema de validación (AJV):',
-			type: 'code',
-			lang: 'json',
-			value: `{
-  "nombre":"string",
-  "valor":"number"
-}`,
-			description: 'Esquema JSON para validación de datos con AJV'
-		} as ICodeProperty,
-		autoAck: {
-			name: 'Auto Ack',
-			type: 'switch',
-			value: true,
-			description: 'Si se activa, se confirmará automáticamente la recepción de mensajes'
-		} as ISwitchProperty,
-		validateButton: {
-			name: 'Validar esquema',
-			type: 'button',
-			value: 'Validar esquema',
-			action: {
-				click: 'validateSchema'
+		actions: {
+			type: 'list',
+			name: 'Acciones:',
+			tabLabel: 'name',
+			object: {
+				name: {
+					name: 'Nombre:',
+					value: '',
+					type: 'string',
+					description: 'Nombre de la función'
+				} as IStringProperty,
+				validationSchema: {
+					name: 'Esquema de validación (AJV):',
+					type: 'code',
+					lang: 'json',
+					value: '{\n  "properties": {\n    "foo": {"type": "integer"},\n    "bar": {"type": "string"}\n  },\n  "required": ["foo"]\n}',
+					autocomplete: 'ajv',
+					description: 'Esquema JSON para validación de datos con AJV'
+				} as ICodeProperty
 			},
-			buttonClass: 'btn-info'
-		} as IButtonProperty
+			value: [
+				{
+					name: {
+						name: 'Nombre:',
+						value: 'client:get',
+						type: 'string',
+						description: 'Nombre de la función'
+					},
+					validationSchema: {
+						name: 'Esquema de validación (AJV):',
+						type: 'code',
+						lang: 'json',
+						value: '{\n  "properties": {\n    "foo": {"type": "integer"},\n    "bar": {"type": "string"}\n  },\n  "required": ["foo"]\n}',
+						autocomplete: 'ajv',
+						description: 'Esquema JSON para validación de datos con AJV'
+					}
+				}
+			]
+		} as IListProperty
 	}
 
-	async onAction() {
-		return {
-			validateSchema: async () => {
-				return validate(this.properties.validationSchema.value)
-			}
+	async onUpdateProperties({ properties, connectors }: classOnUpdateInterface<this['properties']>) {
+		const valor = properties.actions.value
+		connectors.outputs = []
+		for (let i = 0; i < valor.length; i++) {
+			const listName = valor[i].name?.value || `Item ${i + 1}`
+			connectors.outputs.push({ name: listName })
 		}
+		connectors.outputs.push('error')
 	}
 
 	async onExecute({ outputData, execute, dependency, context }: classOnExecuteInterface): Promise<void> {
@@ -71,11 +80,11 @@ export default class implements IClassNode {
 				execute,
 				outputData
 			})
-			module.connection({
-				autoAck: this.properties.autoAck.value,
-				name: this.properties.name.value,
-				schema: this.properties.validationSchema.value
-			})
+			// module.connection({
+			// 	autoAck: this.properties.autoAck.value,
+			// 	name: this.properties.name.value,
+			// 	schema: this.properties.validationSchema.value,
+			// });
 		} catch (error) {
 			let message = 'Error'
 			if (error instanceof Error) message = error.toString()

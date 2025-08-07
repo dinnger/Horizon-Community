@@ -3,7 +3,7 @@ import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
 import type { IClientContext, IClientCredentialContext, IWorkerContext } from './context.interface.js'
 import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
-import type { INodeMeta } from './standardized.js'
+import type { INodeConnectors, INodeMeta } from './standardized.js'
 
 export interface classBaseEnvironmentInterface {
 	baseUrl: string
@@ -60,11 +60,6 @@ export interface classOnCredential<T extends IPropertiesType = IPropertiesType> 
 	credentials: T
 	dependency: classDependencyInterface
 	client: IClientService
-}
-export interface INodeConnectors {
-	inputs?: { name: string; nextNodeTag?: string }[] | Record<string, any>
-	outputs: { name: string; nextNodeTag?: string; type?: 'callback' }[] | Record<string, any>
-	callbacks?: { name: string; nextNodeTag?: string }[] | Record<string, any>
 }
 
 export type IClassOnCredentialResponse = Promise<IClientActionResponse>
