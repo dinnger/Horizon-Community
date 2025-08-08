@@ -35,13 +35,13 @@ export class NewNode {
 		this.connections = value.connections || []
 
 		this.design.width = value.design.width || 120
-		this.design.height = this.calculateNodeHeight() || 90
+		this.calculateNodeHeight()
 	}
 
-	private calculateNodeHeight() {
+	calculateNodeHeight() {
 		const widthByInputs = Math.max(35 + (this.info.connectors?.inputs?.length || 0) * 20, 85)
 		const widthByOutputs = Math.max(35 + (this.info.connectors?.outputs?.length || 0) * 20, 85)
-		return Math.max(widthByInputs, widthByOutputs)
+		this.design.height = Math.max(widthByInputs, widthByOutputs) || 90
 	}
 
 	get() {
@@ -158,13 +158,7 @@ export class NewNode {
 		return false
 	}
 
-	setSelected({
-		pos,
-		relative
-	}: {
-		pos?: { x: number; y: number; x2?: number; y2?: number }
-		relative: { x: number; y: number }
-	}): {
+	setSelected({ pos, relative }: { pos?: { x: number; y: number; x2?: number; y2?: number }; relative: { x: number; y: number } }): {
 		type: 'node' | 'connector'
 		value: any
 	} | null {
@@ -321,11 +315,7 @@ export class NewNode {
 		this.el.duplicateMultiple()
 	}
 
-	addAnimation(data: {
-		type: 'input' | 'output' | 'callback'
-		connectionName: string
-		length: number
-	}) {
+	addAnimation(data: { type: 'input' | 'output' | 'callback'; connectionName: string; length: number }) {
 		if (this.el.ctx) {
 			addAnimation({
 				node: this,

@@ -911,6 +911,7 @@ export class Canvas {
 		const node = this.nodes.getNode({ id })
 		if (node) {
 			node.info.connectors = connector
+			node.calculateNodeHeight()
 		}
 	}
 

@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IProjectTransportConfig, IProjectTransportConfigByType, IProjectTransportType } from '@shared/interfaces/standardized';
+import type { IProjectTransportConfig, IProjectTransportType } from '@shared/interfaces/standardized';
 import { onMounted, ref, watch } from 'vue';
 
 interface Props {

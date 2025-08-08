@@ -69,22 +69,17 @@ export default class implements IClassNode {
 	async onExecute({ outputData, execute, dependency, context }: classOnExecuteInterface): Promise<void> {
 		try {
 			if (!context.project) return
-			const projectType = Object.keys(context.project)[0]
 
 			const classModule = await dependency.getModule({
-				path: 'project/connection',
-				name: `_${projectType}`
+				path: 'microservice_client',
+				name: `_${context.project.type}`
 			})
 			const module = new classModule({
 				context,
 				execute,
 				outputData
 			})
-			// module.connection({
-			// 	autoAck: this.properties.autoAck.value,
-			// 	name: this.properties.name.value,
-			// 	schema: this.properties.validationSchema.value,
-			// });
+			module.connection(this.properties.actions.value)
 		} catch (error) {
 			let message = 'Error'
 			if (error instanceof Error) message = error.toString()

@@ -79,7 +79,7 @@ export interface IKafkaTransportConfig {
 }
 
 export interface INatsTransportConfig {
-	natsUrl: string
+	url: string
 	subject?: string
 	username?: string
 	password?: string

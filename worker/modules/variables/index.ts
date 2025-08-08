@@ -42,7 +42,7 @@ export class VariableModule {
 			const { id, name, items } = credential
 
 			if (!name || !items) continue
-			if (this.projectValue.has(id)) continue
+			if (this.variablesValue.has(id)) continue
 
 			const values: { [key: string]: any } = {}
 			for (const item of items) {
