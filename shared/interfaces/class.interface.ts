@@ -16,7 +16,6 @@ export interface classBaseEnvironmentInterface {
 
 export interface classDependencyInterface {
 	getRequire: (name: string) => Promise<any>
-	getModule: ({ path, name }: { path: string; name: string }) => Promise<any>
 	getSecret: ({ type, subType, name }: { type: string; subType?: string; name?: string }) => Promise<any>
 	listSecrets: ({ type, subType }: { type: string; subType?: string }) => Promise<any>
 }

@@ -66,20 +66,21 @@ export default class implements IClassNode {
 		connectors.outputs.push('error')
 	}
 
-	async onExecute({ outputData, execute, dependency, context }: classOnExecuteInterface): Promise<void> {
+	async onExecute({ outputData, context }: classOnExecuteInterface): Promise<void> {
 		try {
 			if (!context.project) return
-
-			const classModule = await dependency.getModule({
-				path: 'microservice_client',
-				name: `_${context.project.type}`
-			})
-			const module = new classModule({
+			const module = await context.getMicroserviceModule({
 				context,
-				execute,
-				outputData
+				name: context.project.type
 			})
-			module.connection(this.properties.actions.value)
+
+			module.subscribers({
+				items: this.properties.actions.value,
+				callback: ({ name, data }: { name: string; data: any }, callback: (obj: any) => void) => {
+					outputData(name, data)
+					callback({})
+				}
+			})
 		} catch (error) {
 			let message = 'Error'
 			if (error instanceof Error) message = error.toString()

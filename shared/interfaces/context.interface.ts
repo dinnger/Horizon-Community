@@ -1,3 +1,4 @@
+import type { classOnExecuteInterface, IConnectionModule } from '.'
 import type { IProjectTransportConfigByType, IWorkflowInfo, IWorkflowProperties } from './standardized'
 
 export interface IWorkerContext {
@@ -12,6 +13,7 @@ export interface IWorkerContext {
 	} | null
 	getEnvironment: (name: string) => any
 	getSecrets: (name: string) => any
+	getMicroserviceModule: ({ context, name }: { context: IWorkerContext; name: string }) => Promise<any>
 	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
 }
 

@@ -51,13 +51,7 @@ export class CoreModule {
 	 *
 	 * @returns {IWorkflowExecutionInterface} The execution interface containing methods and properties for execution.
 	 */
-	execute = ({
-		node,
-		executeData
-	}: {
-		node: INodeWorker
-		executeData: Map<string, { data: object; meta?: object; time: number }>
-	}) => {
+	execute = ({ node, executeData }: { node: INodeWorker; executeData: Map<string, { data: object; meta?: object; time: number }> }) => {
 		const data: IWorkflowExecutionInterface = {
 			isTest: false,
 			getNodeById: (id: string) => {
@@ -190,7 +184,7 @@ export class CoreModule {
 	 * @param {Object} params.executeMeta - Metadata for execution.
 	 * @param {number} params.executeMeta.accumulativeTime - The accumulative time for execution.
 	 */
-	startExecution({
+	async startExecution({
 		uuid = '',
 		node,
 		inputData,
@@ -245,7 +239,7 @@ export class CoreModule {
 			// Analizar propiedades si es necesario hacer un replace
 			const matchReg = JSON.stringify(classExecute.properties[key]).match(/\{\{((?:(?!\{\{|\}\}).)+)\}\}/g)
 			if (matchReg) {
-				classExecute.properties[key] = fnProperties.analizarProperties(node.name, classExecute.properties[key])
+				classExecute.properties[key] = await fnProperties.analizarProperties(node.name, classExecute.properties[key])
 			} else {
 				if (typeof classExecute.properties[key] === 'string') {
 					classExecute.properties[key] = convertJson(classExecute.properties[key])
@@ -277,7 +271,7 @@ export class CoreModule {
 			| undefined = node?.meta?.logs?.exec
 
 		if (logStart && logStart.type !== 'none') {
-			this.coreLogger.logger[logStart.type](fnProperties.analizarString(node.name, logStart.value), {
+			this.coreLogger.logger[logStart.type](await fnProperties.analizarString(node.name, logStart.value), {
 				node: node.name
 			})
 		}
@@ -305,7 +299,7 @@ export class CoreModule {
 			dependency: this.el.dependencies,
 			credential: this.el.credential,
 			inputData,
-			outputData: (connectorName, data, meta) => {
+			outputData: async (connectorName, data, meta) => {
 				// Si es trigger, generar uuid
 				if (isTrigger) uuid = uid()
 
@@ -317,7 +311,7 @@ export class CoreModule {
 
 				// Registrando logs
 				if (logExec && logExec.type !== 'none') {
-					const value = fnProperties.setInput(data).analizarString(node.name, logExec.value)
+					const value = await fnProperties.setInput(data).analizarString(node.name, logExec.value)
 					this.coreLogger.logger[logExec.type](value, {
 						node: node.name
 					})
