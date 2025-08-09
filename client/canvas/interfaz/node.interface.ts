@@ -1,4 +1,4 @@
-import type { INodePropertiesType } from './node.properties.interface.js'
+import type { INodePropertiesType, INodeConnectors, INodeProperties } from './node.properties.interface'
 
 interface Point {
 	x: number
@@ -42,8 +42,8 @@ export interface INode {
 	id?: string
 	info: INodeInfo
 	dependencies?: string[]
-	properties: INodePropertiesType
-	credentials?: INodePropertiesType
+	properties: any
+	credentials?: any
 	meta?: IMetaNode
 	tags?: string[]
 }

@@ -62,7 +62,7 @@ export const useRoleStore = defineStore('role', {
 				// const response = await fetch('/api/roles')
 				// this.roles = await response.json()
 				// Mock data por ahora
-				this.roles = await socketService.getRoles()
+				this.roles = await socketService.roles().getRoles()
 			} catch (error) {
 				this.error = 'Error al cargar roles'
 				console.error('Error fetching roles:', error)

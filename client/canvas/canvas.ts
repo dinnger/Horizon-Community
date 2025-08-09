@@ -839,7 +839,7 @@ export class Canvas {
 		const nodeDestiny = this.nodes.addNode(data)
 
 		if (origin) {
-			const inputs = nodeDestiny.info.connectors.inputs[0]
+			const inputs = (nodeDestiny.info.connectors.inputs as any)?.[0]
 			const connectorDestinyName = typeof inputs === 'string' ? inputs : inputs.name || ''
 			this.nodes.getNode({ id: origin.idNode })?.addConnection({
 				connectorOriginName: origin.connectorOriginName,

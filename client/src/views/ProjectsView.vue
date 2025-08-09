@@ -90,18 +90,20 @@
                     </div>
                   </td>
                   <td>
-                    <div class="badge badge-info badge-sm badge-outline">{{ project.transportType?.toUpperCase() ||
+                    <div class="badge badge-info badge-sm badge-outline">{{ (project as
+                      any).transportType?.toUpperCase() ||
                       'Sin transporte'
-                    }}</div>
+                      }}</div>
                   </td>
                   <td>
                     <div class="badge badge-secondary badge-outline">
-                      {{ project.workflows?.length || 0 }} workflows
+                      {{ (project as any).workflows?.length || 0 }} workflows
                     </div>
                   </td>
                   <td>
                     <div class="flex space-x-2" @click.stop>
-                      <button @click="editProject(project)" class="btn btn-sm btn-outline btn-ghost">Editar</button>
+                      <button @click="editProject(project as any)"
+                        class="btn btn-sm btn-outline btn-ghost">Editar</button>
                       <button @click="deleteProject(project.id)"
                         class="btn btn-sm btn-outline btn-error ">Eliminar</button>
                     </div>

@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Project } from '@/stores'
+import type { Project } from '../../../../shared/interfaces/project/project.interface'
 
 interface Props {
   project: any // Cambiamos a any para ser más flexible con el tipo

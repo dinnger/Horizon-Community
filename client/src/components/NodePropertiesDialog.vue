@@ -49,9 +49,8 @@ import NodeCredentialsSection from './NodeProperties/NodeCredentialsSection.vue'
 import NodeMetaSection from './NodeProperties/NodeMetaSection.vue'
 import NodePropertiesFooter from './NodeProperties/NodePropertiesFooter.vue'
 import type { IUseCanvasType } from '@/composables/useCanvas.composable'
-import { getClientContext } from '@/context'
-import type { classOnUpdateInterface } from '@shared/interfaces'
 import type { INodeConnectors } from '@shared/interfaces/standardized'
+import { getClientContext } from '@/context'
 
 interface Props {
   canvasComposable: IUseCanvasType

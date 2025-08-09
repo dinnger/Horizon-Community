@@ -181,7 +181,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useWorkflowsComposable, type Workflow } from '@/composables/useWorkflows.composable'
 import { useProjectWorkflows } from '@/composables/useProjectWorkflows'
-import type { Project } from '@/types/socket'
+import type { IProjectClient } from '@shared/interfaces/project/project.interface'
 import WorkflowModal from '@/components/workflow/workflowModal.vue'
 
 
@@ -192,7 +192,7 @@ const showWorkflowModal = ref(false)
 const projectComposable = useProjectWorkflows({ projectId: route.params.id as string })
 
 
-const projectData = ref<Project | null>(null)
+const projectData = ref<IProjectClient | null>(null)
 const workflows = projectComposable.workflows.workflows
 const activeWorkflows = projectComposable.workflows.getActiveWorkflowsCount
 const projectStats = projectComposable.workflows.getWorkflowStats

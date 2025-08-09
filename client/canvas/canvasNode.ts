@@ -10,8 +10,8 @@ export class NewNode {
 	id: string
 	type: string
 	info: INodeCanvas['info']
-	properties: INodePropertiesType
-	oldProperties: INodePropertiesType
+	properties: any
+	oldProperties: any
 	meta?: INodeCanvas['meta'] | undefined
 	design: Required<INodeCanvas['design']>
 	connections: INodeConnections[]
@@ -96,7 +96,7 @@ export class NewNode {
 		this.el.nodes[idNodeDestiny].isSelected = false
 
 		// Ordernar en base a conectores
-		const outputs = this.info.connectors.outputs.map((f) => (typeof f === 'object' ? f.name : f))
+		const outputs = this.info.connectors.outputs.map((f: any) => (typeof f === 'object' ? f.name : f))
 		this.connections = this.connections.sort((a, b) => {
 			return outputs.indexOf(b.connectorOriginName) - outputs.indexOf(a.connectorOriginName)
 		})
@@ -213,7 +213,7 @@ export class NewNode {
 					node: this.get(),
 					type: 'output',
 					index: Number(output),
-					value: this.info.connectors.outputs[Number(output)]
+					value: (this.info.connectors.outputs as any)[Number(output)]
 				}
 			}
 		}
@@ -232,7 +232,7 @@ export class NewNode {
 					node: this.get(),
 					type: 'input',
 					index: Number(input),
-					value: this.info.connectors.inputs[Number(input)]
+					value: (this.info.connectors.inputs as any)?.[Number(input)]
 				}
 			}
 		}

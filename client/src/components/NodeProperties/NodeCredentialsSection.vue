@@ -31,7 +31,7 @@
 import type { INodePropertiesType } from '@canvas/interfaz/node.properties.interface'
 
 interface Props {
-  credentials: INodePropertiesType
+  credentials: any
   isReadOnly?: boolean
 }
 

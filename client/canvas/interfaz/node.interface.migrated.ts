@@ -1,11 +1,11 @@
 /**
  * Migración de interfaces del canvas
- * 
+ *
  * Este archivo actualiza las interfaces del canvas para usar las interfaces estandarizadas
  */
 
-import type { INodePropertiesType } from "./node.properties.interface.js";
-import type { 
+import type { INodePropertiesType } from './node.properties.interface'
+import type {
 	INodeCanvas as INodeCanvasStd,
 	INodeConnection as INodeConnectionStd,
 	INodeConnectors as INodeConnectorsStd,
@@ -28,12 +28,6 @@ export type INodeCanvasAdd = INodeCanvasAddStd
 
 // Interfaces específicas del canvas que no están en las estandarizadas
 export interface INodeCanvasExtended extends INodeCanvas {
-	update: () => void;
-	updateConnectionsOutput: ({
-		before,
-		after,
-	}: {
-		before: string[];
-		after: string[];
-	}) => void;
+	update: () => void
+	updateConnectionsOutput: ({ before, after }: { before: string[]; after: string[] }) => void
 }

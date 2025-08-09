@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { IRole } from '../../../shared/interfaces/deployment.interface'
+import type { IRole } from '../../../shared/interfaces/user/role.interface'
 
 interface Props {
   show: boolean

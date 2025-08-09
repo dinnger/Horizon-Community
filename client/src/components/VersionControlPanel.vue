@@ -38,8 +38,9 @@ const canvasStore = useCanvas()
 const history = ref()
 
 const loadHistory = () => {
-  history.value = canvasStore.getHistory()
-  console.log(history.value)
+  // TODO: implementar getHistory en canvasStore
+  // history.value = canvasStore.getHistory()
+  console.log('History loading not implemented yet')
 }
 
 </script>

@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
 				}
 			}
 		},
-		plugins: [vue(), tailwindcss()],
+		plugins: [vue(), tailwindcss()] as any,
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url)),

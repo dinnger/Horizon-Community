@@ -2,7 +2,20 @@ import type { Express } from 'express'
 import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
 import type { IClientContext, IClientCredentialContext, IWorkerContext } from './context.interface.js'
-import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
+// import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
+export interface IWorkflowExecutionInterface {
+	// Placeholder interface - TODO: implement when worker module is available
+	getGlobalData: (params: any) => any
+	setGlobalData: (params: any) => any
+	deleteGlobalData: (params: any) => any
+	getNodeByType: (type: string) => any
+	ifExecute: () => any
+	isTest: boolean
+	getNodesInputs: (nodeId: string) => any
+	getExecuteData: () => Map<string, any>
+	setExecuteData: (data: Map<string, any>) => any
+	stop: () => void
+}
 import type { INodeConnectors, INodeMeta } from './standardized.js'
 
 export interface classBaseEnvironmentInterface {

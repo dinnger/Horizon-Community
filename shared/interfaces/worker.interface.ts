@@ -1,4 +1,5 @@
-import type { ServerRouterEvents } from '@server/src/routes/socket'
+// import type { ServerRouterEvents } from '@server/src/routes/socket'
+export type ServerRouterEvents = string // Placeholder type
 
 export interface IWorkerInfo {
 	id: string
