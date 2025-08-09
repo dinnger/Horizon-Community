@@ -74,11 +74,10 @@ export default class implements IClassNode {
 				name: context.project.type
 			})
 
-			module.subscribers({
+			await module.subscribers({
 				items: this.properties.actions.value,
-				callback: ({ name, data }: { name: string; data: any }, callback: (obj: any) => void) => {
-					outputData(name, data)
-					callback({})
+				callback: ({ name, data }: { name: string; data: any }, callback: (data: { connectorName: string; data: object }) => void) => {
+					outputData(name, data, undefined, callback)
 				}
 			})
 		} catch (error) {

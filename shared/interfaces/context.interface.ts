@@ -13,7 +13,7 @@ export interface IWorkerContext {
 	} | null
 	getEnvironment: (name: string) => any
 	getSecrets: (name: string) => any
-	getMicroserviceModule: ({ context, name }: { context: IWorkerContext; name: string }) => Promise<any>
+	getMicroserviceModule: ({ context, name }: { context: IWorkerContext; name: string }) => Promise<IConnectionModule>
 	onCustomEvent?: (eventName: string, callback: (...args: any[]) => any) => any
 }
 

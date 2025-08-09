@@ -50,7 +50,7 @@ export interface classOnExecuteInterface {
 	environment: classBaseEnvironmentInterface
 	dependency: classDependencyInterface
 	inputData: { idNode: string; inputName: string; data: object }
-	outputData: (outputName: string, data: object, meta?: object) => void
+	outputData: (outputName: string, data: object, meta?: object, callback?: (obj: any) => void) => void
 	credential: classCredentialInterface
 }
 

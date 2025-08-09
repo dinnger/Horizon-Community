@@ -46,7 +46,7 @@ export default class implements IConnectionModule {
 		callback
 	}: {
 		items: { name: { value: any }; validationSchema: { value: any } }[]
-		callback: ({ name, data }: { name: string; data: any }, callback: (obj: any) => void) => void
+		callback: ({ name, data }: { name: string; data: any }, callback: (obj: { connectorName: string; data: object }) => void) => void
 	}) {
 		if (!this.nc) return
 		// Subscribers
@@ -61,7 +61,7 @@ export default class implements IConnectionModule {
 					const sc = StringCodec()
 					const data = JSON.parse(sc.decode(msg.data))
 					callback({ name: msg.subject, data }, (obj) => {
-						msg.respond(obj)
+						msg.respond(sc.encode(JSON.stringify(obj)))
 					})
 				}
 			})

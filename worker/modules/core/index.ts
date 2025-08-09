@@ -191,7 +191,7 @@ export class CoreModule {
 		executeMeta,
 		executeData = new Map(),
 		executeClass = new Map(),
-		meta
+		executeCallback
 	}: {
 		uuid?: string
 		node?: INodeWorker
@@ -199,7 +199,7 @@ export class CoreModule {
 		executeData: Map<string, { data: object; meta?: object; time: number }>
 		executeMeta: { accumulativeTime: number }
 		executeClass?: Map<string, IClassNode>
-		meta?: object
+		executeCallback?: (data: { connectorName: string; data: object }) => void
 	}) {
 		node = node || this.el.nodeModule.nodesInit || undefined
 		if (!node) return
@@ -299,7 +299,7 @@ export class CoreModule {
 			dependency: this.el.dependencies,
 			credential: this.el.credential,
 			inputData,
-			outputData: async (connectorName, data, meta) => {
+			outputData: async (connectorName, data, meta, callback) => {
 				// Si es trigger, generar uuid
 				if (isTrigger) uuid = uid()
 
@@ -349,16 +349,18 @@ export class CoreModule {
 								inputName: output.connectorDestinyName,
 								data
 							},
-							meta,
 							// executeData: { ...executeData },
 							// Se cambia para que solo los trigger inicien los datos
 							executeData: newExecuteData,
 							executeMeta: newExecuteMeta,
+							executeCallback: callback,
 							executeClass
 						})
 					}
 				} else {
 					//  Si no existen outputs
+					// Callback
+					if (executeCallback) executeCallback({ connectorName, data })
 					// executeClass.clear()
 					executeData.clear()
 					executeDateNode.clear()

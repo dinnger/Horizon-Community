@@ -50,7 +50,7 @@ export class PluginMicroservice {
 					message: objectParams
 				})
 				// Reemplazar en la expresión
-				this.scope['___temp___'] = response
+				this.scope.___temp___ = JSON.parse(response)
 				this.processedExpression.value = this.processedExpression.value.replace(fullMatch, '___temp___')
 			} catch (error) {
 				console.error(error)

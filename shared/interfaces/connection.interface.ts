@@ -4,8 +4,8 @@ import type { classOnExecuteInterface } from '@shared/interfaces/class.interface
 // Interface for connection modules (e.g., TCP, RabbitMQ)
 export interface IConnectionModule {
 	connection?(params: Record<string, any>): Promise<any>
-	subscribers?(params: Record<string, any>): Promise<void>
-	request?(params: Record<string, any>): Promise<void>
+	subscribers(params: Record<string, any>): Promise<void>
+	request(params: Record<string, any>): Promise<string>
 	retry?(params: { fn: (args?: any) => Promise<void> | void; error: string; args?: any }): Promise<void>
 }
 
