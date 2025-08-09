@@ -24,36 +24,53 @@ export class PluginMicroservice {
 	}
 
 	async eval() {
-		const microserviceCallRegex = /([\w]+):([\w]+)\([^)]*\)/g
+		// Regex mejorada para capturar mejor las llamadas de microservicio
+		const microserviceCallRegex = /([\w]+):([\w]+)\(([^)]*)\)/g
 		const projectType = this.context.project?.type || 'none'
 
-		while (true) {
-			const match = microserviceCallRegex.exec(this.processedExpression.value)
-			if (match === null) break
-
+		let match: RegExpExecArray | null
+		// biome-ignore lint/suspicious/noAssignInExpressions: Es necesario para el loop de regex
+		while ((match = microserviceCallRegex.exec(this.processedExpression.value)) !== null) {
 			const module = await this.context.getMicroserviceModule({
 				context: this.context,
 				name: projectType
 			})
 
 			const fullMatch = match[0]
+			const serviceName = match[1]
+			const methodName = match[2]
+			const parametersStr = match[3]
 
-			const [functionName, parameters] = fullMatch.split('(')
+			// Construir el nombre completo de la función
+			const functionName = `${serviceName}:${methodName}`
 
 			// Verificar si hay parámetros
 			try {
-				const objectTrim = parameters.slice(0, -1).replace(/'/g, '"')
-				const objectParams = JSON.parse(objectTrim)
+				let objectParams = {}
+
+				if (parametersStr.trim()) {
+					// Reemplazar comillas simples por dobles para JSON válido
+					const objectTrim = parametersStr.replace(/'/g, '"')
+					objectParams = JSON.parse(objectTrim)
+				}
 
 				const response = await module.request({
 					name: functionName,
 					message: objectParams
 				})
+
+				// Crear una variable temporal única para este resultado
+				const tempVarName = `__microservice_${serviceName}_${methodName}_${Date.now()}`
+				this.scope[tempVarName] = JSON.parse(response)
+
 				// Reemplazar en la expresión
-				this.scope.___temp___ = JSON.parse(response)
-				this.processedExpression.value = this.processedExpression.value.replace(fullMatch, '___temp___')
+				this.processedExpression.value = this.processedExpression.value.replace(fullMatch, tempVarName)
+
+				// Reiniciar la regex para procesar desde el principio con el nuevo valor
+				microserviceCallRegex.lastIndex = 0
 			} catch (error) {
-				console.error(error)
+				console.error(`Error en microservicio ${functionName}:`, error)
+				// En caso de error, mantener la expresión original
 			}
 		}
 	}

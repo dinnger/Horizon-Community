@@ -78,7 +78,8 @@ export default class implements IConnectionModule {
 			try {
 				if (!this.context.project || this.context.project.type !== 'nats') return
 				const nc = await connect({ servers: this.context.project?.transportConfig.url.split(',') || [] })
-				const response = await nc.request(name, Buffer.from(JSON.stringify(message)))
+				// Timeout de 20 segundos
+				const response = await nc.request(name, Buffer.from(JSON.stringify(message)), { timeout: 20000 })
 				resolve(StringCodec().decode(response.data))
 			} catch (error) {
 				reject(error)

@@ -273,7 +273,9 @@ export default class AIService implements IClassNode {
 		// Agregar mensaje del usuario
 		messages.push({
 			role: 'user',
-			content: String(this.properties.message.value)
+			content: String(
+				typeof this.properties.message.value === 'object' ? JSON.stringify(this.properties.message.value) : this.properties.message.value
+			)
 		})
 
 		return messages

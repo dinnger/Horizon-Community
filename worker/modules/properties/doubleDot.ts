@@ -29,11 +29,14 @@ export class PluginDoubleDot {
 
 			if (resolvedValue !== undefined) {
 				// Crear una variable temporal única para este valor
-				const tempVarName = `__temp_${fullMatch.replace(/\.\./g, '_')}_${Object.keys(this.scope).length}`
+				const tempVarName = `__doubleDot_${fullMatch.replace(/\.\./g, '_')}_${Date.now()}`
 				this.scope[tempVarName] = resolvedValue
 
 				// Reemplazar en la expresión
 				this.processedExpression.value = this.processedExpression.value.replace(fullMatch, tempVarName)
+
+				// Reiniciar la regex para procesar desde el principio
+				doubleDotRegex.lastIndex = 0
 			}
 		}
 	}
@@ -53,6 +56,9 @@ export class PluginDoubleDot {
 			rootObject = this.currentObject.input
 		} else if (this.currentObject[rootPath]) {
 			rootObject = this.currentObject[rootPath]
+		} else if (this.scope[rootPath]) {
+			// Buscar en variables temporales del scope (para microservicios)
+			rootObject = this.scope[rootPath]
 		} else {
 			return undefined
 		}

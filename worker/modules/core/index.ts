@@ -353,7 +353,7 @@ export class CoreModule {
 							// Se cambia para que solo los trigger inicien los datos
 							executeData: newExecuteData,
 							executeMeta: newExecuteMeta,
-							executeCallback: callback,
+							executeCallback: executeCallback || callback,
 							executeClass
 						})
 					}

@@ -89,18 +89,28 @@ export class initProperties {
 				value: reg
 			}
 
-			// plugin de doble punto
-			const pluginDoubleDot = new PluginDoubleDot({ currentObject: this.currentObject, processedExpression, scope })
-			await pluginDoubleDot.eval()
+			// Procesar de forma iterativa hasta que no haya más cambios
+			let previousValue = ''
+			let iterations = 0
+			const maxIterations = 10
 
-			// plugin de microservice
-			const pluginMicroservice = new PluginMicroservice({
-				context: this.context,
-				currentObject: this.currentObject,
-				processedExpression,
-				scope
-			})
-			await pluginMicroservice.eval()
+			while (processedExpression.value !== previousValue && iterations < maxIterations) {
+				previousValue = processedExpression.value
+				iterations++
+
+				// Plugin de doble punto - resolver propiedades recursivas primero
+				const pluginDoubleDot = new PluginDoubleDot({ currentObject: this.currentObject, processedExpression, scope })
+				await pluginDoubleDot.eval()
+
+				// Plugin de microservice - ejecutar después de resolver propiedades
+				const pluginMicroservice = new PluginMicroservice({
+					context: this.context,
+					currentObject: this.currentObject,
+					processedExpression,
+					scope
+				})
+				await pluginMicroservice.eval()
+			}
 
 			// ============================================================================
 
@@ -115,7 +125,7 @@ export class initProperties {
 			if (error instanceof Error) message = error.message
 			console.log(node, '\x1b[41m Error Property \x1b[0m', reg, message)
 			valideData = false
-			return undefined
+			return ''
 		}
 	}
 
