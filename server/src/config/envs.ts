@@ -8,6 +8,8 @@ interface Envs {
 	IS_WINDOWS: boolean
 
 	DB_PATH: string
+	DB_SYNC_FORCE: boolean
+
 	PORT: number
 	SERVER_URL: string
 	SERVER_SSL_MODE: boolean
@@ -28,11 +30,12 @@ interface Envs {
 const {
 	VITE_SERVER_URL,
 	VITE_GOOGLE_LOGIN,
-	DB_PATH,
 	PORT,
 	NODE_ENV,
 	SERVER_URL,
 	SERVER_SSL_MODE,
+	DB_PATH,
+	DB_SYNC_FORCE,
 	CLIENT_URL,
 	SEED_DATABASE,
 	TRACKING_EXECUTE,
@@ -61,11 +64,12 @@ if (GOOGLE_CLIENT_ID && !GOOGLE_CALLBACK_URL) throw new Error('No se encontró l
 export const envs: Envs = {
 	IS_DEV: NODE_ENV === 'development',
 	IS_WINDOWS: process.platform === 'win32',
-	DB_PATH,
 	PORT: Number.parseInt(PORT),
 	NODE_ENV: NODE_ENV as 'development' | 'production',
 	SERVER_URL,
 	SERVER_SSL_MODE: SERVER_SSL_MODE?.toString().toLowerCase() === 'true',
+	DB_PATH,
+	DB_SYNC_FORCE: DB_SYNC_FORCE?.toString().toLowerCase() === 'true',
 	CLIENT_URL,
 	SEED_DATABASE: SEED_DATABASE?.toString().toLowerCase() === 'true',
 	TRACKING_EXECUTE: TRACKING_EXECUTE?.toString().toLowerCase() === 'true',

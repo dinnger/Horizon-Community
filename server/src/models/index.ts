@@ -17,6 +17,7 @@ import DeploymentInstanceAssignmentRole from './DeploymentInstanceAssignmentRole
 import DeploymentQueue from './DeploymentQueue.js'
 import Storage from './Storage.js'
 import { sequelize } from '../config/database.js'
+import { envs } from '../config/envs.js'
 
 // Initialize database
 export const initDatabase = async () => {
@@ -26,7 +27,7 @@ export const initDatabase = async () => {
 		console.log('Database connection established successfully.')
 
 		// Sync all models
-		await sequelize.sync({ force: false })
+		await sequelize.sync({ force: envs.DB_SYNC_FORCE })
 		console.log('All models were synchronized successfully.')
 	} catch (error) {
 		console.error('Unable to connect to the database:', error)
