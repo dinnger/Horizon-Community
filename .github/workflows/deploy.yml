@@ -1,0 +1,85 @@
+name: horizon
+
+on:
+  push:
+    branches: [enterprise]
+  # pull_request:
+  #   branches: [ master ]
+
+jobs:
+  # test:
+  #   name: Tests
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Installing dependencies
+  #       run: yarn install
+
+  #     - name: Running Test
+  #       run: yarn test
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          cache: "npm"
+      - run: |
+          git config --global  pull.ff true
+          git submodule update --init --recursive
+          git submodule update --recursive --remote
+          cp .env.base .env
+          npm ci
+          npm run build --if-present
+          cd horizonSub/ && git checkout main && git pull
+          cd docusaurus  && npm ci && npm run build
+
+      - name: Upload file via SSH
+        uses: appleboy/scp-action@master
+        with:
+          source: dist, horizonSub/docusaurus/build
+          target: /home/ubuntu/dinnger/temp/
+          rm: true
+          host: ${{ secrets.SSH_AWS_SERVER_IP }}
+          username: ${{ secrets.SSH_SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: SSH & Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_AWS_SERVER_IP }}
+          username: ${{ secrets.SSH_SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            whoami
+            echo ${{vars.TELEGRAM_TO}}
+            sudo npm install pm2 -g
+            rm -rf /home/ubuntu/dinnger/process-2/dist
+            rm -rf /home/ubuntu/dinnger/process-2/distDocs
+            mv /home/ubuntu/dinnger/temp/dist /home/ubuntu/dinnger/process-2/
+            mv /home/ubuntu/dinnger/temp/horizonSub/docusaurus/build /home/ubuntu/dinnger/process-2/distDocs
+            cd /home/ubuntu/dinnger/process-2/ && git pull && git submodule update --recursive --remote
+            cd /home/ubuntu/dinnger/process-2/horizonSub/ && git checkout main && git pull
+            cd /home/ubuntu/dinnger/process-2/ && git checkout v2.0
+            sudo npm i
+            sudo pm2 delete process 2> /dev/null
+            sudo pm2 start "npm run server" --name process
+
+      # sudo npm install pm2 -g
+      # sudo pm2 delete landing 2> /dev/null
+      # sudo pm2 start server.js --name landing
+
+      - name: send telegram message on push
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{vars.TELEGRAM_TO}}
+          token: ${{vars.TELEGRAM_TOKEN}}
+          message: |
+            ${{ github.actor }}-${{ github.repository }}:
+
+            Commit message: ${{ github.event.commits[0].message }}
+
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
