@@ -9,7 +9,7 @@ import type {
 
 export default class implements IClassNode {
 	public meta: { [key: string]: any } = {}
-
+	dependencies = ['@modelcontextprotocol/sdk', 'zod']
 	info = {
 		name: 'MCP Server',
 		desc: 'Model Context Protocol Server - Expone herramientas y recursos a través de MCP',

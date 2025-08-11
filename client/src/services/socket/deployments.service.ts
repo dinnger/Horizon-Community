@@ -41,7 +41,6 @@ export function socketDeployments(socket: Socket | null) {
 
 		createDeploymentQueueItem(queueItem: {
 			workspaceId: string
-			deploymentId?: string
 			workflowId: string
 			workflowVersionId?: string
 			description?: string

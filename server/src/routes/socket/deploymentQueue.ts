@@ -6,7 +6,8 @@ import {
 	DeploymentInstanceAssignment,
 	Workflow,
 	User,
-	WorkflowHistory
+	WorkflowHistory,
+	Project
 } from '../../models/index.js'
 import { Op } from 'sequelize'
 import type { IWorkflowDataSave, IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standardized.js'
@@ -16,12 +17,26 @@ import { setupWorkflowRoutes } from './workflows.js'
 
 export const setupDeploymentQueueRoutes = {
 	// Crear nueva solicitud de despliegue
-	'deployment-queue:create': async ({ io, socket, data, callback, eventRouter }: SocketData) => {
+	'deployment-queue:create': async ({ socket, data, callback, eventRouter }: SocketData) => {
 		try {
 			const { workspaceId, deploymentId, workflowId, workflowVersionId, description, meta = {}, scheduledAt } = data
 			const { userId } = socket
 
-			const workflow = await Workflow.findByPk(workflowId)
+			const workflow = await Workflow.findOne({
+				include: [
+					{
+						model: Project,
+						as: 'project',
+						attributes: ['id'],
+						where: {
+							workspaceId
+						}
+					}
+				],
+				where: {
+					id: workflowId
+				}
+			})
 			if (!workflow) {
 				callback({ success: false, message: 'Workflow no encontrado' })
 				return
@@ -54,7 +69,7 @@ export const setupDeploymentQueueRoutes = {
 				environment: [],
 				secrets: []
 			}
-			
+
 			// Si no hay instancias, crear un elemento genérico
 			const queueItem = await DeploymentQueue.create({
 				workflowId,

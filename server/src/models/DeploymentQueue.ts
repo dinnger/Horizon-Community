@@ -9,6 +9,7 @@ import type { IWorkflowFull, IWorkflowSaveFull } from '@shared/interfaces/standa
 
 export interface DeploymentQueueAttributes extends IStatusEntity {
 	id: string
+	deploymentId?: string
 	instanceId?: string // ID de la instancia específica donde se desplegará
 	workflowId: string
 	workflowVersionId?: string // ID del historial del workflow si es una versión específica
@@ -85,7 +86,16 @@ DeploymentQueue.init(
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true
 		},
-
+		deploymentId: {
+			type: DataTypes.UUID,
+			allowNull: true,
+			references: {
+				model: Deployment,
+				key: 'id'
+			},
+			onUpdate: 'CASCADE',
+			onDelete: 'CASCADE'
+		},
 		instanceId: {
 			type: DataTypes.UUID,
 			allowNull: true,
