@@ -24,8 +24,8 @@ export default class implements IClassNode {
 		color: '#3498DB',
 		isTrigger: true,
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		}
 	}
 

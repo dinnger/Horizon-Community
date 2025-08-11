@@ -19,8 +19,8 @@ export default class DatabaseNode implements IClassNode {
 		group: 'Base de Datos',
 		color: '#52b0e7',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		},
 		isSingleton: true
 	}

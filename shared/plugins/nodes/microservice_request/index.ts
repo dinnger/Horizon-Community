@@ -16,8 +16,8 @@ export default class implements IClassNode {
 			group: 'Microservice',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['init', 'send'],
-				outputs: ['response', 'error', 'timeout']
+				inputs: [{ name: 'init' }, { name: 'send' }],
+				outputs: [{ name: 'response' }, { name: 'error' }, { name: 'timeout' }]
 			}
 		}
 

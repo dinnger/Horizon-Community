@@ -32,8 +32,8 @@ export default class implements IClassNode {
 			color: '#27AE60',
 			isSingleton: true,
 			connectors: {
-				inputs: ['init', 'stop'],
-				outputs: ['connection', 'data', 'closed', 'error']
+				inputs: [{ name: 'init' }, { name: 'stop' }],
+				outputs: [{ name: 'connection' }, { name: 'data' }, { name: 'closed' }, { name: 'error' }]
 			}
 		}
 

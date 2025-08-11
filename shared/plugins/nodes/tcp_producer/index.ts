@@ -29,8 +29,8 @@ export default class TcpProducer implements IClassNode {
 			group: 'TCP',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['init'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'init' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			},
 			isSingleton: true
 		}

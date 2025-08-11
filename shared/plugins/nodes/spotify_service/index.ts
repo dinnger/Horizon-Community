@@ -43,8 +43,8 @@ export default class Spotify implements IClassNode {
 		group: 'Servicios',
 		color: '#1DB954',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		},
 		isSingleton: true
 	}

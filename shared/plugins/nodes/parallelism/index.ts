@@ -17,8 +17,8 @@ export default class implements IClassNode {
 			group: 'Procesamiento',
 			color: '#F39C12',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			},
 			isSingleton: true
 		}

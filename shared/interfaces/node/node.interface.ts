@@ -62,9 +62,9 @@ export interface INodeMeta extends INodeLog {
  * Conectores de un nodo
  */
 export interface INodeConnectors {
-	inputs?: { name: string; nextNodeTag?: string | string[] }[] | Record<string, any>
-	outputs: { name: string; nextNodeTag?: string | string[] }[] | Record<string, any>
-	callbacks?: { name: string; nextNodeTag?: string | string[] }[] | Record<string, any>
+	inputs?: { name: string; nextNodeTag?: string }[]
+	outputs: { name: string; nextNodeTag?: string }[]
+	callbacks?: { name: string; nextNodeTag?: string }[]
 }
 
 /**

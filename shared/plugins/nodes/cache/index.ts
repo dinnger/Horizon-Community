@@ -23,8 +23,8 @@ export default class implements IClassNode {
 			group: 'Utilities',
 			color: '#27AE60',
 			connectors: {
-				inputs: ['get', 'set'],
-				outputs: ['response', 'noExist']
+				inputs: [{ name: 'get' }, { name: 'set' }],
+				outputs: [{ name: 'response' }, { name: 'noExist' }]
 			},
 			isSingleton: true
 		}

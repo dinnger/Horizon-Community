@@ -15,8 +15,8 @@ export default class implements IClassNode {
 			color: '#F39C12',
 			isSingleton: true,
 			connectors: {
-				inputs: ['init', 'add', 'next', 'finish'],
-				outputs: ['response', 'finish', 'error']
+				inputs: [{ name: 'init' }, { name: 'add' }, { name: 'next' }, { name: 'finish' }],
+				outputs: [{ name: 'response' }, { name: 'finish' }, { name: 'error' }]
 			}
 		}
 		this.properties = {

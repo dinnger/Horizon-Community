@@ -10,8 +10,8 @@ export default class implements IClassNode {
 		group: 'Microservice',
 		color: '#3498DB',
 		connectors: {
-			inputs: ['input'],
-			outputs: [{ name: 'client:get', type: 'callback' }, 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'client:get' }, { name: 'error' }]
 		}
 	}
 	properties = {
@@ -61,9 +61,9 @@ export default class implements IClassNode {
 		connectors.outputs = []
 		for (let i = 0; i < valor.length; i++) {
 			const listName = valor[i].name?.value || `Item ${i + 1}`
-			connectors.outputs.push({ name: listName })
+			connectors.outputs.push({ name: String(listName) })
 		}
-		connectors.outputs.push('error')
+		connectors.outputs.push({ name: 'error' })
 	}
 
 	async onExecute({ outputData, context }: classOnExecuteInterface): Promise<void> {

@@ -20,8 +20,8 @@ export default class implements IClassNode {
 		group: 'Database',
 		color: '#DC382D',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		},
 		isSingleton: true
 	}

@@ -23,8 +23,8 @@ export default class implements IClassNode {
 			group: 'Utilities',
 			color: '#E67E22',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['valid', 'invalid', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'valid' }, { name: 'invalid' }, { name: 'error' }]
 			}
 		}
 

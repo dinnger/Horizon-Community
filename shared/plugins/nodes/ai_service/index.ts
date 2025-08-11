@@ -52,8 +52,8 @@ export default class AIService implements IClassNode {
 		group: 'IA',
 		color: '#10A37F',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		},
 		isSingleton: true
 	}

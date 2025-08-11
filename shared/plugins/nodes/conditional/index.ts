@@ -13,8 +13,8 @@ export default class ConditionalNode implements IClassNode {
 		group: 'Control Flow / Logic',
 		color: '#9b59b6',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'error' }]
 		},
 		isSingleton: true
 	}
@@ -56,8 +56,8 @@ export default class ConditionalNode implements IClassNode {
 			const name = valor[i]?.name?.value?.toString().trim().replace('{{index}}', index) || `condicion_${index}`
 			connectors.outputs.push({ name: name })
 		}
-		connectors.outputs.push('else')
-		connectors.outputs.push('error')
+		connectors.outputs.push({ name: 'else' })
+		connectors.outputs.push({ name: 'error' })
 	}
 
 	async onExecute({ inputData, outputData }: classOnExecuteInterface): Promise<void> {

@@ -56,8 +56,8 @@ export default class AuthServiceNode implements IClassNode {
 			group: 'Autenticación',
 			color: '#4CAF50',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['credentials', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'credentials' }, { name: 'error' }]
 			}
 		}
 
