@@ -19,8 +19,8 @@ export default class implements IClassNode {
 			color: '#3498DB',
 			isTrigger: true,
 			connectors: {
-				inputs: ['init'],
-				outputs: ['response', 'error', 'error:connection']
+				inputs: [{ name: 'init' }],
+				outputs: [{ name: 'response' }, { name: 'error' }, { name: 'error:connection' }]
 			}
 		}
 		this.properties = {

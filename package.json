@@ -10,7 +10,7 @@
     "server"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "clean": "rimraf dist/",
     "start": "npm run clean && tsc && tsc-alias  && node ./dist/server/src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,9 +18,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "2.0.6",
+    "@modelcontextprotocol/sdk": "^1.17.2",
     "@types/amqplib": "^0.10.7",
     "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^6.0.0",
+    "@types/connect-history-api-fallback": "^1.5.4",
     "@types/express": "^5.0.3",
     "@types/express-fileupload": "^1.5.1",
     "@types/express-session": "^1.18.2",
@@ -36,11 +39,13 @@
     "archiver": "^7.0.1",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
+    "connect-history-api-fallback": "^2.0.0",
     "crypto": "^1.0.1",
     "express-session": "^1.18.2",
     "http-proxy-middleware": "^3.0.5",
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
+    "nats": "^2.29.3",
     "node-cache": "^5.1.2",
     "openai": "^5.11.0",
     "oracledb": "^6.9.0",

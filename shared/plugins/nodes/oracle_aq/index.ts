@@ -20,8 +20,8 @@ export default class OracleAQNode implements IClassNode {
 		group: 'Base de Datos',
 		color: '#F80000',
 		connectors: {
-			inputs: ['input'],
-			outputs: ['response', 'error']
+			inputs: [{ name: 'input' }],
+			outputs: [{ name: 'response' }, { name: 'error' }]
 		},
 		isSingleton: true
 	}

@@ -6,6 +6,7 @@ import { socketRoutes } from './routes/socket/index.js'
 import { workerManager } from './services/workerManager.js'
 import { deploymentQueueService } from './services/deploy.service.js'
 import express from 'express'
+import history from 'connect-history-api-fallback'
 import cors from 'cors'
 
 // import authGoogleRouter from './routes/authGoogle.js'
@@ -16,6 +17,7 @@ import https from 'node:https'
 import fs from 'node:fs'
 import { sessionMiddleware } from './middleware/session.js'
 import passport from 'passport'
+import { fileURLToPath } from 'node:url'
 
 declare module 'express-session' {
 	interface SessionData {
@@ -64,18 +66,24 @@ socketRoutes.init(io)
 workerManager.initWorkerManager({ app, io })
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-	res.json({ status: 'OK', timestamp: new Date().toISOString() })
-})
-
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.get('/health', (_, res) => {
+	res.json({ status: 'OK', timestamp: new Date().toISOString() })
+})
 // Google Auth endpoint
 app.use('/api/auth', auth({ app, server }))
-
 // Node REST routes
 app.use('/api/external', external({ app, server }))
+
+const PATH_URL = envs.SERVER_URL?.slice(-1) === '/' ? envs.SERVER_URL.toString().slice(0, -1) : (envs.SERVER_URL ?? '')
+// Middleware para manejar rutas del cliente antes de servir archivos estáticos
+app.use(`/ui`, history({ verbose: true }))
+
+// Servir archivos estáticos del cliente
+const pathStatic = express.static(fileURLToPath(new URL('../../../dist/client', import.meta.url)))
+app.use(`/ui`, pathStatic)
 
 // Initialize database and start server
 const startServer = async () => {

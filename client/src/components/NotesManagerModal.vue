@@ -93,7 +93,7 @@ const notes = computed(() => props.notes)
 
 const formatDate = (date: Date | string) => {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString()
+  return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
 }
 
 const selectNote = (note: INoteCanvas) => {
@@ -105,8 +105,6 @@ const editNote = (note: INoteCanvas) => {
 }
 
 const deleteNote = (noteId: string) => {
-  if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
-    emit('deleteNote', noteId)
-  }
+  emit('deleteNote', noteId)
 }
 </script>

@@ -10,7 +10,7 @@ export interface IProjectTransportConfig {
 	maxRetries?: number
 
 	// RabbitMQ
-	amqpUrl?: string
+	url?: string
 	exchange?: string
 	queue?: string
 	routingKey?: string
@@ -22,18 +22,10 @@ export interface IProjectTransportConfig {
 	topic?: string
 
 	// NATS
-	natsUrl?: string
 	subject?: string
 
 	// HTTP/REST
-	baseUrl?: string
 	timeout?: number
-
-	// WebSocket
-	wsUrl?: string
-
-	// MQTT
-	mqttUrl?: string
 
 	// Common
 	username?: string
@@ -87,7 +79,7 @@ export interface IKafkaTransportConfig {
 }
 
 export interface INatsTransportConfig {
-	natsUrl: string
+	url: string
 	subject?: string
 	username?: string
 	password?: string

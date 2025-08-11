@@ -1,67 +1,59 @@
 <template>
-  <div v-if="isOpen" class="modal modal-open">
-    <div class="modal-box w-11/12 h-[90vh] max-w-6xl flex flex-col">
-      <h3 class="font-bold text-lg mb-4">
-        {{ isEdit ? 'Editar Proyecto' : 'Crear Nuevo Proyecto' }}
-      </h3>
+  <form @submit.prevent="handleSubmit" class="flex-1 overflow-auto">
+    <Modal :isVisible="isOpen" @close="close" :title="isEdit ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'"
+      description="Información básica del proyecto" two-panels>
 
-      <form @submit.prevent="handleSubmit" class="flex-1 overflow-auto">
-        <div class="overflow-auto flex flex-col h-full">
-          <div class="flex-1 flex h-full gap-4 overflow-auto">
-            <!-- Información básica -->
-            <div class="w-1/3 border-r border-base-300 pr-4 space-y-4 p-2">
-              <h4 class="font-semibold text-base-content">Información Básica</h4>
+      <!-- Información básica -->
+      <div class="w-1/3 border-r border-base-300 pr-4 space-y-4 p-2">
+        <h4 class="font-semibold text-base-content">Información Básica</h4>
 
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Nombre del Proyecto</span>
-                </label>
-                <input v-model="formData.name" type="text" placeholder="Mi proyecto increíble"
-                  class="input input-bordered w-full" required />
-              </div>
-
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Descripción</span>
-                </label>
-                <textarea v-model="formData.description" class="textarea textarea-bordered h-24 w-full"
-                  placeholder="Describe tu proyecto..."></textarea>
-              </div>
-
-            </div>
-
-            <!-- Configuración de Transporte -->
-            <div class="flex-1 overflow-auto p-2  flex flex-col gap-4">
-              <!-- Configuración de Deployments -->
-
-              <TransportConfig v-model:transport-type="formData.transportType"
-                v-model:transport-config="formData.transportConfig" />
-            </div>
-          </div>
-
-          <div class="modal-action mt-6">
-            <button type="button" @click="$emit('close')" class="btn">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">
-              {{ isEdit ? 'Actualizar Proyecto' : 'Crear Proyecto' }}
-            </button>
-          </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Nombre del Proyecto</span>
+          </label>
+          <input v-model="formData.name" type="text" placeholder="Mi proyecto increíble"
+            class="input input-bordered w-full" required />
         </div>
-      </form>
-    </div>
-  </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Descripción</span>
+          </label>
+          <textarea v-model="formData.description" class="textarea textarea-bordered h-24 w-full"
+            placeholder="Describe tu proyecto..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Configuración de Transporte -->
+      <div class="flex-1 overflow-auto p-2  flex flex-col gap-4">
+        <TransportConfig :transport-type="formData.transportType" :transportConfig="formData.transportConfig"
+          @update:transport-type="changeTransportType" @update:transport-config="formData.transportConfig = $event" />
+      </div>
+
+
+      <template #actions>
+        <button type="button" @click="close" class="btn mr-2">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {{ isEdit ? 'Actualizar Proyecto' : 'Crear Proyecto' }}
+        </button>
+      </template>
+    </Modal>
+  </form>
 </template>
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import TransportConfig from './TransportConfig.vue'
-import type { Project, ProjectTransportConfig } from '@/stores'
+import Modal from '../Modal.vue'
+import type { IProjectClient, IProjectTransportConfig, IProjectTransportType } from '@shared/interfaces/standardized'
 
 interface Props {
   isOpen: boolean
   isEdit?: boolean
-  project?: Project | null
+  project?: IProjectClient | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -74,8 +66,8 @@ const emit = defineEmits<{
   submit: [data: {
     name: string
     description: string
-    transportType?: 'none' | 'tcp' | 'rabbitmq' | 'kafka' | 'nats' | 'http' | 'websocket' | 'mqtt'
-    transportConfig: ProjectTransportConfig
+    transportType?: IProjectTransportType
+    transportConfig: IProjectTransportConfig
     deploymentId?: string | null
     deploymentConfiguration?: Record<string, any>
   }]
@@ -84,8 +76,8 @@ const emit = defineEmits<{
 const formData = reactive<{
   name: string
   description: string
-  transportType?: 'none' | 'tcp' | 'rabbitmq' | 'kafka' | 'nats' | 'http' | 'websocket' | 'mqtt'
-  transportConfig: ProjectTransportConfig
+  transportType: IProjectTransportType
+  transportConfig: IProjectTransportConfig
   deploymentId?: string | null
   deploymentConfiguration?: Record<string, any>
 }>({
@@ -116,6 +108,10 @@ watch(() => props.isOpen, (isOpen) => {
   }
 })
 
+const changeTransportType = (type: IProjectTransportType) => {
+  formData.transportType = type
+}
+
 const resetForm = () => {
   formData.name = ''
   formData.description = ''
@@ -138,5 +134,10 @@ const handleSubmit = () => {
   if (!props.isEdit) {
     resetForm()
   }
+}
+
+const close = () => {
+  resetForm()
+  emit('close')
 }
 </script>

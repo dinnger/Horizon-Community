@@ -98,6 +98,10 @@ export default class implements IConnectionModule {
 		}
 	}
 
+	async subscribers(params: Record<string, any>): Promise<void> {
+		return
+	}
+
 	// ======================================================================
 	// REQUEST
 	// ======================================================================
@@ -120,26 +124,19 @@ export default class implements IConnectionModule {
 				wait
 			})
 		} catch (err: any) {
-			await this.retry({
-				fn: this.request.bind(this),
-				error: `RabbitMQ request error: ${err.message}`,
-				args: { name, timeout, message }
-			})
+			// await this.retry({
+			// 	fn: this.request.bind(this),
+			// 	error: `RabbitMQ request error: ${err.message}`,
+			// 	args: { name, timeout, message }
+			// })
 		}
+		return ''
 	}
 
 	// ======================================================================
 	// RETRY
 	// ======================================================================
-	async retry({
-		fn,
-		error,
-		args
-	}: {
-		fn: (args?: any) => Promise<void> | void
-		error: string
-		args?: any
-	}): Promise<void> {
+	async retry({ fn, error, args }: { fn: (args?: any) => Promise<void> | void; error: string; args?: any }): Promise<void> {
 		this.attempts++
 		if (this.channel) {
 			await this.channel.close()

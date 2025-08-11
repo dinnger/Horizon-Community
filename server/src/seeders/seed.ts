@@ -658,19 +658,7 @@ export const seedDatabase = async () => {
 		// User: Basic access
 		const userPermissions = permissions.filter(
 			(p) =>
-				[
-					'workspaces',
-					'projects',
-					'workflows',
-					'executions',
-					'dashboard',
-					'settings',
-					'nodes',
-					'workers',
-					'deployments',
-					'deployment-instances',
-					'deployment-types'
-				].includes(p.module) &&
+				['workspaces', 'projects', 'workflows', 'executions', 'dashboard', 'settings', 'nodes', 'workers'].includes(p.module) &&
 				['list', 'execute', 'get', 'getVersions', 'search', 'groups', 'info', 'stats', 'dashboard'].includes(p.action)
 		)
 

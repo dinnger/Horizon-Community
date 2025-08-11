@@ -77,8 +77,9 @@ export interface ISwitchProperty extends IBaseProperty {
 
 export interface ICodeProperty extends IBaseProperty, IActionsProperty, IValidProperty {
 	type: 'code'
-	lang: 'sql' | 'json' | 'js' | 'string'
+	lang: 'sql' | 'json' | 'javascript' | 'string'
 	value: string | object
+	autocomplete?: 'ajv'
 	suggestions?: { label: string; value: any }[]
 }
 
@@ -113,6 +114,7 @@ export interface IBoxType extends IBaseProperty {
 
 export interface IListProperty extends IBaseProperty {
 	type: 'list'
+	tabLabel?: string
 	object: {
 		[key: string]: propertiesType
 	}

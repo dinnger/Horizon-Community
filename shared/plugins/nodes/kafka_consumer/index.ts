@@ -19,8 +19,8 @@ export default class implements IClassNode {
 			color: '#3498DB',
 			isTrigger: true,
 			connectors: {
-				inputs: ['init', 'add', 'next', 'finish'],
-				outputs: ['response', 'finish', 'error']
+				inputs: [{ name: 'init' }, { name: 'add' }, { name: 'next' }, { name: 'finish' }],
+				outputs: [{ name: 'response' }, { name: 'finish' }, { name: 'error' }]
 			}
 		}
 
@@ -82,8 +82,8 @@ export default class implements IClassNode {
 
 	async onUpdateProperties({ context }: classOnUpdateInterface) {
 		this.info.connectors.inputs = []
-		this.info.connectors.inputs.push('init')
-		if (this.properties.autoCommit.value) this.info.connectors.inputs.push('next')
+		this.info.connectors.inputs.push({ name: 'init' })
+		if (this.properties.autoCommit.value) this.info.connectors.inputs.push({ name: 'next' })
 	}
 
 	async onExecute({ inputData, outputData, context, dependency }: classOnExecuteInterface) {

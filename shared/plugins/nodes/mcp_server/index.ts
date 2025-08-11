@@ -1,399 +1,411 @@
-import type { IClassNode, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnExecuteInterface, classOnUpdateInterface } from '@shared/interfaces/class.interface.js'
 import type {
-	IPropertiesType,
-	IOptionsProperty,
-	IStringProperty,
 	ICodeProperty,
+	IListProperty,
+	IStringProperty,
 	INumberProperty,
 	ISwitchProperty
 } from '@shared/interfaces/workflow.properties.interface.js'
 
-interface IProperties extends IPropertiesType {
-	serverCommand: IStringProperty
-	serverArgs: ICodeProperty
-	transport: IOptionsProperty
-	host: IStringProperty
-	port: INumberProperty
-	operation: IOptionsProperty
-	toolName: IStringProperty
-	toolParams: ICodeProperty
-	resourceUri: IStringProperty
-	timeout: INumberProperty
-	autoRestart: ISwitchProperty
-	logLevel: IOptionsProperty
-}
-
 export default class implements IClassNode {
-	// ===============================================
-	// Dependencias
-	// ===============================================
-	// #pk @modelcontextprotocol/sdk
-	// #pk child_process
-	// ===============================================
-	constructor(
-		public dependencies: string[],
-		public info: infoInterface,
-		public properties: IProperties
-	) {
-		this.dependencies = ['@modelcontextprotocol/sdk', 'child_process']
-		this.info = {
-			name: 'MCP Server',
-			desc: 'Conecta con servidores MCP (Model Context Protocol)',
-			icon: '󰀵',
-			group: 'Servicios',
-			color: '#9B59B6',
-			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
-			},
-			isSingleton: false
-		}
+	public meta: { [key: string]: any } = {}
 
-		this.properties = {
-			serverCommand: {
-				name: 'Comando del servidor',
-				type: 'string',
-				value: '',
-				description: 'Comando para iniciar el servidor MCP (ej: python, node, etc.)',
-				required: true
+	info = {
+		name: 'MCP Server',
+		desc: 'Model Context Protocol Server - Expone herramientas y recursos a través de MCP',
+		icon: '🔌',
+		group: 'MCP',
+		color: '#2E86AB',
+		connectors: {
+			inputs: [{ name: 'init' }, { name: 'stop' }],
+			outputs: [{ name: 'ready' }, { name: 'tool_echo' }, { name: 'error' }]
+		}
+	}
+
+	properties = {
+		serverName: {
+			type: 'string',
+			name: 'Nombre del servidor:',
+			value: 'horizon-mcp-server',
+			description: 'Nombre identificador del servidor MCP',
+			required: true
+		} as IStringProperty,
+
+		version: {
+			type: 'string',
+			name: 'Versión:',
+			value: '1.0.0',
+			description: 'Versión del servidor MCP'
+		} as IStringProperty,
+
+		transport: {
+			type: 'options',
+			name: 'Tipo de transporte:',
+			value: 'stdio',
+			options: [{ label: 'Standard I/O', value: 'stdio' }],
+			description: 'Método de comunicación con el cliente MCP'
+		} as any,
+
+		enableLogging: {
+			type: 'switch',
+			name: 'Habilitar logging:',
+			value: true,
+			description: 'Habilitar logs detallados del servidor MCP'
+		} as ISwitchProperty,
+
+		tools: {
+			type: 'list',
+			name: 'Herramientas (Tools):',
+			tabLabel: 'name',
+			description: 'Lista de herramientas disponibles en el servidor MCP',
+			object: {
+				name: {
+					name: 'Nombre de la herramienta:',
+					value: '',
+					type: 'string',
+					description: 'Nombre único de la herramienta',
+					required: true
+				} as IStringProperty,
+
+				description: {
+					name: 'Descripción:',
+					value: '',
+					type: 'string',
+					description: 'Descripción de qué hace la herramienta'
+				} as IStringProperty,
+
+				inputSchema: {
+					name: 'Esquema de entrada (JSON Schema):',
+					type: 'code',
+					lang: 'json',
+					value:
+						'{\n  "type": "object",\n  "properties": {\n    "input": {\n      "type": "string",\n      "description": "Parámetro de entrada"\n    }\n  },\n  "required": ["input"]\n}',
+					autocomplete: 'ajv',
+					description: 'Esquema JSON que define los parámetros de entrada de la herramienta'
+				} as ICodeProperty,
+
+				outputSchema: {
+					name: 'Esquema de salida (JSON Schema):',
+					type: 'code',
+					lang: 'json',
+					value:
+						'{\n  "type": "object",\n  "properties": {\n    "result": {\n      "type": "string",\n      "description": "Resultado de la herramienta"\n    }\n  }\n}',
+					autocomplete: 'ajv',
+					description: 'Esquema JSON que define la estructura de respuesta de la herramienta'
+				} as ICodeProperty,
+
+				timeout: {
+					name: 'Timeout (ms):',
+					value: 30000,
+					type: 'number',
+					description: 'Tiempo máximo de ejecución en milisegundos',
+					min: 1000,
+					max: 300000
+				} as INumberProperty,
+
+				enabled: {
+					type: 'switch',
+					name: 'Habilitada:',
+					value: true,
+					description: 'Si la herramienta está habilitada o no'
+				} as ISwitchProperty
 			},
-			serverArgs: {
-				name: 'Argumentos del servidor',
-				type: 'code',
-				lang: 'json',
-				value: '[\n  "/path/to/server.py"\n]',
-				description: 'Array JSON con los argumentos para el servidor MCP'
-			},
-			transport: {
-				name: 'Tipo de transporte',
-				type: 'options',
-				options: [
-					{
-						label: 'Standard Input/Output',
-						value: 'stdio'
+			value: [
+				{
+					name: {
+						name: 'Nombre de la herramienta:',
+						value: 'echo',
+						type: 'string',
+						description: 'Nombre único de la herramienta',
+						required: true
 					},
-					{
-						label: 'Server-Sent Events',
-						value: 'sse'
+					description: {
+						name: 'Descripción:',
+						value: 'Herramienta de ejemplo que hace eco del input',
+						type: 'string',
+						description: 'Descripción de qué hace la herramienta'
+					},
+					inputSchema: {
+						name: 'Esquema de entrada (JSON Schema):',
+						type: 'code',
+						lang: 'json',
+						value:
+							'{\n  "type": "object",\n  "properties": {\n    "message": {\n      "type": "string",\n      "description": "Mensaje a hacer eco"\n    }\n  },\n  "required": ["message"]\n}',
+						autocomplete: 'ajv',
+						description: 'Esquema JSON que define los parámetros de entrada de la herramienta'
+					},
+					outputSchema: {
+						name: 'Esquema de salida (JSON Schema):',
+						type: 'code',
+						lang: 'json',
+						value:
+							'{\n  "type": "object",\n  "properties": {\n    "echo": {\n      "type": "string",\n      "description": "Mensaje de eco"\n    }\n  }\n}',
+						autocomplete: 'ajv',
+						description: 'Esquema JSON que define la estructura de respuesta de la herramienta'
+					},
+					timeout: {
+						name: 'Timeout (ms):',
+						value: 5000,
+						type: 'number',
+						description: 'Tiempo máximo de ejecución en milisegundos',
+						min: 1000,
+						max: 300000
+					},
+					enabled: {
+						type: 'switch',
+						name: 'Habilitada:',
+						value: true,
+						description: 'Si la herramienta está habilitada o no'
 					}
-				],
-				value: 'stdio',
-				description: 'Método de comunicación con el servidor MCP'
-			},
-			host: {
-				name: 'Host',
-				type: 'string',
-				value: 'localhost',
-				description: 'Host para transporte SSE'
-			},
-			port: {
-				name: 'Puerto',
-				type: 'number',
-				value: 3000,
-				description: 'Puerto para transporte SSE'
-			},
-			operation: {
-				name: 'Operación',
-				type: 'options',
-				options: [
-					{
-						label: 'Listar herramientas',
-						value: 'list_tools'
-					},
-					{
-						label: 'Llamar herramienta',
-						value: 'call_tool'
-					},
-					{
-						label: 'Listar recursos',
-						value: 'list_resources'
-					},
-					{
-						label: 'Leer recurso',
-						value: 'read_resource'
-					},
-					{
-						label: 'Listar prompts',
-						value: 'list_prompts'
-					},
-					{
-						label: 'Obtener prompt',
-						value: 'get_prompt'
-					}
-				],
-				value: 'list_tools',
-				description: 'Operación a realizar en el servidor MCP'
-			},
-			toolName: {
-				name: 'Nombre de la herramienta',
-				type: 'string',
-				value: '',
-				description: 'Nombre de la herramienta a llamar'
-			},
-			toolParams: {
-				name: 'Parámetros de la herramienta',
-				type: 'code',
-				lang: 'json',
-				value: '{}',
-				description: 'Parámetros JSON para la herramienta'
-			},
-			resourceUri: {
-				name: 'URI del recurso',
-				type: 'string',
-				value: '',
-				description: 'URI del recurso a leer'
-			},
-			timeout: {
-				name: 'Timeout (ms)',
-				type: 'number',
-				value: 30000,
-				description: 'Tiempo límite para operaciones en milisegundos'
-			},
-			autoRestart: {
-				name: 'Reinicio automático',
-				type: 'switch',
-				value: true,
-				description: 'Reiniciar automáticamente el servidor si falla'
-			},
-			logLevel: {
-				name: 'Nivel de log',
-				type: 'options',
-				options: [
-					{
-						label: 'Error',
-						value: 'error'
-					},
-					{
-						label: 'Warn',
-						value: 'warn'
-					},
-					{
-						label: 'Info',
-						value: 'info'
-					},
-					{
-						label: 'Debug',
-						value: 'debug'
-					}
-				],
-				value: 'info',
-				description: 'Nivel de logging para el servidor MCP'
+				}
+			]
+		} as IListProperty
+	}
+
+	private mcpServer: any = null
+	private isRunning = false
+
+	async onUpdateProperties({ properties, connectors }: classOnUpdateInterface<this['properties']>) {
+		const tools = properties.tools.value
+		connectors.outputs = [{ name: 'ready' }, { name: 'error' }]
+
+		// Agregar un output por cada herramienta habilitada
+		for (let i = 0; i < tools.length; i++) {
+			const tool = tools[i]
+			const toolName = `tool_${tool.name?.value}` || `tool_${i + 1}`
+			const isEnabled = tool.enabled?.value !== false
+
+			if (isEnabled) {
+				connectors.outputs.push({ name: String(toolName) })
 			}
 		}
 	}
 
-	async onUpdateProperties() {
-		// Mostrar/ocultar campos según el tipo de transporte
-		const isSSE = this.properties.transport.value === 'sse'
-		this.properties.host.show = isSSE
-		this.properties.port.show = isSSE
-
-		// Mostrar/ocultar campos según la operación
-		const operation = this.properties.operation.value
-		this.properties.toolName.show = operation === 'call_tool'
-		this.properties.toolParams.show = operation === 'call_tool'
-		this.properties.resourceUri.show = operation === 'read_resource'
-	}
-
-	private mcpClient: any = null
-	private serverProcess: any = null
-
-	async onExecute({ outputData, dependency, logger, inputData }: classOnExecuteInterface) {
-		const { Client } = await dependency.getRequire('@modelcontextprotocol/sdk/client/index.js')
-		const { StdioClientTransport } = await dependency.getRequire('@modelcontextprotocol/sdk/client/stdio.js')
-		const { SSEClientTransport } = await dependency.getRequire('@modelcontextprotocol/sdk/client/sse.js')
-		const { spawn } = await dependency.getRequire('child_process')
+	async onExecute({ inputData, outputData, dependency, logger }: classOnExecuteInterface): Promise<void> {
+		const inputName = inputData.inputName
 
 		try {
-			// Inicializar cliente MCP si no existe
-			if (!this.mcpClient) {
-				await this.initializeMCPClient(dependency, logger)
+			if (inputName === 'init') {
+				await this.startMCPServer(outputData, dependency, logger)
+			} else if (inputName === 'stop') {
+				await this.stopMCPServer(outputData, logger)
+			}
+		} catch (error) {
+			let message = 'Error en MCP Server'
+			if (error instanceof Error) message = error.message
+
+			if (this.properties.enableLogging.value) {
+				logger.error('MCP Server Error:', error)
 			}
 
-			const operation = this.properties.operation.value
-			let result: any
+			outputData('error', { error: message })
+		}
+	}
 
-			switch (operation) {
-				case 'list_tools':
-					result = await this.mcpClient.listTools()
-					break
+	private async startMCPServer(outputData: classOnExecuteInterface['outputData'], dependency: any, logger: any): Promise<void> {
+		if (this.isRunning) {
+			outputData('error', { error: 'El servidor MCP ya está ejecutándose' })
+			return
+		}
 
-				case 'call_tool': {
-					if (!this.properties.toolName.value) {
-						throw new Error('Nombre de herramienta requerido')
-					}
+		try {
+			// Importar SDK de MCP usando la nueva API
+			const { McpServer } = await dependency.getRequire('@modelcontextprotocol/sdk/server/mcp.js')
+			const { StdioServerTransport } = await dependency.getRequire('@modelcontextprotocol/sdk/server/stdio.js')
+			const { z } = await dependency.getRequire('zod')
 
-					const toolParams = this.properties.toolParams.value
-						? typeof this.properties.toolParams.value === 'string'
-							? JSON.parse(this.properties.toolParams.value)
-							: this.properties.toolParams.value
-						: {}
+			// Crear servidor MCP usando la nueva API
+			const server = new McpServer({
+				name: this.properties.serverName.value,
+				version: this.properties.version.value
+			})
 
-					result = await this.mcpClient.callTool({
-						name: this.properties.toolName.value,
-						arguments: toolParams
-					})
-					break
+			// Registrar herramientas usando la nueva API
+			const enabledTools = this.getEnabledTools()
+			for (const tool of enabledTools) {
+				if (this.properties.enableLogging.value) {
+					logger.info(`Registrando herramienta: ${tool.name}`)
 				}
 
-				case 'list_resources':
-					result = await this.mcpClient.listResources()
-					break
-
-				case 'read_resource':
-					if (!this.properties.resourceUri.value) {
-						throw new Error('URI del recurso requerido')
-					}
-
-					result = await this.mcpClient.readResource({
-						uri: this.properties.resourceUri.value
-					})
-					break
-
-				case 'list_prompts':
-					result = await this.mcpClient.listPrompts()
-					break
-
-				case 'get_prompt':
-					// Implementar según necesidades específicas
-					result = await this.mcpClient.getPrompt({
-						name: this.properties.toolName.value || 'default'
-					})
-					break
-
-				default:
-					throw new Error(`Operación no soportada: ${operation}`)
-			}
-
-			outputData('response', {
-				result,
-				operation,
-				timestamp: new Date().toISOString()
-			})
-		} catch (error: any) {
-			logger.error('Error en MCP Server:', error)
-
-			// Intentar reiniciar si está habilitado
-			if (this.properties.autoRestart.value && this.mcpClient) {
+				// Crear esquema de entrada usando zod
+				let inputSchema: any = {}
 				try {
-					await this.cleanup()
-					await this.initializeMCPClient(dependency, logger)
-					logger.info('Servidor MCP reiniciado exitosamente')
-				} catch (restartError) {
-					logger.error('Error al reiniciar servidor MCP:', restartError)
+					const parsedSchema = JSON.parse(tool.inputSchema)
+					// Convertir propiedades JSON Schema a esquemas zod
+					if (parsedSchema?.properties) {
+						inputSchema = Object.fromEntries(
+							Object.entries(parsedSchema.properties).map(([key, value]: [string, any]) => {
+								if (value.type === 'string') return [key, z.string().optional()]
+								if (value.type === 'number') return [key, z.number().optional()]
+								if (value.type === 'boolean') return [key, z.boolean().optional()]
+								return [key, z.any().optional()]
+							})
+						)
+					}
+				} catch (error) {
+					if (this.properties.enableLogging.value) {
+						logger.error(`Error parseando esquema de ${tool.name}:`, error)
+					}
+					inputSchema = { input: z.any().optional() } // fallback
 				}
+
+				// Registrar la herramienta
+				server.registerTool(
+					tool.name,
+					{
+						title: tool.name,
+						description: tool.description,
+						inputSchema: inputSchema
+					},
+					async (args: any) => {
+						if (this.properties.enableLogging.value) {
+							logger.info(`Ejecutando herramienta: ${tool.name}`, args)
+						}
+
+						// Configurar timeout
+						const timeout = tool.timeout || 30000
+						const timeoutPromise = new Promise((_, reject) => {
+							setTimeout(() => reject(new Error('Timeout de herramienta')), timeout)
+						})
+
+						// Crear callback para manejar la respuesta
+						const executionPromise = new Promise((resolve, reject) => {
+							const toolOutputName = `tool_${tool.name}`
+							outputData(
+								toolOutputName,
+								{
+									toolName: tool.name,
+									arguments: args,
+									requestId: `mcp-${Date.now()}`,
+									timestamp: new Date().toISOString()
+								},
+								undefined,
+								(response: any) => {
+									if (response?.error) {
+										reject(new Error(response.error))
+									} else {
+										resolve(response)
+									}
+								}
+							)
+						})
+
+						try {
+							// Ejecutar con timeout
+							const result = await Promise.race([executionPromise, timeoutPromise])
+
+							if (this.properties.enableLogging.value) {
+								logger.info(`Herramienta ${tool.name} ejecutada exitosamente`)
+							}
+
+							// Retornar en formato MCP
+							return {
+								content: [
+									{
+										type: 'text',
+										text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+									}
+								]
+							}
+						} catch (error) {
+							if (this.properties.enableLogging.value) {
+								logger.error(`Error ejecutando herramienta ${tool.name}:`, error)
+							}
+
+							// Retornar error en formato MCP
+							return {
+								content: [
+									{
+										type: 'text',
+										text: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`
+									}
+								],
+								isError: true
+							}
+						}
+					}
+				)
 			}
 
-			let message = 'Error en servidor MCP: '
-			if (error instanceof Error) {
-				message += error.message
-			} else {
-				message += String(error)
+			// Configurar transporte - solo stdio por ahora
+			const transport = new StdioServerTransport()
+
+			if (this.properties.enableLogging.value) {
+				logger.info('MCP Server (Stdio) configurado')
 			}
 
-			outputData('error', {
-				error: message,
-				operation: this.properties.operation.value,
+			// Conectar servidor con transporte
+			await server.connect(transport)
+
+			this.mcpServer = server
+			this.isRunning = true
+
+			if (this.properties.enableLogging.value) {
+				logger.info('MCP Server iniciado exitosamente')
+			}
+
+			outputData('ready', {
+				serverName: this.properties.serverName.value,
+				version: this.properties.version.value,
+				transport: this.properties.transport.value,
+				tools: enabledTools.map((t) => t.name),
 				timestamp: new Date().toISOString()
 			})
+		} catch (error) {
+			throw new Error(`Error al iniciar servidor MCP: ${error}`)
 		}
 	}
 
-	private async initializeMCPClient(dependency: any, logger: any) {
-		const { Client } = await dependency.getRequire('@modelcontextprotocol/sdk/client/index.js')
-		const { spawn } = await dependency.getRequire('child_process')
-
-		if (this.properties.transport.value === 'stdio') {
-			const { StdioClientTransport } = await dependency.getRequire('@modelcontextprotocol/sdk/client/stdio.js')
-
-			// Parsear argumentos del servidor
-			const serverArgs = this.properties.serverArgs.value
-				? typeof this.properties.serverArgs.value === 'string'
-					? JSON.parse(this.properties.serverArgs.value)
-					: this.properties.serverArgs.value
-				: []
-
-			// Crear proceso del servidor
-			this.serverProcess = spawn(this.properties.serverCommand.value, serverArgs, {
-				stdio: ['pipe', 'pipe', 'pipe']
-			})
-
-			// Manejar errores del proceso
-			this.serverProcess.on('error', (error: any) => {
-				logger.error('Error en proceso del servidor MCP:', error)
-			})
-
-			this.serverProcess.on('exit', (code: number) => {
-				logger.info(`Servidor MCP terminó con código: ${code}`)
-			})
-
-			// Crear transporte stdio
-			const transport = new StdioClientTransport({
-				readable: this.serverProcess.stdout,
-				writable: this.serverProcess.stdin
-			})
-
-			// Crear cliente
-			this.mcpClient = new Client(
-				{
-					name: 'horizon3-mcp-client',
-					version: '1.0.0'
-				},
-				{
-					capabilities: {}
-				}
-			)
-
-			await this.mcpClient.connect(transport)
-		} else if (this.properties.transport.value === 'sse') {
-			const { SSEClientTransport } = await dependency.getRequire('@modelcontextprotocol/sdk/client/sse.js')
-
-			const transport = new SSEClientTransport(new URL(`http://${this.properties.host.value}:${this.properties.port.value}/sse`))
-
-			this.mcpClient = new Client(
-				{
-					name: 'horizon3-mcp-client',
-					version: '1.0.0'
-				},
-				{
-					capabilities: {}
-				}
-			)
-
-			await this.mcpClient.connect(transport)
+	private async stopMCPServer(outputData: classOnExecuteInterface['outputData'], logger: any): Promise<void> {
+		if (!this.isRunning || !this.mcpServer) {
+			outputData('error', { error: 'El servidor MCP no está ejecutándose' })
+			return
 		}
 
-		logger.info('Cliente MCP inicializado exitosamente')
-	}
+		try {
+			// Cerrar el servidor MCP
+			await this.mcpServer.close()
 
-	private async cleanup() {
-		if (this.mcpClient) {
-			try {
-				await this.mcpClient.close()
-			} catch (error) {
-				// Ignorar errores de cierre
+			this.isRunning = false
+			this.mcpServer = null
+
+			if (this.properties.enableLogging.value) {
+				logger.info('MCP Server detenido')
 			}
-			this.mcpClient = null
-		}
 
-		if (this.serverProcess) {
-			try {
-				this.serverProcess.kill('SIGTERM')
-
-				// Esperar un poco y forzar si es necesario
-				setTimeout(() => {
-					if (this.serverProcess && !this.serverProcess.killed) {
-						this.serverProcess.kill('SIGKILL')
-					}
-				}, 5000)
-			} catch (error) {
-				// Ignorar errores de terminación
-			}
-			this.serverProcess = null
+			outputData('ready', {
+				status: 'stopped',
+				timestamp: new Date().toISOString()
+			})
+		} catch (error) {
+			throw new Error(`Error al detener servidor MCP: ${error}`)
 		}
 	}
 
-	async onDestroy() {
-		await this.cleanup()
+	private getEnabledTools(): any[] {
+		return this.properties.tools.value
+			.filter((tool) => tool.enabled?.value !== false)
+			.map((tool) => ({
+				name: tool.name?.value || '',
+				description: tool.description?.value || '',
+				inputSchema: String(tool.inputSchema?.value || '{}'),
+				timeout: tool.timeout?.value || 30000
+			}))
+	}
+
+	private findTool(toolName: string): any {
+		return this.properties.tools.value.find((tool) => tool.name?.value === toolName)
+	}
+
+	onDestroy(): void {
+		if (this.isRunning && this.mcpServer) {
+			if (this.mcpServer.close) {
+				this.mcpServer.close().catch(() => {
+					// Ignore errors during cleanup
+				})
+			}
+			this.isRunning = false
+			this.mcpServer = null
+		}
 	}
 }

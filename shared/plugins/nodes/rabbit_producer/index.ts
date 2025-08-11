@@ -18,8 +18,8 @@ export default class implements IClassNode {
 			group: 'RabbitMQ',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['init'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'init' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			}
 		}
 

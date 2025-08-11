@@ -17,8 +17,8 @@ export default class implements IClassNode {
 			group: 'Kafka',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			}
 		}
 		this.properties = {

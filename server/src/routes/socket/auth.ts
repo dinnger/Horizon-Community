@@ -142,17 +142,16 @@ export const setupAuthRoutes = {
 	'auth:me': async ({ socket, callback }: SocketData) => {
 		try {
 			const userResponse = {
-				id: socket.user.id,
-				email: socket.user.email,
+				userId: socket.user.userId,
 				name: socket.user.name,
 				avatar: socket.user.avatar,
 				// role: socket.user.role,
 				permissions: socket.user.permissions || []
 			}
-
+			if (!socket.user?.userId) return callback({ success: false, message: 'No se encontró el usuario' })
 			callback({ success: true, user: userResponse })
-		} catch (error) {
-			console.error('Error obteniendo usuario actual:', error)
+		} catch (error:any) {
+			console.error('Error obteniendo usuario actual:', error.toString())
 			callback({ success: false, message: 'Error interno del servidor' })
 		}
 	}

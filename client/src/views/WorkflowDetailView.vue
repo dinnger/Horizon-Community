@@ -17,7 +17,7 @@
           </div>
           <p class="text-base-content/70 mt-1">{{ workflow?.description }}</p>
           <div class="flex items-center space-x-4 mt-2 text-sm text-base-content/60">
-            <span>Proyecto: {{ project?.name }}</span>
+            <span>Proyecto: {{ (project as any)?.name || 'Cargando...' }}</span>
             <span>•</span>
             <span>Última ejecución: {{ workflow ? formatDate(workflow.lastRun) : 'N/A' }}</span>
             <span>•</span>
@@ -343,7 +343,7 @@
                       <div>
                         <div class="font-semibold">{{ artifact.name }}</div>
                         <div class="text-xs text-base-content/60">{{ formatFileSize(artifact.size) }} • {{ artifact.type
-                        }}</div>
+                          }}</div>
                       </div>
                     </div>
                     <button class="btn btn-xs btn-primary">Descargar</button>

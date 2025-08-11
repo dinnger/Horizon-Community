@@ -1,4 +1,4 @@
-import type { INodePropertiesType } from './node.properties.interface.js'
+import type { INodePropertiesType, INodeConnectors, INodeProperties } from './node.properties.interface'
 
 interface Point {
 	x: number
@@ -23,12 +23,6 @@ interface IMetaNode {
 	[key: string]: any
 }
 
-export interface INodeConnectors {
-	inputs: { name: string; nextNodeTag?: string | string[] }[]
-	outputs: { name: string; nextNodeTag?: string | string[] }[]
-	callbacks?: { name: string; nextNodeTag?: string | string[] }[]
-}
-
 export interface INodeConnections {
 	id?: string
 	connectorOriginName: string
@@ -48,8 +42,8 @@ export interface INode {
 	id?: string
 	info: INodeInfo
 	dependencies?: string[]
-	properties: INodePropertiesType
-	credentials?: INodePropertiesType
+	properties: any
+	credentials?: any
 	meta?: IMetaNode
 	tags?: string[]
 }

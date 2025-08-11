@@ -9,6 +9,7 @@ import { CanvasGroups } from './canvasGroups'
 import type { INodeCanvas, INodeConnections } from './interfaz/node.interface.js'
 import type { propertiesType } from '@shared/interfaces/workflow.properties.interface.js'
 import type { INodeSave, IWorkflowDataSave } from '@shared/interfaces/standardized.js'
+import type { INodeConnectors } from './interfaz/node.interface.migrated.js'
 
 export interface ILog {
 	logs?: object
@@ -172,19 +173,13 @@ export class Canvas {
 	 * @param nodes - Diccionario de nodos indexados por ID
 	 * @param connections - Array de conexiones entre nodos
 	 */
-	private load({
-		nodes,
-		connections
-	}: {
-		nodes: { [key: string]: INodeCanvas }
-		connections: INodeConnections[]
-	}) {
+	private load({ nodes, connections }: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[] }) {
 		for (const [key, node] of Object.entries(nodes)) {
 			this.nodes.addNode({ ...node, id: key })
 		}
 		for (const connection of connections) {
 			const exist = this.nodes.addConnection(connection)
-			if (!exist) delete this.nodes[connection.idNodeDestiny]
+			if (!exist) this.nodes.removeNode(connection.idNodeDestiny)
 		}
 	}
 
@@ -616,12 +611,19 @@ export class Canvas {
 			return
 		}
 
+		this.eventMouseMove(_e)
+		this.eventMouseDown(_e)
+
 		// PRIMERO: Verificar si hay nodos seleccionados (mayor prioridad)
 		const selected = this.nodes.getSelected()
 		if (selected.length > 0) {
 			this.emit('node_context', {
 				selected,
-				canvasTranslate: this.nodes.canvasTranslate
+				canvasTranslate: this.nodes.canvasTranslate,
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -638,7 +640,11 @@ export class Canvas {
 				nodeOrigin: connectionAtPosition.nodeOrigin.get(),
 				nodeDestiny: connectionAtPosition.nodeDestiny.get(),
 				input: connectionAtPosition.connection.connectorDestinyName,
-				output: connectionAtPosition.connection.connectorOriginName
+				output: connectionAtPosition.connection.connectorOriginName,
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -649,7 +655,10 @@ export class Canvas {
 		if (noteAtPosition) {
 			this.emit('note_context', {
 				note: noteAtPosition,
-				position: { x: this.canvasPosition.x, y: this.canvasPosition.y }
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
@@ -659,14 +668,21 @@ export class Canvas {
 		if (groupAtPosition) {
 			this.emit('group_context', {
 				group: groupAtPosition,
-				position: { x: this.canvasPosition.x, y: this.canvasPosition.y }
+				position: {
+					x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+					y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+				}
 			})
 			return
 		}
 
 		// QUINTO: Menú contextual del canvas vacío
+		// Agregar posición top y left del canvas
 		this.emit('canvas_context', {
-			position: { x: this.canvasPosition.x, y: this.canvasPosition.y },
+			position: {
+				x: this.canvasPosition.x + this.canvas.getBoundingClientRect().left,
+				y: this.canvasPosition.y + this.canvas.getBoundingClientRect().top
+			},
 			canvasPosition: { x: this.canvasRelativePos.x, y: this.canvasRelativePos.y }
 		})
 	}
@@ -690,12 +706,12 @@ export class Canvas {
 				const originNode = this.nodes.getNode({
 					id: this.newConnectionNode.node.id
 				})
-				const connectorOriginName =
-					typeof this.newConnectionNode.value === 'string' ? this.newConnectionNode.value : this.newConnectionNode.value.name || ''
-				const isAdded = originNode.addConnection({
+				const connectorOriginName = this.newConnectionNode.value.name || ''
+				const connectorDestinyName = (targetInput.connectorOriginName as any).name || ''
+				const isAdded = originNode?.addConnection({
 					connectorOriginName,
 					idNodeDestiny: targetInput.node.id,
-					connectorDestinyName: targetInput.connectorOriginName,
+					connectorDestinyName,
 					idNodeOrigin: ''
 				})
 
@@ -823,9 +839,9 @@ export class Canvas {
 		const nodeDestiny = this.nodes.addNode(data)
 
 		if (origin) {
-			const inputs = nodeDestiny.info.connectors.inputs[0]
+			const inputs = (nodeDestiny.info.connectors.inputs as any)?.[0]
 			const connectorDestinyName = typeof inputs === 'string' ? inputs : inputs.name || ''
-			this.nodes.getNode({ id: origin.idNode }).addConnection({
+			this.nodes.getNode({ id: origin.idNode })?.addConnection({
 				connectorOriginName: origin.connectorOriginName,
 				idNodeDestiny: nodeDestiny.id,
 				connectorDestinyName,
@@ -891,6 +907,14 @@ export class Canvas {
 		}
 	}
 
+	actionUpdateNodeConnector({ id, connector }: { id: string; connector: INodeConnectors }) {
+		const node = this.nodes.getNode({ id })
+		if (node) {
+			node.info.connectors = connector
+			node.calculateNodeHeight()
+		}
+	}
+
 	/**
 	 * Get the current workflow data.
 	 * @returns A workflow data object with nodes, connections, notes, and groups.
@@ -937,12 +961,7 @@ export class Canvas {
 	 * Carga datos de workflow en el canvas, limpiando el contenido actual.
 	 * @param data - Nodos, conexiones, notas y grupos a cargar.
 	 */
-	loadWorkflowData(data: {
-		nodes: { [key: string]: INodeCanvas }
-		connections: INodeConnections[]
-		notes?: any[]
-		groups?: any[]
-	}) {
+	loadWorkflowData(data: { nodes: { [key: string]: INodeCanvas }; connections: INodeConnections[]; notes?: any[]; groups?: any[] }) {
 		// Limpiar nodos existentes
 		this.nodes.clear()
 		this.selectedNode = []
@@ -1061,20 +1080,16 @@ export class Canvas {
 	/**
 	 * Crea un nuevo grupo de nodos
 	 */
-	actionCreateGroup(options: {
-		label: string
-		color: string
-		nodeIds: string[]
-	}): string {
+	actionCreateGroup(options: { label: string; color: string; nodeIds: string[] }): string {
 		// Calcular bounds basado en los nodos seleccionados
 		const nodePositions = options.nodeIds
 			.map((id) => this.nodes.getNode({ id }))
 			.filter(Boolean)
 			.map((node) => ({
-				x: node.design.x,
-				y: node.design.y,
-				width: node.design.width || 200,
-				height: node.design.height || 100
+				x: node?.design.x || 0,
+				y: node?.design.y || 0,
+				width: node?.design.width || 200,
+				height: node?.design.height || 100
 			}))
 
 		const bounds = this.groups.calculateGroupBounds(nodePositions)

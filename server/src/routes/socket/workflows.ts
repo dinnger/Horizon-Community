@@ -326,6 +326,24 @@ export const setupWorkflowRoutes = {
 				let workflowVersion: string
 				let workflowInfo: Workflow
 
+				// Si no se especifica versión, usar la versión actual (última)
+				const workflow = await Workflow.findOne({
+					include: [
+						{
+							attributes: ['id', 'name', 'description', 'transportType', 'transportConfig'],
+							model: Project,
+							as: 'project'
+						}
+					],
+					where: {
+						id: workflowId
+					}
+				})
+				if (!workflow) {
+					callback({ success: false, message: 'Workflow no encontrado' })
+					return
+				}
+
 				if (version) {
 					// Si se especifica una versión, buscar en el historial
 					const historyEntry = await WorkflowHistory.findOne({
@@ -341,23 +359,10 @@ export const setupWorkflowRoutes = {
 						return
 					}
 
-					const workflow = await Workflow.findByPk(workflowId)
-					if (!workflow) {
-						callback({ success: false, message: 'Workflow no encontrado' })
-						return
-					}
-
 					workflowInfo = workflow
 					workflowData = historyEntry.newData?.workflowData
 					workflowVersion = historyEntry.version
 				} else {
-					// Si no se especifica versión, usar la versión actual (última)
-					const workflow = await Workflow.findByPk(workflowId)
-					if (!workflow) {
-						callback({ success: false, message: 'Workflow no encontrado' })
-						return
-					}
-
 					workflowInfo = workflow
 					workflowData = workflow.workflowData
 					workflowVersion = workflow.version
@@ -373,7 +378,12 @@ export const setupWorkflowRoutes = {
 					}
 
 					// Save flow.json with version info
-					const flowData: IWorkflowFull = {
+					const flowData: IWorkflowSaveFull = {
+						project: {
+							name: workflowInfo.project?.name,
+							transportType: workflowInfo.project?.transportType,
+							transportConfig: Object.keys(workflowInfo.project?.transportConfig || {})
+						},
 						info: {
 							name: workflowInfo.name,
 							description: workflowInfo.description,

@@ -16,8 +16,8 @@ export default class implements IClassNode {
 			group: 'Email',
 			color: '#D44638',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['success', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'success' }, { name: 'error' }]
 			}
 		}
 

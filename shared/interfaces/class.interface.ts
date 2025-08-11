@@ -2,8 +2,21 @@ import type { Express } from 'express'
 import type { IPropertiesType } from './workflow.properties.interface.js'
 import type { IClientActionResponse, IClientService } from './client.interface.js'
 import type { IClientContext, IClientCredentialContext, IWorkerContext } from './context.interface.js'
-import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
-import type { INodeMeta } from './standardized.js'
+// import type { IWorkflowExecutionInterface } from '@worker/modules/workflow/index.js'
+export interface IWorkflowExecutionInterface {
+	// Placeholder interface - TODO: implement when worker module is available
+	getGlobalData: (params: any) => any
+	setGlobalData: (params: any) => any
+	deleteGlobalData: (params: any) => any
+	getNodeByType: (type: string) => any
+	ifExecute: () => any
+	isTest: boolean
+	getNodesInputs: (nodeId: string) => any
+	getExecuteData: () => Map<string, any>
+	setExecuteData: (data: Map<string, any>) => any
+	stop: () => void
+}
+import type { INodeConnectors, INodeMeta } from './standardized.js'
 
 export interface classBaseEnvironmentInterface {
 	baseUrl: string
@@ -16,7 +29,7 @@ export interface classBaseEnvironmentInterface {
 
 export interface classDependencyInterface {
 	getRequire: (name: string) => Promise<any>
-	getModule: ({ path, name }: { path: string; name: string }) => Promise<any>
+	getImport: (name: string) => Promise<any>
 	getSecret: ({ type, subType, name }: { type: string; subType?: string; name?: string }) => Promise<any>
 	listSecrets: ({ type, subType }: { type: string; subType?: string }) => Promise<any>
 }
@@ -51,7 +64,8 @@ export interface classOnExecuteInterface {
 	environment: classBaseEnvironmentInterface
 	dependency: classDependencyInterface
 	inputData: { idNode: string; inputName: string; data: object }
-	outputData: (outputName: string, data: object, meta?: object) => void
+	// Callback indica que si es el último nodo de la ejecución, se debe ejecutar el callback
+	outputData: (outputName: string, data: object, meta?: object, callback?: (obj: any) => void) => void
 	credential: classCredentialInterface
 }
 
@@ -60,11 +74,6 @@ export interface classOnCredential<T extends IPropertiesType = IPropertiesType> 
 	credentials: T
 	dependency: classDependencyInterface
 	client: IClientService
-}
-export interface INodeConnectors {
-	inputs?: { name: string; nextNodeTag?: string }[] | Record<string, any>
-	outputs: { name: string; nextNodeTag?: string }[] | Record<string, any>
-	callbacks?: { name: string; nextNodeTag?: string }[] | Record<string, any>
 }
 
 export type IClassOnCredentialResponse = Promise<IClientActionResponse>

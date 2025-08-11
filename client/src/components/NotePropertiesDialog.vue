@@ -151,7 +151,7 @@ const emit = defineEmits<{
 }>()
 
 // Estado del formulario
-const noteContent = ref('<p></p>')
+const noteContent = ref('')
 const noteColor = ref(NOTE_COLORS.yellow)
 const noteWidth = ref(NOTE_DEFAULT_SIZE.width)
 const noteHeight = ref(NOTE_DEFAULT_SIZE.height)
@@ -159,7 +159,7 @@ const isSaving = ref(false)
 
 // Estado inicial para detectar cambios
 const initialState = ref({
-  content: '<p></p>',
+  content: '',
   color: NOTE_COLORS.yellow,
   width: NOTE_DEFAULT_SIZE.width,
   height: NOTE_DEFAULT_SIZE.height
@@ -266,7 +266,7 @@ const closeDialog = () => {
 }
 
 const resetForm = () => {
-  noteContent.value = '<p></p>'
+  noteContent.value = ''
   noteColor.value = NOTE_COLORS.yellow
   noteWidth.value = NOTE_DEFAULT_SIZE.width
   noteHeight.value = NOTE_DEFAULT_SIZE.height
@@ -278,7 +278,7 @@ watch([() => props.note, () => props.isVisible], ([note, isVisible]) => {
   if (isVisible) {
     if (note) {
       // Modo edición
-      noteContent.value = note.content || '<p></p>'
+      noteContent.value = note.content || ''
       noteColor.value = note.color || NOTE_COLORS.yellow
       noteWidth.value = note.size?.width || NOTE_DEFAULT_SIZE.width
       noteHeight.value = note.size?.height || NOTE_DEFAULT_SIZE.height
@@ -294,7 +294,7 @@ watch([() => props.note, () => props.isVisible], ([note, isVisible]) => {
       // Modo creación
       resetForm()
       initialState.value = {
-        content: '<p></p>',
+        content: '',
         color: NOTE_COLORS.yellow,
         width: NOTE_DEFAULT_SIZE.width,
         height: NOTE_DEFAULT_SIZE.height

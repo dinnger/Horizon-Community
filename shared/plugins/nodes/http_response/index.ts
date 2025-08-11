@@ -1,4 +1,4 @@
-import type { IClassNode, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type { IClassNode, classOnExecuteInterface, classOnUpdateInterface, infoInterface } from '@shared/interfaces/class.interface.js'
 import { getProperties, type IProperty } from './properties.js'
 
 export default class implements IClassNode {
@@ -13,15 +13,20 @@ export default class implements IClassNode {
 			group: 'Input/Output',
 			color: '#F39C12',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			}
 		}
 
 		this.properties = getProperties()
 	}
 
-	async onExecute({ execute, logger, outputData }: classOnExecuteInterface) {
+	async onUpdateProperties({ properties }: classOnUpdateInterface<IProperty>) {
+		// Mostrar/ocultar el campo de nombre de archivo según el estado del switch
+		properties.nameFile.show = properties.isFile.value === true
+	}
+
+	async onExecute({ execute, outputData }: classOnExecuteInterface) {
 		let node = execute.getNodeByType('webhook_handler')
 		if (!node) node = execute.getNodeByType('integration/crud')
 		if (!node) node = execute.getNodeByType('integration/soap')

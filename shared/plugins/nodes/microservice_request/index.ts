@@ -10,14 +10,14 @@ export default class implements IClassNode {
 	) {
 		this.dependencies = ['uuid']
 		this.info = {
-			name: 'Message Request',
-			desc: 'Envía un mensaje y espera su respuesta',
+			name: 'Microservice Request',
+			desc: 'Send and receive messages',
 			icon: '󱧐',
-			group: 'Project',
+			group: 'Microservice',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['init', 'send'],
-				outputs: ['response', 'error', 'timeout']
+				inputs: [{ name: 'init' }, { name: 'send' }],
+				outputs: [{ name: 'response' }, { name: 'error' }, { name: 'timeout' }]
 			}
 		}
 
@@ -52,21 +52,17 @@ export default class implements IClassNode {
 		}
 	}
 
-	async onExecute({ outputData, dependency, execute, context }: classOnExecuteInterface): Promise<void> {
+	async onExecute({ outputData, dependency, context }: classOnExecuteInterface): Promise<void> {
 		try {
 			const { v4 } = await dependency.getRequire('uuid')
 			if (!context.project) return
 			const projectType = Object.keys(context.project)[0]
 
-			const classModule = await dependency.getModule({
-				path: 'project/connection',
-				name: `_${projectType}`
-			})
-			const module = new classModule({
+			const module = await context.getMicroserviceModule({
 				context,
-				execute,
-				outputData
+				name: `${projectType}`
 			})
+
 			const wait = this.properties.wait.value
 			module.request({
 				wait,

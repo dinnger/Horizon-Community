@@ -21,8 +21,8 @@ export default class implements IClassNode {
 			group: 'Utilities',
 			color: '#E67E22',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['output', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'output' }, { name: 'error' }]
 			}
 		}
 
@@ -44,7 +44,7 @@ export default class implements IClassNode {
 			helperFunctions: {
 				name: 'Funciones auxiliares:',
 				type: 'code',
-				lang: 'js',
+				lang: 'javascript',
 				value: `// Estas funciones auxiliares estarán disponibles en tus expresiones
 function formatDate(date) {
   if (!date) return '';

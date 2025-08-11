@@ -1,7 +1,6 @@
 import type { IWorkerInfo } from '@shared/interfaces/worker.interface'
 import { io, type Socket } from 'socket.io-client'
 import { ref } from 'vue'
-import { socketAuth } from './socket/auth.service'
 import { socketProject } from './socket/project.service'
 import { socketWorkspace } from './socket/workspace.service'
 import { socketWorkflow } from './socket/workflow.service'
@@ -11,11 +10,13 @@ import { socketNodes } from './socket/nodes.service'
 import { socketDeployments } from './socket/deployments.service'
 import { socketWorkers } from './socket/workers.service'
 import { socketStorage } from './socket/storage.service'
+import { useAuthStore } from '@/stores'
 
 let socket: Socket | null = null
 
 function SocketService() {
 	const isConnected = ref<boolean>(false)
+	const isReconnecting = ref<boolean>(false)
 	return {
 		isConnected,
 		connect(userId?: string, previousSocket?: string): Socket {
@@ -32,8 +33,27 @@ function SocketService() {
 
 			console.log('socket1', socket)
 
-			socket.on('connect', () => {
-				console.log('Connected to server:', socket?.id)
+			socket.on('connect', async () => {
+				// Reconectar socket
+				socket?.emit('auth:me', {}, async (response: { success: boolean; [key: string]: any }) => {
+					if (response.success) return
+					if (!response.success && isReconnecting.value) {
+						isReconnecting.value = false
+						socket?.disconnect()
+						return
+					}
+					isReconnecting.value = true
+					const authStore = useAuthStore()
+					const rememberMe = await authStore.rememberMe()
+					if (rememberMe?.success) {
+						await authStore.validate()
+						await socket?.disconnect()
+						await socket?.connect()
+						isReconnecting.value = false
+					} else {
+						socket?.disconnect()
+					}
+				})
 				isConnected.value = true
 			})
 
@@ -144,8 +164,6 @@ function SocketService() {
 
 export const socketService = {
 	...SocketService(),
-	// Auth methods
-	auth: () => socketAuth(socket),
 	// Workspace methods
 	workspace: () => socketWorkspace(socket),
 	// Project methods

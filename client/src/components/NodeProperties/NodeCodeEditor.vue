@@ -13,6 +13,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import loader from '@monaco-editor/loader'
+// @ts-ignore
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+// @ts-ignore
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+
 
 interface Props {
   property: any
@@ -50,6 +55,24 @@ const updateLocalValue = () => {
 }
 
 const hasError = computed(() => !!errorMessage.value)
+
+self.MonacoEnvironment = {
+  getWorker(_, label) {
+    if (label === 'json') {
+      return new JsonWorker()
+    }
+    // if (label === 'css' || label === 'scss' || label === 'less') {
+    //   return new CssWorker()
+    // }
+    // if (label === 'html' || label === 'handlebars' || label === 'razor') {
+    //   return new HtmlWorker()
+    // }
+    // if (label === 'js') {
+    //   return new TsWorker()
+    // }
+    return new EditorWorker()
+  }
+}
 
 const getLanguageForMonaco = (lang: string) => {
   const languageMap: Record<string, string> = {
@@ -93,12 +116,10 @@ const initializeMonacoEditor = async () => {
       lineDecorationsWidth: 0,
       lineNumbersMinChars: 3,
       glyphMargin: false,
-      // Configuraciones adicionales para mejorar rendimiento
-      quickSuggestions: false,
-      parameterHints: { enabled: false },
-      suggestOnTriggerCharacters: false,
-      acceptSuggestionOnEnter: 'off',
-      tabCompletion: 'off',
+      // parameterHints: { enabled: false },
+      // suggestOnTriggerCharacters: false,
+      // acceptSuggestionOnEnter: 'off',
+      // tabCompletion: 'off',
       wordBasedSuggestions: 'off'
     })
 

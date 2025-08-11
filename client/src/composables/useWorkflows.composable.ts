@@ -140,28 +140,6 @@ export function useWorkflowsComposable({ projectId }: { projectId: string }) {
 		return true
 	}
 
-	const runWorkflow = (workflowId: string) => {
-		const workflow = workflows.value.find((w) => w.id === workflowId)
-		if (workflow) {
-			workflow.status = 'running'
-			workflow.lastRun = new Date()
-			workflow.updatedAt = new Date()
-
-			// Simular ejecución
-			setTimeout(
-				() => {
-					workflow.status = Math.random() > 0.1 ? 'success' : 'failed'
-					workflow.duration = `${Math.floor(Math.random() * 5) + 1}m ${Math.floor(Math.random() * 60)}s`
-					workflow.updatedAt = new Date()
-				},
-				2000 + Math.random() * 3000
-			)
-
-			return true
-		}
-		return false
-	}
-
 	const setLoading = (value: boolean) => {
 		loading.value = value
 	}
@@ -183,7 +161,6 @@ export function useWorkflowsComposable({ projectId }: { projectId: string }) {
 
 		// Actions
 		createWorkflow,
-		runWorkflow,
 		setLoading,
 		setError,
 

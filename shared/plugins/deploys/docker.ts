@@ -22,8 +22,8 @@ export default class implements classDeployInterface {
 			group: 'Despliegue',
 			color: '#2496ED',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['output']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'output' }]
 			}
 		}
 

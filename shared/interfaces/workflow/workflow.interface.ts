@@ -51,6 +51,15 @@ export interface IWorkflowBase {
 	secrets: string[]
 }
 
+type IWorkflowBaseSave = Omit<IWorkflowBase, 'project'> & {
+	project?: {
+		id: string
+		name: string
+		transportType: string
+		transportConfig?: string[]
+	}
+}
+
 export interface IWorkflowData {
 	nodes: { [key: string]: INodeFull }
 	connections: INodeConnection[]
@@ -85,7 +94,7 @@ export type IWorkflowDataSave = Omit<IWorkflowData, 'nodes'> & { nodes: { [key: 
 /**
  * Interfaz para workflow completo guardada
  */
-export interface IWorkflowSaveFull extends IWorkflowBase, IWorkflowDataSave {}
+export interface IWorkflowSaveFull extends IWorkflowBaseSave, IWorkflowDataSave {}
 
 /**
  * Interfaz para workflow completo

@@ -16,8 +16,8 @@ export default class implements IClassNode {
 			group: 'Input/Output',
 			color: '#3498DB',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['response', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'response' }, { name: 'error' }]
 			}
 		}
 

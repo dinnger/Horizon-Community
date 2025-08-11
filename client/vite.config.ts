@@ -8,7 +8,10 @@ export default defineConfig(({ mode }) => {
 	// Cargar variables de entorno desde la carpeta padre
 	const env = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '')
 
+	const base = `/ui`
 	return {
+		plugins: [vue(), tailwindcss()] as any,
+		base,
 		server: {
 			proxy: {
 				'/api': {
@@ -18,13 +21,16 @@ export default defineConfig(({ mode }) => {
 				}
 			}
 		},
-		plugins: [vue(), tailwindcss()],
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url)),
 				'@canvas': fileURLToPath(new URL('./canvas', import.meta.url))
 			}
 		},
-		envDir: fileURLToPath(new URL('..', import.meta.url))
+		envDir: fileURLToPath(new URL('..', import.meta.url)),
+		build: {
+			outDir: '../dist/client',
+			emptyOutDir: true // also necessary
+		}
 	}
 })

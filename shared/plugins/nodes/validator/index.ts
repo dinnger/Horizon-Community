@@ -23,8 +23,8 @@ export default class implements IClassNode {
 			group: 'Utilities',
 			color: '#E67E22',
 			connectors: {
-				inputs: ['input'],
-				outputs: ['valid', 'invalid', 'error']
+				inputs: [{ name: 'input' }],
+				outputs: [{ name: 'valid' }, { name: 'invalid' }, { name: 'error' }]
 			}
 		}
 
@@ -59,7 +59,7 @@ export default class implements IClassNode {
 			customKeywords: {
 				name: 'Keywords personalizados:',
 				type: 'code',
-				lang: 'js',
+				lang: 'javascript',
 				value: `// Ejemplo - validación de rango de fechas
 // ajv.addKeyword({
 //   keyword: "dateRangeWithinYear",
@@ -198,19 +198,12 @@ export default class implements IClassNode {
 				const errors = localize.es(validate.errors) || []
 
 				// Formatear errores para mejor legibilidad
-				const formattedErrors = errors.map(
-					(err: {
-						message: any
-						instancePath: any
-						keyword: any
-						params: any
-					}) => ({
-						message: err.message,
-						path: err.instancePath || '/',
-						keyword: err.keyword,
-						params: err.params
-					})
-				)
+				const formattedErrors = errors.map((err: { message: any; instancePath: any; keyword: any; params: any }) => ({
+					message: err.message,
+					path: err.instancePath || '/',
+					keyword: err.keyword,
+					params: err.params
+				}))
 
 				outputData('invalid', {
 					valid: false,

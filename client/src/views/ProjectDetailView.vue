@@ -116,7 +116,7 @@
               </thead>
               <tbody>
                 <tr v-for="workflow in workflows" :key="workflow.id" class="hover cursor-pointer"
-                  @click="viewWorkflowDetail(workflow.id)">
+                  @click="editWorkflow(workflow)">
                   <td>
                     <div class="flex items-center space-x-3">
                       <div :class="['w-3 h-3 rounded-full', getStatusColor(workflow.status)]"></div>
@@ -135,13 +135,13 @@
                   <td>{{ workflow.duration }}</td>
                   <td>
                     <div class="flex space-x-2" @click.stop>
-                      <button @click="runWorkflow(workflow.id)" class="btn btn-xs btn-primary">
+                      <button @click="runWorkflow(workflow.id)" class="btn btn-sm btn-outline btn-primary">
                         Ejecutar
                       </button>
-                      <button @click="editWorkflow(workflow)" class="btn btn-xs btn-ghost">
-                        Editar
+                      <button @click="viewWorkflowDetail(workflow.id)" class="btn btn-sm btn-outline btn-ghost">
+                        Detalle
                       </button>
-                      <button @click="deleteWorkflow(workflow.id)" class="btn btn-xs btn-error">
+                      <button @click="deleteWorkflow(workflow.id)" class="btn btn-sm btn-outline btn-error">
                         Eliminar
                       </button>
                     </div>
@@ -154,37 +154,9 @@
       </div>
 
       <!-- Create Workflow Modal -->
-      <div v-if="showWorkflowModal" class="modal modal-open">
-        <div class="modal-box">
-          <h3 class="font-bold text-lg mb-4">Crear Nuevo Workflow</h3>
-          <form @submit.prevent="createWorkflow">
-            <div class="form-control mb-4">
-              <label class="label">
-                <span class="label-text">Nombre del Workflow</span>
-              </label>
-              <input v-model="newWorkflow.name" type="text" placeholder="Deploy Production"
-                class="input input-bordered w-full" required />
-            </div>
 
-            <div class="form-control mb-6">
-              <label class="label">
-                <span class="label-text">Descripción</span>
-              </label>
-              <textarea v-model="newWorkflow.description" class="textarea textarea-bordered h-24"
-                placeholder="Describe el workflow..."></textarea>
-            </div>
+      <WorkflowModal :show-workflow-modal="showWorkflowModal" @close="loadWorkflows(); showWorkflowModal = false" />
 
-            <div class="modal-action">
-              <button type="button" @click="showWorkflowModal = false" class="btn">
-                Cancelar
-              </button>
-              <button type="submit" class="btn btn-primary">
-                Crear Workflow
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
     <div v-else class="text-center py-8">
       <div class="w-24 h-24 bg-base-300 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -209,7 +181,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useWorkflowsComposable, type Workflow } from '@/composables/useWorkflows.composable'
 import { useProjectWorkflows } from '@/composables/useProjectWorkflows'
-import type { Project } from '@/types/socket'
+import type { IProjectClient } from '@shared/interfaces/project/project.interface'
+import WorkflowModal from '@/components/workflow/workflowModal.vue'
 
 
 const route = useRoute()
@@ -219,39 +192,16 @@ const showWorkflowModal = ref(false)
 const projectComposable = useProjectWorkflows({ projectId: route.params.id as string })
 
 
-const projectData = ref<Project | null>(null)
+const projectData = ref<IProjectClient | null>(null)
 const workflows = projectComposable.workflows.workflows
 const activeWorkflows = projectComposable.workflows.getActiveWorkflowsCount
 const projectStats = projectComposable.workflows.getWorkflowStats
 
-const newWorkflow = reactive({
-  name: '',
-  description: ''
-})
 
-onMounted(() => {
-  projectComposable.workflows.loadWorkflows()
-  projectComposable.getProjectById().then((project) => {
-    projectData.value = project
-  })
-})
 
-const createWorkflow = () => {
-  projectComposable.workflows.createWorkflow({
-    name: newWorkflow.name,
-    description: newWorkflow.description,
-    status: 'pending',
-    duration: '0m 0s',
-  })
-
-  // Reset form
-  newWorkflow.name = ''
-  newWorkflow.description = ''
-  showWorkflowModal.value = false
-}
 
 const runWorkflow = (workflowId: string) => {
-  projectComposable.workflows.runWorkflow(workflowId)
+  // projectComposable.workflows.runWorkflow(workflowId)
 }
 
 const editWorkflow = (workflow: Workflow) => {
@@ -259,7 +209,10 @@ const editWorkflow = (workflow: Workflow) => {
 }
 
 const deleteWorkflow = (workflowId: string) => {
-  projectComposable.workflows.deleteWorkflow(workflowId)
+  const confirmMessage = '¿Estás seguro de que quieres eliminar este workflow?'
+  if (confirm(confirmMessage)) {
+    projectComposable.workflows.deleteWorkflow(workflowId)
+  }
 }
 
 const viewWorkflowDetail = (workflowId: string) => {
@@ -307,5 +260,17 @@ const getTransportLabel = (transportType: string) => {
   }
   return labels[transportType] || transportType.toUpperCase()
 }
+
+const loadWorkflows = () => {
+  projectComposable.workflows.loadWorkflows()
+}
+
+onMounted(() => {
+  loadWorkflows()
+  projectComposable.getProjectById().then((project) => {
+    projectData.value = project
+  })
+})
+
 
 </script>

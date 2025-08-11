@@ -13,12 +13,13 @@ export const useCanvas = defineStore('canvas', () => {
 
 	// Referencias reactivas del canvas
 	const activeTab = ref<'design' | 'execution'>('design')
-	const projectName = ref('Web Application')
+	const projectName = ref('')
+	const workflowName = ref('')
+	const transportType = ref('none')
 
 	const isExecuting = ref(false)
 	const isLoading = ref(true)
 	const isError = ref(false)
-
 
 	const version = ref<{
 		value: string
@@ -28,7 +29,6 @@ export const useCanvas = defineStore('canvas', () => {
 		status: 'draft'
 	})
 	const changes = ref(false)
-
 
 	// =============================================================================
 	// MÉTODOS DE GRUPOS
@@ -40,8 +40,10 @@ export const useCanvas = defineStore('canvas', () => {
 		activeTab,
 		// Referencias reactivas
 		projectName,
+		workflowName,
+		transportType,
 		isExecuting,
 		isLoading,
-		isError,
+		isError
 	}
 })

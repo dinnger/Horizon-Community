@@ -1,7 +1,19 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/20" @click="closeMenu">
-    <div class="bg-base-200 border border-base-300 rounded-lg shadow-lg py-2 min-w-[160px]" @click.stop>
+  <div v-if="isVisible" class="fixed inset-0 z-50  justify-center bg-black/20" @click="closeMenu"
+    @contextmenu.stop.prevent="() => false" @keydown.escape="closeMenu">
+    <div class="bg-base-200 border border-base-300 rounded-lg shadow-lg  w-[250px] absolute overflow-hidden" @click.stop
+      :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }">
       <!-- Opción: Cambiar nombre (solo si es un nodo) -->
+      <div v-if="isSingleNode" class="p-3 border-b border-base-300"
+        :style="{ backgroundColor: selectedNodes[0].info.color }">
+        <span class="material-icons text-base-content/80">{{ selectedNodes[0].info.icon }}</span>
+        {{ selectedNodes[0].info.name }}
+      </div>
+      <div v-else="isSingleNode" class="p-3 border-b bg-primary">
+        <span class="mdi mdi-selection-multiple text-base-content/80"></span>
+        Selección Multiple
+      </div>
+
       <button v-if="isSingleNode" @click="handleRename"
         class="w-full px-4 py-2 text-left hover:bg-base-300 flex items-center gap-2">
         <span class="mdi mdi-pencil text-sm"></span>
@@ -9,14 +21,13 @@
       </button>
 
       <!-- Opción: Duplicar (solo si es un nodo) -->
-      <button v-if="isSingleNode" @click="handleDuplicate"
-        class="w-full px-4 py-2 text-left hover:bg-base-300 flex items-center gap-2">
+      <button @click="handleDuplicate" class="w-full px-4 py-2 text-left hover:bg-base-300 flex items-center gap-2">
         <span class="mdi mdi-content-copy text-sm"></span>
-        Duplicar
+        Duplicar{{ selectedNodes.length > 1 ? ` (${selectedNodes.length})` : '' }}
       </button>
 
       <!-- Separador -->
-      <div v-if="isSingleNode" class="border-t border-base-300 my-1"></div>
+      <div class="border-t border-base-300 my-1"></div>
 
       <!-- Opción: Crear grupo (solo si hay múltiples nodos seleccionados) -->
       <button v-if="hasMultipleNodes" @click="handleCreateGroup"
@@ -70,12 +81,13 @@ import type { INodeCanvas } from '../../canvas/interfaz/node.interface'
 interface Props {
   isVisible: boolean
   selectedNodes: INodeCanvas[]
+  position: { x: number; y: number }
 }
 
 interface Emits {
   (e: 'close'): void
   (e: 'delete', nodes: INodeCanvas[]): void
-  (e: 'duplicate', node: INodeCanvas): void
+  (e: 'duplicate', node: INodeCanvas[]): void
   (e: 'rename', node: INodeCanvas, newName: string): void
   (e: 'createGroup', nodeIds: string[]): void
 }
@@ -89,6 +101,25 @@ const newNodeName = ref('')
 
 const isSingleNode = computed(() => props.selectedNodes.length === 1)
 const hasMultipleNodes = computed(() => props.selectedNodes.length > 1)
+
+const menuPosition = computed(() => {
+  // Ajustar posición para que no salga de la pantalla
+  const menuWidth = 200
+  const menuHeight = 60
+
+  let x = props.position.x
+  let y = props.position.y
+
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 10
+  }
+
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 10
+  }
+
+  return { x, y }
+})
 
 const closeMenu = () => {
   emit('close')
@@ -110,9 +141,7 @@ const handleDelete = () => {
 }
 
 const handleDuplicate = () => {
-  if (isSingleNode.value) {
-    emit('duplicate', props.selectedNodes[0])
-  }
+  emit('duplicate', props.selectedNodes)
   closeMenu()
 }
 

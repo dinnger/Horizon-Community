@@ -50,7 +50,12 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 		version,
 		canvas,
 		isLocked = false
-	}: { workflowId: string; version?: string; canvas: HTMLCanvasElement; isLocked?: boolean }) => {
+	}: {
+		workflowId: string
+		version?: string
+		canvas: HTMLCanvasElement
+		isLocked?: boolean
+	}) => {
 		try {
 			const flow = await load({ workflowId, version })
 			isLoading.value = false
@@ -161,7 +166,11 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 				uid: data.id,
 				version: data.version
 			},
-			properties: data.properties
+			properties: data.properties,
+			getMicroserviceModule: async ({ context, name }: { context: any; name: string }) => {
+				// TODO: implementar getMicroserviceModule
+				throw new Error('getMicroserviceModule not implemented')
+			}
 		}
 	}
 

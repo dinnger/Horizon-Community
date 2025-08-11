@@ -166,7 +166,7 @@ function renderConnectors({
 		let separator = 0
 		let textAlign: CanvasTextAlign = 'left'
 
-		for (const [key, input] of Object.entries(connector)) {
+		for (const [key, input] of Object.entries(connector as Record<string, any>)) {
 			if (type === 'inputs') {
 				x = node.design.x - 5
 				y = node.design.y + (25 + Number.parseInt(key) * 20)
@@ -180,7 +180,7 @@ function renderConnectors({
 				separator = 4
 			}
 			if (type === 'callbacks') {
-				const total = Object.keys(connector).length
+				const total = Object.keys(connector as Record<string, any>).length
 				const spacing = 20 // separación entre conectores
 				const totalWidth = (total - 1) * spacing
 				x = node.design.x + ((node.design.width || 0) - 5) / 2 - totalWidth / 2 + Number.parseInt(key) * spacing
@@ -191,7 +191,7 @@ function renderConnectors({
 			ctx.beginPath()
 
 			ctx.roundRect(x, y, 8, 10, 2)
-			if (connector.length > 0) {
+			if ((connector as any[]).length > 0) {
 				const name = (input as any).name || input
 				ctx.textAlign = textAlign
 				ctx.fillStyle = theme === 'dark' ? '#fff' : '#333'
@@ -478,7 +478,7 @@ export function getPositionConnection(node: INodeCanvas, connectorName: string) 
 	let point = { x: 0, y: 0 }
 	let side: 'left' | 'right' | 'top' | 'bottom' = 'left'
 	for (const [connector, value] of Object.entries(node.info.connectors)) {
-		const index = value.findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f) === connectorName)
+		const index = (value as any[]).findIndex((f: { name: string } | string) => (typeof f === 'object' ? f.name : f) === connectorName)
 		if (index !== -1) {
 			if (connector === 'inputs') {
 				pos = 30 + index * 20
@@ -491,7 +491,7 @@ export function getPositionConnection(node: INodeCanvas, connectorName: string) 
 				side = 'right'
 			}
 			if (connector === 'callbacks') {
-				const total = value.length
+				const total = (value as any[]).length
 				const spacing = 20 // separación entre conectores
 				const totalWidth = (total - 1) * spacing
 				pos = ((width || 0) - 5) / 2 - totalWidth / 2 + index * spacing
@@ -538,14 +538,14 @@ export function renderConnectionNodes({
 		const shapeA = {
 			left: nodeOrigin.design.x,
 			top: nodeOrigin.design.y,
-			width: nodeOrigin.design.width,
-			height: nodeOrigin.design.height
+			width: nodeOrigin.design.width || 150,
+			height: nodeOrigin.design.height || 50
 		}
 		const shapeB = {
 			left: nodeDestiny.design.x,
 			top: nodeDestiny.design.y,
-			width: nodeDestiny.design.width,
-			height: nodeDestiny.design.height
+			width: nodeDestiny.design.width || 150,
+			height: nodeDestiny.design.height || 50
 		}
 
 		const shapeAPos = getPositionConnection(nodeOrigin, connection.connectorOriginName)
@@ -761,7 +761,7 @@ export function verifyNodeFocus({
 		) {
 			nodes_selected = node
 			// Verificar inputs (lado izquierdo del nodo)
-			for (const input of Object.keys(node.info.connectors.inputs)) {
+			for (const input of Object.keys(node.info.connectors.inputs || {})) {
 				if (
 					x >= node.design.x - 8 &&
 					x <= node.design.x &&

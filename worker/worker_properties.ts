@@ -4,6 +4,8 @@ import type { INodeWorker } from '@shared/interfaces/standardized.js'
 import type { Worker } from './worker.js'
 import { proprietaryFunctions } from './worker_properties_proprietary.js'
 import { createRequire } from 'node:module'
+import { PluginDoubleDot } from './modules/properties/doubleDot.js'
+import { PluginMicroservice } from './modules/properties/microservice.js'
 const require = createRequire(import.meta.url)
 const Sandbox = require('@nyariv/sandboxjs')
 
@@ -24,8 +26,7 @@ export class initProperties {
 		el,
 		node,
 		input,
-		executeData,
-		variables = {}
+		executeData
 	}: {
 		el: Worker
 		node: INodeWorker
@@ -69,7 +70,7 @@ export class initProperties {
 	// ============================================================================
 	// ================================= Replace ==================================
 	// ============================================================================
-	replaceProperty(node: string, regCoincidencia: string, object = null) {
+	async replaceProperty(node: string, regCoincidencia: string) {
 		const reg = regCoincidencia.slice(2, -2)
 		let valideData = true
 
@@ -77,43 +78,43 @@ export class initProperties {
 			// Preparar el scope inicial
 			const sandbox = new Sandbox.default()
 			const value_horizon_property = null
-			let scope = {
+			const scope = {
 				value_horizon_property,
 				...this.currentObject,
 				...proprietaryFunctions()
 			}
 
 			// Procesar expresiones con doble punto antes de evaluar
-			let processedExpression = reg
-
-			// Buscar todas las expresiones con doble punto en la expresión (mejorada para múltiples niveles)
-			const doubleDotRegex = /(\w+(?:\.\.\w+)+)/g
-			let match: RegExpExecArray | null
-			const replacements: { [key: string]: any } = {}
-
-			while (true) {
-				match = doubleDotRegex.exec(reg)
-				if (match === null) break
-
-				const fullMatch = match[0]
-
-				// Resolver la expresión con doble punto
-				const resolvedValue = this.resolveDoubleDotExpression(fullMatch)
-
-				if (resolvedValue !== undefined) {
-					// Crear una variable temporal única para este valor
-					const tempVarName = `__temp_${fullMatch.replace(/\.\./g, '_')}_${Object.keys(replacements).length}`
-					replacements[tempVarName] = resolvedValue
-
-					// Reemplazar en la expresión
-					processedExpression = processedExpression.replace(fullMatch, tempVarName)
-				}
+			const processedExpression = {
+				value: reg
 			}
 
-			// Agregar las variables temporales al scope
-			scope = { ...scope, ...replacements }
+			// Procesar de forma iterativa hasta que no haya más cambios
+			let previousValue = ''
+			let iterations = 0
+			const maxIterations = 10
 
-			const evaluate = `value_horizon_property = ${processedExpression}`
+			while (processedExpression.value !== previousValue && iterations < maxIterations) {
+				previousValue = processedExpression.value
+				iterations++
+
+				// Plugin de doble punto - resolver propiedades recursivas primero
+				const pluginDoubleDot = new PluginDoubleDot({ currentObject: this.currentObject, processedExpression, scope })
+				await pluginDoubleDot.eval()
+
+				// Plugin de microservice - ejecutar después de resolver propiedades
+				const pluginMicroservice = new PluginMicroservice({
+					context: this.context,
+					currentObject: this.currentObject,
+					processedExpression,
+					scope
+				})
+				await pluginMicroservice.eval()
+			}
+
+			// ============================================================================
+
+			const evaluate = `value_horizon_property = ${processedExpression.value}`
 			const exec = sandbox.compile(evaluate)
 			exec(scope).run()
 			if (scope.value_horizon_property === null) return null
@@ -124,7 +125,7 @@ export class initProperties {
 			if (error instanceof Error) message = error.message
 			console.log(node, '\x1b[41m Error Property \x1b[0m', reg, message)
 			valideData = false
-			return undefined
+			return ''
 		}
 	}
 
@@ -258,62 +259,7 @@ export class initProperties {
 		return results
 	}
 
-	// Función para resolver expresiones con doble punto (..)
-	resolveDoubleDotExpression(expression: string): any {
-		const parts = expression.split('..')
-		if (parts.length < 2) {
-			return undefined
-		}
-
-		const [rootPath, ...propertyParts] = parts
-
-		// Obtener el objeto raíz
-		let rootObject: any
-		if (rootPath === 'input') {
-			rootObject = this.currentObject.input
-		} else if (this.currentObject[rootPath]) {
-			rootObject = this.currentObject[rootPath]
-		} else {
-			return undefined
-		}
-
-		// Si solo hay una propiedad después del primer .., usar búsqueda recursiva
-		if (propertyParts.length === 1) {
-			const propertyName = propertyParts[0].trim()
-
-			// Primero intentar búsqueda recursiva simple
-			const simpleResult = this.findPropertyRecursive(rootObject, propertyName)
-			if (simpleResult !== undefined) {
-				return simpleResult
-			}
-
-			// Si no encuentra nada, intentar buscar todos los valores de esa propiedad
-			const allValues = this.findAllPropertyValues(rootObject, propertyName)
-			if (allValues.length === 1) {
-				return allValues[0]
-			}
-			if (allValues.length > 1) {
-				return allValues
-			}
-
-			return undefined
-		}
-
-		// Si hay múltiples propiedades, usar la nueva función de búsqueda por ruta
-		const cleanPropertyParts = propertyParts.map((part) => part.trim()).filter((part) => part.length > 0)
-
-		// Intentar búsqueda por ruta específica
-		const pathResult = this.findPropertyPath(rootObject, cleanPropertyParts)
-		if (pathResult !== undefined) {
-			return pathResult
-		}
-
-		// Si no encuentra por ruta específica, intentar buscar la última propiedad recursivamente
-		const lastProperty = cleanPropertyParts[cleanPropertyParts.length - 1]
-		return this.findPropertyRecursive(rootObject, lastProperty)
-	}
-
-	analizar(node: string, property: { [key: string]: any }, firstAnalizar: boolean) {
+	async analizar(node: string, property: { [key: string]: any }, firstAnalizar: boolean) {
 		const isList = firstAnalizar && property.type === 'list'
 		const obj = Object.entries(property)
 			.filter(([_, f]) => !f.type || !['options'].includes(f.type))
@@ -322,7 +268,7 @@ export class initProperties {
 			if (value.evaluation?.active === false) continue
 
 			if (typeof value === 'object') {
-				this.analizar(node, property[key], false)
+				await this.analizar(node, property[key], false)
 			} else {
 				const evalAll = property.evaluation?.all
 				if (evalAll && key === 'value') {
@@ -359,7 +305,7 @@ export class initProperties {
 					continue
 				}
 				for (const match of matchReg) {
-					const valor = this.replaceProperty(node, match)
+					const valor = await this.replaceProperty(node, match)
 					if (typeof valor === 'object' && property[key] === match) {
 						property[key] = valor
 					} else {
@@ -382,15 +328,15 @@ export class initProperties {
 	}
 
 	// Remplazando valores en ciclos
-	analizarProperties(node: string, property: propertiesType) {
+	async analizarProperties(node: string, property: propertiesType) {
 		const textProperties: propertiesType = JSON.parse(JSON.stringify(property))
-		this.analizar(node, textProperties, true)
+		await this.analizar(node, textProperties, true)
 		return textProperties
 	}
 
-	analizarString(node: string, text: string) {
+	async analizarString(node: string, text: string) {
 		const textProperties = JSON.parse(JSON.stringify({ data: text }))
-		this.analizar(node, textProperties, true)
+		await this.analizar(node, textProperties, true)
 		return textProperties.data
 	}
 }

@@ -7,7 +7,7 @@
 
     <!-- Tabs -->
     <div class="tabs bg-base-200 w-fit mb-6">
-      <a v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
+      <a v-for="tab in availableTabs" :key="tab.id" @click="changeTab(tab.id)"
         :class="['tab', { 'tab-active': activeTab === tab.id }]">
         <span class="mdi mr-2" :class="tab.icon"></span>
         {{ tab.label }}
@@ -282,15 +282,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSettingsStore } from '../stores/settings'
 import SettingsWorkspaces from '@/components/settings/SettingsWorkspaces.vue'
 import { toast } from 'vue-sonner'
+import { useRoleStore } from '@/stores'
 
 const settingsStore = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
+const roleStore = useRoleStore()
 
 const tabs = [
   { id: 'general', label: 'General', icon: 'mdi-cog' },
@@ -302,6 +304,18 @@ const tabs = [
 
 const defaultTab = 'general'
 const activeTab = ref(defaultTab)
+
+const availableTabs = computed(() => {
+  const availableModules = roleStore.availableModules
+
+  return tabs.filter((item) => {
+    // siempre está disponible
+    if (['general', 'account', 'privacy', 'about'].includes(item.id)) return true
+
+    // Verificar si el módulo está disponible para el usuario
+    return availableModules.includes(item.id)
+  })
+})
 
 // Sincroniza el tab activo con el query param 'tab'
 const setTabFromRoute = () => {

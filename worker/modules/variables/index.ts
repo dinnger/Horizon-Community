@@ -5,6 +5,7 @@ import { setSecret } from '../../../shared/engine/secret.engine.js'
 export class VariableModule {
 	el: Worker
 	variablesValue: Map<string, { name: string; values: { [key: string]: any } }> = new Map()
+	projectValue: Map<string, any> = new Map()
 
 	constructor(el: Worker) {
 		this.el = el
@@ -27,28 +28,28 @@ export class VariableModule {
 	 */
 	async checkWorkflowEnvironment({ flow }: { flow: IWorkflowSaveFull }) {
 		// Project variables
+		const values: { [key: string]: any } = {}
 		if (flow.project) {
-			for (const key of Object.keys(flow.project) as Array<keyof typeof flow.project>) {
-				const projectSection = flow.project[key]
-				if (projectSection && typeof projectSection === 'object') {
-					for (const name of Object.keys(projectSection)) {
-						const variable = `PJ_${String(key).toUpperCase()}_${name.toUpperCase()}`
-						const value = process.env[variable]
-						console.debug(`\x1b[44m Variable \x1b[0m  ${value ? '\x1b[32m\u2713' : '\x1b[33m\u26a0'} ${variable} \x1b[0m`)
-					}
-				}
+			for (const item of flow.project?.transportConfig || []) {
+				const variable = `PROJECT_${String(flow.project?.transportType).toUpperCase()}_${item.toUpperCase()}`
+				const value = process.env[variable]
+				console.debug(`\x1b[44m Variable \x1b[0m  ${value ? '\x1b[32m\u2713 ' : '\x1b[33m\u26a0 '} ${variable} \x1b[0m`)
+				this.projectValue.set(item, value)
 			}
 		}
 		// Variables
 		for (const credential of flow.credentials || []) {
 			const { id, name, items } = credential
+
 			if (!name || !items) continue
+			if (this.variablesValue.has(id)) continue
+
 			const values: { [key: string]: any } = {}
 			for (const item of items) {
 				const variable = `WORKFLOW_${name.toUpperCase()}_${item.toUpperCase()}`
 				const value = process.env[variable]
-				values[item] = value
-				console.debug(`\x1b[44m Credencial \x1b[0m  ${value ? '\x1b[32m\u2713' : '\x1b[33m\u26a0 '} ${variable} \x1b[0m`)
+				if (value) values[item] = value
+				console.debug(`\x1b[44m Credencial \x1b[0m  ${value ? '\x1b[32m\u2713 ' : '\x1b[33m\u26a0 '} ${variable} \x1b[0m`)
 			}
 			this.variablesValue.set(id, { name, values })
 		}

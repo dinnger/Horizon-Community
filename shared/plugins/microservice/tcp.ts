@@ -27,8 +27,8 @@ export default class implements IConnectionModule {
 		if (!context.project) return
 		if (context.project.type !== 'tcp') return
 		const { port, host, maxRetries } = context.project.transportConfig || {}
-		this.port = port || 0
-		this.host = host || ''
+		this.port = port
+		this.host = host
 		this.attemps = 0
 		this.retries = Number(maxRetries)
 	}
@@ -101,18 +101,14 @@ export default class implements IConnectionModule {
 		}
 	}
 
+	async subscribers(params: Record<string, any>): Promise<void> {
+		return
+	}
+
 	// ======================================================================
 	// RETRY
 	// ======================================================================
-	async retry({
-		fn,
-		error,
-		args
-	}: {
-		fn: (args: any) => void
-		error: any
-		args: any
-	}) {
+	async retry({ fn, error, args }: { fn: (args: any) => void; error: any; args: any }) {
 		this.attemps++
 		if (this.client) this.client.end()
 		this.client = null
@@ -293,12 +289,13 @@ export default class implements IConnectionModule {
 			this.client.on('connect', () => {
 				sendRequest()
 			})
-			return
+			return ''
 		}
 		if (this.client?.connecting) {
 			this.client.once('connect', sendRequest)
 		} else {
 			sendRequest()
 		}
+		return ''
 	}
 }

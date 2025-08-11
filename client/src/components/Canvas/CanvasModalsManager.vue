@@ -11,16 +11,18 @@ Usa el patrón Observer para comunicación entre componentes
     <NodePropertiesDialog :is-visible="canvasModals.nodePropertiesDialog.isVisible"
       :node-data="canvasModals.nodePropertiesDialog.node" :is-read-only="canvasModals.nodePropertiesDialog.isReadOnly"
       @close="canvasModals.closeNodePropertiesDialog" @save="canvasActions.handleNodePropertiesSave"
-      :canvas-composable="canvasComposable" />
+      @save-connectors="canvasActions.handleConnectorSave" :canvas-composable="canvasComposable" />
 
     <!-- Menú contextual del nodo -->
     <NodeContextMenu :is-visible="canvasModals.nodeContextMenu.isVisible"
-      :selected-nodes="canvasModals.nodeContextMenu.selectedNodes" @close="canvasModals.closeNodeContextMenu"
-      @delete="canvasActions.handleNodeDelete" @duplicate="canvasActions.handleNodeDuplicate"
-      @rename="canvasActions.handleNodeRename" @create-group="canvasActions.handleGroupCreate" />
+      :position="canvasModals.nodeContextMenu.position" :selected-nodes="canvasModals.nodeContextMenu.selectedNodes"
+      @close="canvasModals.closeNodeContextMenu" @delete="canvasActions.handleNodeDelete"
+      @duplicate="canvasActions.handleNodeDuplicate" @rename="canvasActions.handleNodeRename"
+      @create-group="canvasActions.handleGroupCreate" />
 
     <!-- Menú contextual de conexión -->
     <ConnectionContextMenu :is-visible="canvasModals.connectionContextMenu.isVisible"
+      :position="canvasModals.connectionContextMenu.connectionInfo?.position"
       :connection-info="canvasModals.connectionContextMenu.connectionInfo"
       @close="canvasModals.closeConnectionContextMenu" @delete="canvasActions.handleConnectionDelete" />
 
@@ -36,9 +38,9 @@ Usa el patrón Observer para comunicación entre componentes
 
     <!-- Menú contextual de grupos -->
     <GroupContextMenu :is-visible="canvasModals.groupContextMenu.isVisible"
-      :selected-group="canvasModals.groupContextMenu.group" @close="canvasModals.closeGroupContextMenu"
-      @edit-group="canvasActions.handleGroupEdit" @ungroup="canvasActions.handleGroupUngroup"
-      @delete-group="canvasActions.handleGroupDelete" />
+      :position="canvasModals.groupContextMenu.position" :selected-group="canvasModals.groupContextMenu.group"
+      @close="canvasModals.closeGroupContextMenu" @edit-group="canvasActions.handleGroupEdit"
+      @ungroup="canvasActions.handleGroupUngroup" @delete-group="canvasActions.handleGroupDelete" />
 
     <!-- Modal de propiedades de nota -->
     <NotePropertiesDialog :is-visible="canvasModals.notePropertiesDialog.isVisible"
@@ -111,8 +113,8 @@ onMounted(() => {
   )
 
   eventUnsubscribers.push(
-    canvasEvents.on('node:context:open', ({ nodes }) => {
-      canvasModals.openNodeContextMenu(nodes)
+    canvasEvents.on('node:context:open', ({ nodes, position }) => {
+      canvasModals.openNodeContextMenu(nodes, position)
     })
   )
 
@@ -195,8 +197,8 @@ onMounted(() => {
   // REGISTRAR LISTENERS PARA EVENTOS DE GRUPOS
   // =============================================================================
   eventUnsubscribers.push(
-    canvasEvents.on('group:context:open', ({ group }) => {
-      canvasModals.openGroupContextMenu(group)
+    canvasEvents.on('group:context:open', ({ group, position }) => {
+      canvasModals.openGroupContextMenu(group, position)
     })
   )
 

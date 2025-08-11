@@ -50,7 +50,7 @@ export type CanvasModalEvent =
 export type CanvasModalEventData = {
 	'node:properties:open': { node: INodeCanvas; isReadOnly?: boolean }
 	'node:properties:close': undefined
-	'node:context:open': { nodes: INodeCanvas[] }
+	'node:context:open': { nodes: INodeCanvas[]; position: { x: number; y: number } }
 	'node:context:close': undefined
 	'node:delete': { nodes: INodeCanvas[] }
 	'node:duplicate': { node: INodeCanvas }
@@ -79,7 +79,7 @@ export type CanvasModalEventData = {
 	'note:manager:edit': { note: INoteCanvas }
 	'note:manager:delete': { noteId: string }
 	'group:create': { nodeIds: string[] }
-	'group:context:open': { group: INodeGroupCanvas }
+	'group:context:open': { group: INodeGroupCanvas; position: { x: number; y: number } }
 	'group:context:close': undefined
 	'group:properties:open': { group?: INodeGroupCanvas; nodeIds?: string[] }
 	'group:properties:close': undefined
