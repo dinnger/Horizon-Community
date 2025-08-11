@@ -45,6 +45,7 @@ export interface classOnUpdateInterface<T extends IPropertiesType = IPropertiesT
 }
 
 export interface classOnUpdateCredentialInterface<T extends IPropertiesType = IPropertiesType> {
+	field: keyof T
 	context: IClientCredentialContext
 	properties: T
 }

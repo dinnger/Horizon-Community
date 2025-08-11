@@ -278,7 +278,7 @@ export default class Spotify implements IClassNode {
 		}
 	}
 
-	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface) {
+	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface<typeof this.credentials>) {
 		properties.redirectUri.value = context.environments.callback
 	}
 

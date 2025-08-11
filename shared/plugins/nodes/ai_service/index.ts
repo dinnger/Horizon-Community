@@ -375,7 +375,7 @@ export default class AIService implements IClassNode {
 		}
 	}
 
-	async onUpdateCredential({ properties, context }: classOnUpdateCredentialInterface) {
+	async onUpdateCredential({ properties }: classOnUpdateCredentialInterface<typeof this.credentials>) {
 		function getModelsForProvider(provider: string): Array<{ label: string; value: string }> {
 			const models: Record<string, Array<{ label: string; value: string }>> = {
 				openai: [
