@@ -140,7 +140,7 @@ export class DeploymentQueueService {
 			await fs.mkdir(deploymentPath, { recursive: true })
 
 			// Transformar el flow a la estructura IWorkflowFull
-			const standardizedFlow = this.transformToWorkflowFull(queueItem.flow)
+			const standardizedFlow = queueItem.flow
 
 			// Crear archivo flow.json con la estructura estandarizada
 			const flowJsonPath = path.join(deploymentPath, 'flow.json')
@@ -196,7 +196,7 @@ export class DeploymentQueueService {
 	/**
 	 * Transforma un flow a la estructura IWorkflowFull estandarizada
 	 */
-	private transformToWorkflowFull(flow: any): IWorkflowFull {
+	transformToWorkflowFull(flow: any): IWorkflowFull {
 		try {
 			// Crear la estructura base requerida por IWorkflowFull
 			const workflowData = flow.workflowData || {}
@@ -295,7 +295,7 @@ export class DeploymentQueueService {
 			}
 
 			// Copiar shared/store y shared/utils
-			const dirs = ['shared/store', 'shared/utils', 'worker']
+			const dirs = ['shared/engine', 'shared/store', 'shared/utils', 'worker']
 			for (const dir of dirs) {
 				const sourceDir = path.join(process.cwd(), 'dist', dir)
 				const targetDir = path.join(deploymentPath, dir)

@@ -31,7 +31,6 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const showAutoDeploymentToast = ref(false)
 	// Estados para el selector de despliegue
 	const selectedDeploymentId = ref<string | null>(null)
-	const currentWorkflowInfo = ref<{ id: string; name: string; description?: string } | null>(null)
 	const showDeploymentSelector = ref(false)
 	const autoDeploymentInfo = ref<{ workflowName: string; deploymentName: string } | null>(null)
 	const actions = ref<IUseCanvasActionsType | undefined>()
@@ -212,45 +211,20 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const publish = async ({ workflowId }: { workflowId: string }) => {
 		try {
 			// Primero guardamos el workflow
-			await saveCanvas({ workflowId })
+			try {
+				await saveCanvas({ workflowId })
+			} catch (error) {}
 
 			if (!workflowId) return
 
-			// Validar y preparar la publicación usando el store de deployment
-			const validationResult = await deployComposable.validateAndPrepareWorkflowPublication(workflowId)
-
-			if (validationResult.type === 'automatic' && validationResult.autoDeployment) {
-				// Despliegue automático
-				const { workflowInfo, autoDeployment } = validationResult
-
-				// Mostrar toast de despliegue automático
-				autoDeploymentInfo.value = {
-					workflowName: workflowInfo.name,
-					deploymentName: autoDeployment.deploymentName
-				}
-				showAutoDeploymentToast.value = true
-
-				// Usar el despliegue asignado al proyecto automáticamente
-				const deploymentData = {
-					workflowId,
-					deploymentId: autoDeployment.deploymentId,
-					priority: 3, // Prioridad normal por defecto
-					description: `Despliegue automático de ${workflowInfo.name} desde proyecto ${autoDeployment.projectName}`,
-					scheduledAt: undefined // Inmediato
-				}
-
-				// Ocultar el toast después de un momento
-				setTimeout(() => {
-					showAutoDeploymentToast.value = false
-					autoDeploymentInfo.value = null
-				}, 4000)
-
-				await handleDeploymentPublish(deploymentData)
-			} else {
-				// Despliegue manual
-				currentWorkflowInfo.value = validationResult.workflowInfo
-				showDeploymentSelector.value = true
+			const deploymentData = {
+				workflowId,
+				priority: 3, // Prioridad normal por defecto
+				description: `Despliegue manual`,
+				scheduledAt: undefined // Inmediato
 			}
+			await handleDeploymentPublish(deploymentData)
+			showDeploymentSelector.value = true
 		} catch (error: any) {
 			throw new Error(error)
 		}
@@ -265,13 +239,11 @@ export function useCanvasComposable({ workflowId }: { workflowId: string }) {
 	const closeDeploymentSelector = () => {
 		showDeploymentSelector.value = false
 		selectedDeploymentId.value = null
-		currentWorkflowInfo.value = null
 	}
 
 	// Función para manejar la publicación en el despliegue seleccionado
 	const handleDeploymentPublish = async (deploymentData: {
 		workflowId: string
-		deploymentId: string
 		priority: number
 		description: string
 		scheduledAt?: Date

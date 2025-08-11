@@ -13,6 +13,7 @@
     "build": "tsc && tsc-alias",
     "clean": "rimraf dist/",
     "start": "npm run clean && tsc && tsc-alias  && node ./dist/server/src/index.js",
+    "start:worker": "npm run clean && tsc && tsc-alias  && node ./dist/worker/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

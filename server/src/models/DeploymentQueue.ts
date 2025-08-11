@@ -9,7 +9,7 @@ import type { IWorkflowFull } from '@shared/interfaces/standardized.js'
 
 export interface DeploymentQueueAttributes extends IStatusEntity {
 	id: string
-	deploymentId: string
+	deploymentId?: string
 	instanceId?: string // ID de la instancia específica donde se desplegará
 	workflowId: string
 	workflowVersionId?: string // ID del historial del workflow si es una versión específica
@@ -89,7 +89,7 @@ DeploymentQueue.init(
 		},
 		deploymentId: {
 			type: DataTypes.UUID,
-			allowNull: false,
+			allowNull: true,
 			references: {
 				model: Deployment,
 				key: 'id'

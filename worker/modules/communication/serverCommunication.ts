@@ -47,6 +47,7 @@ class WorkerServerComm {
 
 	async requestFromServer(route: string, data: any = {}): Promise<any> {
 		return new Promise((resolve, reject) => {
+			if (!parentPort) resolve(null)
 			const requestId = uuidv4()
 			const timeout = setTimeout(() => {
 				this.pendingRequests.delete(requestId)
@@ -172,13 +173,7 @@ export class ServerCommunication extends WorkerServerComm {
 	/**
 	 * Report worker progress to server
 	 */
-	async reportProgress(progress: {
-		nodeId?: string
-		stepName?: string
-		percentage?: number
-		message?: string
-		data?: any
-	}): Promise<void> {
+	async reportProgress(progress: { nodeId?: string; stepName?: string; percentage?: number; message?: string; data?: any }): Promise<void> {
 		try {
 			await this.requestFromServer('worker:progress', {
 				...progress,

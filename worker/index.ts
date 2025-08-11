@@ -19,9 +19,11 @@ const IS_DEV = envs.IS_DEV
 const SERVER_CLUSTER = envs.WORKER_CLUSTER
 
 // Set .env variables WORKFLOW_*
-for (const key of Object.keys(workerData)) {
-	if (!key.startsWith('WORKFLOW_') && !key.startsWith('PROJECT_')) continue
-	process.env[key.toUpperCase()] = workerData[key]
+if (workerData) {
+	for (const key of Object.keys(workerData)) {
+		if (!key.startsWith('WORKFLOW_') && !key.startsWith('PROJECT_')) continue
+		process.env[key.toUpperCase()] = workerData[key]
+	}
 }
 
 // Set port
