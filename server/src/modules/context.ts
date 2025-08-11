@@ -31,6 +31,7 @@ function clientContext({ socket }: { socket: Required<AuthenticatedSocket> }): I
 function dependencyContext(): classDependencyInterface {
 	return {
 		getRequire: async (name: string) => Promise.resolve(require(name)),
+		getImport: async (name: string) => Promise.resolve(await import(name)),
 		getSecret: ({ type, subType, name }: { type: string; subType?: string; name?: string }) =>
 			Promise.resolve(getSecret({ type, subType, name })),
 		listSecrets: ({ type, subType }: { type: string; subType?: string }) => Promise.resolve(listSecrets({ type, subType }))

@@ -29,6 +29,7 @@ export interface classBaseEnvironmentInterface {
 
 export interface classDependencyInterface {
 	getRequire: (name: string) => Promise<any>
+	getImport: (name: string) => Promise<any>
 	getSecret: ({ type, subType, name }: { type: string; subType?: string; name?: string }) => Promise<any>
 	listSecrets: ({ type, subType }: { type: string; subType?: string }) => Promise<any>
 }
@@ -63,6 +64,7 @@ export interface classOnExecuteInterface {
 	environment: classBaseEnvironmentInterface
 	dependency: classDependencyInterface
 	inputData: { idNode: string; inputName: string; data: object }
+	// Callback indica que si es el último nodo de la ejecución, se debe ejecutar el callback
 	outputData: (outputName: string, data: object, meta?: object, callback?: (obj: any) => void) => void
 	credential: classCredentialInterface
 }

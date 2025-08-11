@@ -706,12 +706,12 @@ export class Canvas {
 				const originNode = this.nodes.getNode({
 					id: this.newConnectionNode.node.id
 				})
-				const connectorOriginName =
-					typeof this.newConnectionNode.value === 'string' ? this.newConnectionNode.value : this.newConnectionNode.value.name || ''
+				const connectorOriginName = this.newConnectionNode.value.name || ''
+				const connectorDestinyName = (targetInput.connectorOriginName as any).name || ''
 				const isAdded = originNode?.addConnection({
 					connectorOriginName,
 					idNodeDestiny: targetInput.node.id,
-					connectorDestinyName: targetInput.connectorOriginName,
+					connectorDestinyName,
 					idNodeOrigin: ''
 				})
 

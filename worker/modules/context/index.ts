@@ -79,6 +79,7 @@ export class ContextModule {
 	getDependencies(): classDependencyInterface {
 		return {
 			getRequire: async (name: string) => Promise.resolve(require(name)),
+			getImport: async (name: string) => Promise.resolve(import(name)),
 
 			getSecret: ({ type, subType, name }: { type: string; subType?: string; name?: string }) =>
 				Promise.resolve(getSecret({ type, subType, name })),
