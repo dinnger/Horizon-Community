@@ -176,7 +176,7 @@ const nextStep = async () => {
       const credentialsModule = await import(/* @vite-ignore */ credentialsScriptUrl)
       const onUpdateCredentialFunction = credentialsModule.onUpdateCredential
       if (typeof onUpdateCredentialFunction === 'function') {
-        fnOnUpdateCredential = (properties: any) => { onUpdateCredentialFunction({ properties, context: getClientCredentialContext() }) }
+        fnOnUpdateCredential = (field: string, properties: any) => { onUpdateCredentialFunction({ field, properties, context: getClientCredentialContext() }) }
         fnOnUpdateCredential(credentialsPropertiesNode.value)
       } else {
         console.warn('El script onUpdateCredential no exporta una función ejecutable')
@@ -234,12 +234,11 @@ const updateProperty = (key: string, value: any) => {
   if (credentialsPropertiesNode.value) {
     credentialsPropertiesNode.value[key].value = value
   }
-  if (fnOnUpdateCredential) fnOnUpdateCredential(credentialsPropertiesNode.value)
+  if (fnOnUpdateCredential) fnOnUpdateCredential(key, credentialsPropertiesNode.value)
 }
 
 onMounted(() => {
   useStore.getCredentialsList().then((data) => {
-    console.log(data)
     for (const item of data) {
       nodesList.value.push({ key: item.name, ...item.info })
     }

@@ -13,7 +13,7 @@ export default class implements IClassNode {
 	info = {
 		name: 'MCP Server',
 		desc: 'Model Context Protocol Server - Expone herramientas y recursos a través de MCP',
-		icon: '🔌',
+		icon: '󱘖',
 		group: 'MCP',
 		color: '#2E86AB',
 		connectors: {
@@ -84,16 +84,6 @@ export default class implements IClassNode {
 					description: 'Esquema JSON que define los parámetros de entrada de la herramienta'
 				} as ICodeProperty,
 
-				outputSchema: {
-					name: 'Esquema de salida (JSON Schema):',
-					type: 'code',
-					lang: 'json',
-					value:
-						'{\n  "type": "object",\n  "properties": {\n    "result": {\n      "type": "string",\n      "description": "Resultado de la herramienta"\n    }\n  }\n}',
-					autocomplete: 'ajv',
-					description: 'Esquema JSON que define la estructura de respuesta de la herramienta'
-				} as ICodeProperty,
-
 				timeout: {
 					name: 'Timeout (ms):',
 					value: 30000,
@@ -133,15 +123,6 @@ export default class implements IClassNode {
 							'{\n  "type": "object",\n  "properties": {\n    "message": {\n      "type": "string",\n      "description": "Mensaje a hacer eco"\n    }\n  },\n  "required": ["message"]\n}',
 						autocomplete: 'ajv',
 						description: 'Esquema JSON que define los parámetros de entrada de la herramienta'
-					},
-					outputSchema: {
-						name: 'Esquema de salida (JSON Schema):',
-						type: 'code',
-						lang: 'json',
-						value:
-							'{\n  "type": "object",\n  "properties": {\n    "echo": {\n      "type": "string",\n      "description": "Mensaje de eco"\n    }\n  }\n}',
-						autocomplete: 'ajv',
-						description: 'Esquema JSON que define la estructura de respuesta de la herramienta'
 					},
 					timeout: {
 						name: 'Timeout (ms):',
@@ -207,7 +188,6 @@ export default class implements IClassNode {
 			outputData('error', { error: 'El servidor MCP ya está ejecutándose' })
 			return
 		}
-
 		try {
 			// Importar SDK de MCP usando la nueva API
 			const { McpServer } = await dependency.getRequire('@modelcontextprotocol/sdk/server/mcp.js')
@@ -271,6 +251,7 @@ export default class implements IClassNode {
 						// Crear callback para manejar la respuesta
 						const executionPromise = new Promise((resolve, reject) => {
 							const toolOutputName = `tool_${tool.name}`
+							logger.info(`Executing  ${toolOutputName}`)
 							outputData(
 								toolOutputName,
 								{
@@ -284,7 +265,7 @@ export default class implements IClassNode {
 									if (response?.error) {
 										reject(new Error(response.error))
 									} else {
-										resolve(response)
+										resolve(response?.data || response)
 									}
 								}
 							)

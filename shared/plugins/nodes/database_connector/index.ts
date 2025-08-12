@@ -1,8 +1,14 @@
-import type { IClassNode, classOnUpdateInterface, classOnExecuteInterface, infoInterface } from '@shared/interfaces/class.interface.js'
+import type {
+	classOnUpdateInterface,
+	classOnExecuteInterface,
+	classOnCredential,
+	classOnUpdateCredentialInterface,
+	IClassNode
+} from '@shared/interfaces/class.interface.js'
 import type {
 	ICodeProperty,
+	ICredentialProperty,
 	IOptionsProperty,
-	IPropertiesType,
 	ISecretProperty,
 	ISwitchProperty
 } from '@shared/interfaces/workflow.properties.interface.js'
@@ -26,6 +32,28 @@ export default class DatabaseNode implements IClassNode {
 	}
 
 	properties = {
+		connection: {
+			name: 'Tipo de conexión',
+			type: 'options',
+			options: [
+				{
+					label: 'Manual',
+					value: 'manual'
+				},
+				{
+					label: 'Secreto',
+					value: 'secret'
+				}
+			],
+			value: 'secret'
+		} as IOptionsProperty,
+		configSecret: {
+			name: 'Configuración',
+			type: 'credential',
+			options: [],
+			value: '',
+			show: true
+		} as ICredentialProperty,
 		dialect: {
 			name: 'Dialecto',
 			type: 'options',
@@ -55,22 +83,8 @@ export default class DatabaseNode implements IClassNode {
 					value: 'oracle'
 				}
 			],
+			show: false,
 			value: 'postgres'
-		} as IOptionsProperty,
-		connection: {
-			name: 'Tipo de conexión',
-			type: 'options',
-			options: [
-				{
-					label: 'Manual',
-					value: 'manual'
-				},
-				{
-					label: 'Secreto',
-					value: 'secret'
-				}
-			],
-			value: 'manual'
 		} as IOptionsProperty,
 		config: {
 			name: 'Configuración',
@@ -83,16 +97,9 @@ export default class DatabaseNode implements IClassNode {
           "database": "mydatabase",
           "port": 5432,
           "logging": false
-        }`
-		} as ICodeProperty,
-		configSecret: {
-			name: 'Configuración',
-			type: 'secret',
-			secretType: 'DATABASE',
-			options: [],
-			value: '',
+        }`,
 			show: false
-		} as ISecretProperty,
+		} as ICodeProperty,
 		query: {
 			name: 'Query',
 			type: 'code',
@@ -179,22 +186,22 @@ export default class DatabaseNode implements IClassNode {
 		}
 	}
 
-	async onUpdateProperties({ context }: classOnUpdateInterface): Promise<void> {
-		if (this.properties.connection.value === 'secret') {
-			this.properties.configSecret.show = true
-			this.properties.config.show = false
-			const secrets = await context.getSecrets(this.properties.dialect.value as IDialect)
+	async onUpdateProperties({ properties, context }: classOnUpdateInterface<typeof this.properties>): Promise<void> {
+		if (properties.connection.value === 'secret') {
+			properties.configSecret.show = true
+			properties.config.show = false
+			const secrets = await context.getSecrets(properties.dialect.value as IDialect)
 			if (secrets) {
-				this.properties.configSecret.options = secrets
+				properties.configSecret.options = secrets
 			}
 		}
-		if (this.properties.connection.value === 'manual') {
-			this.properties.config.show = true
-			this.properties.configSecret.show = false
+		if (properties.connection.value === 'manual') {
+			properties.config.show = true
+			properties.configSecret.show = false
 		}
 	}
 
-	async onExecute({ outputData, dependency }: classOnExecuteInterface) {
+	async onExecute({ outputData, dependency, credential }: classOnExecuteInterface) {
 		const { Sequelize, QueryTypes } = await dependency.getRequire('sequelize')
 		let sequelize: typeof Sequelize | null = null
 
@@ -205,12 +212,11 @@ export default class DatabaseNode implements IClassNode {
 				if (!this.properties.configSecret.value) {
 					return outputData('error', { error: 'No se especificó el secreto' })
 				}
-				const [type, subType, name] = this.properties.configSecret.value.toString().split('_')
-				const secrets = await dependency.getSecret({ type, subType, name })
-				if (!secrets) {
+				const { database, config } = await credential.getCredential(String(this.properties.configSecret.value))
+				if (!database || !config) {
 					return outputData('error', { error: 'No se encontraron secretos' })
 				}
-				this.properties.config.value = Object.fromEntries(Object.entries(secrets).map(([k, v]) => [k.toLowerCase(), v]))
+				this.properties.config.value = JSON.parse(config)
 			}
 
 			const config: {
@@ -240,7 +246,7 @@ export default class DatabaseNode implements IClassNode {
 				sequelize = new Sequelize({
 					...config,
 					dialect,
-					logging: config.logging === undefined ? false : config.logging
+					logging: config.logging
 				})
 				this.connections[configHash] = sequelize
 			}
@@ -263,13 +269,102 @@ export default class DatabaseNode implements IClassNode {
 		}
 	}
 
-	// async onCredential() {
-	// 	const { database, config } = this.credentials
-	// 	// Las credenciales se definen directamente en la configuración del nodo de credenciales.
-	// 	// Este método podría usarse para validaciones adicionales si fuera necesario.
-	// 	return {
-	// 		database: database.value,
-	// 		config: config.value
-	// 	}
-	// }
+	async onUpdateCredential({ field, properties }: classOnUpdateCredentialInterface<typeof this.credentials>) {
+		if (field !== 'database') return
+		switch (properties.database.value) {
+			case 'postgres':
+				properties.config.value = JSON.stringify(
+					{
+						database: '',
+						username: '',
+						password: '',
+						host: '',
+						port: 5432,
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			case 'mysql':
+				properties.config.value = JSON.stringify(
+					{
+						database: '',
+						username: '',
+						password: '',
+						host: '',
+						port: 3306,
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			case 'sqlite':
+				properties.config.value = JSON.stringify(
+					{
+						storage: './database.sqlite',
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			case 'mariadb':
+				properties.config.value = JSON.stringify(
+					{
+						database: '',
+						username: '',
+						password: '',
+						host: '',
+						port: 3306,
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			case 'mssql':
+				properties.config.value = JSON.stringify(
+					{
+						database: '',
+						username: '',
+						password: '',
+						host: '',
+						port: 1433,
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			case 'oracle':
+				properties.config.value = JSON.stringify(
+					{
+						username: '',
+						password: '',
+						connectString: '',
+						logging: false
+					},
+					null,
+					2
+				)
+				break
+			default:
+				properties.config.value = JSON.stringify({}, null, 2)
+		}
+	}
+
+	async onCredential({ credentials }: classOnCredential) {
+		const { database, config } = credentials
+		// Las credenciales se definen directamente en la configuración del nodo de credenciales.
+		// Este método podría usarse para validaciones adicionales si fuera necesario.
+		return {
+			status: true,
+			data: {
+				database: database.value,
+				config: config.value
+			}
+		}
+	}
 }

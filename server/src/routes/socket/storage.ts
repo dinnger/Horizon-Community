@@ -8,12 +8,14 @@ export const setupStorageRoutes = {
 	// List all available node classes - requires read permission
 	'storage-credentials:list': async ({ callback }: SocketData) => {
 		const arr = getNodesInfo()
-		const getNodeCredentials = Object.keys(arr).map((key) => {
-			return {
-				name: key,
-				info: arr[key].info
-			}
-		})
+		const getNodeCredentials = Object.keys(arr)
+			.filter((key) => arr[key].credentials)
+			.map((key) => {
+				return {
+					name: key,
+					info: arr[key].info
+				}
+			})
 		callback({ success: true, credentials: getNodeCredentials })
 	},
 	// Get the properties of a node class - requires read permission
