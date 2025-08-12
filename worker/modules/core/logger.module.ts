@@ -8,9 +8,28 @@ export class CoreLogger {
 	logger: winston.Logger
 	constructor(el: Worker) {
 		this.el = el
+
+		const alignColorsAndTime = winston.format.combine(
+			winston.format.colorize({
+				all: true
+			}),
+			winston.format.label({
+				label: '[LOGGER]'
+			}),
+			winston.format.timestamp({
+				format: 'YY-MM-DD HH:mm:ss'
+			}),
+			winston.format.printf((info) => ` ${info.label}  ${info.timestamp} ${info.level} : ${info.message}`)
+		)
 		this.logger = winston.createLogger({
-			level: 'info',
-			format: winston.format.json(),
+			format: winston.format.combine(
+				winston.format.timestamp({
+					format: 'YYYY-MM-DD HH:mm:ss'
+				}),
+				winston.format.printf(
+					(info) => `${info.timestamp} ${info.level}: ${info.message}${info.splat !== undefined ? `${info.splat}` : ' '}`
+				)
+			),
 			transports: [
 				new winston.transports.File({
 					filename: `logs/${this.el.workflowId}/error.log`,
@@ -21,10 +40,7 @@ export class CoreLogger {
 					level: 'info'
 				}),
 				new winston.transports.Console({
-					format: winston.format.combine(
-						winston.format.colorize(), // Colorea el texto en la consola
-						winston.format.simple() // Formato simple (sin detalles adicionales)
-					)
+					format: winston.format.combine(winston.format.colorize(), alignColorsAndTime)
 				})
 			]
 		})

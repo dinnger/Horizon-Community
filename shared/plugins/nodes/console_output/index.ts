@@ -44,7 +44,10 @@ export default class implements IClassNode {
 	}
 
 	async onExecute({ outputData }: classOnExecuteInterface) {
-		if (this.properties.showProduction.value === false && process.env.NODE_ENV === 'production') return
+		const isProd = process.env.NODE_ENV === 'production'
+		outputData('response', { data: this.properties.value.value })
+
+		if (this.properties.showProduction.value === false && isProd) return
 		const value = this.properties.value.value
 		switch (this.properties.type.value) {
 			case 'info':
@@ -60,6 +63,5 @@ export default class implements IClassNode {
 				console.debug('console', value)
 				break
 		}
-		outputData('response', { data: this.properties.value.value })
 	}
 }

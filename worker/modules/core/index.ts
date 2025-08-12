@@ -141,28 +141,29 @@ export class CoreModule {
 		data: any
 	}) {
 		// Consola
-		if (this.el.isDev || envs.TRACKING_EXECUTE) {
+		if (envs.TRACKING_EXECUTE) {
 			const memory = getMemoryUsage()
 			const executeTimeString = executeTime
 			if (envs.TRACKING_EXECUTE) {
 				const timeString = `[Duration: ${`${executeTimeString}ms`.toString().padEnd(10, ' ')} Accumulative: ${`${executeMeta.accumulativeTime}ms`.padEnd(10, ' ')} Memory: ${memory}mb]`
 				for (const o of destiny) {
 					if (!o) continue
-					console.debug(
-						`\x1b[42m Execute \x1b[0m ${node.info.name.padEnd(13, ' ')} --> ${connectorName ? `${connectorName.padEnd(13, ' ')} --> ` : ''} ${o.padEnd(13, ' ')} \x1b[34m ${timeString.padEnd(40, ' ')} \x1b[0m`
-					)
+					const info = `\x1b[42m Execute \x1b[0m ${node.info.name.padEnd(13, ' ')} --> ${connectorName ? `${connectorName.padEnd(13, ' ')} --> ` : ''} ${o.padEnd(13, ' ')} \x1b[34m ${timeString.padEnd(40, ' ')} \x1b[0m`
+					this.coreLogger.logger.debug(info)
 				}
 			}
-			// Enviar mensaje de debug
-			this.debug.send({
-				uid,
-				node,
-				destiny,
-				executeTimeString,
-				executeMeta,
-				data,
-				memory
-			})
+			if (this.el.isDev) {
+				// Enviar mensaje de debug
+				this.debug.send({
+					uid,
+					node,
+					destiny,
+					executeTimeString,
+					executeMeta,
+					data,
+					memory
+				})
+			}
 		}
 
 		// Registrar animación para envío al cliente
